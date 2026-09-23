@@ -50,27 +50,55 @@ export function cleanAndParseJson<T = any>(rawText: string, fallback: any = {}):
   }
 }
 
+// Clean up non-API-key client identifiers that can shadow GEMINI_API_KEY in GoogleGenAI SDK
+if (process.env.GOOGLE_API_KEY && process.env.GOOGLE_API_KEY.startsWith('gen-lang-client')) {
+  delete process.env.GOOGLE_API_KEY;
+}
+if (process.env.VITE_GEMINI_API_KEY && process.env.VITE_GEMINI_API_KEY.startsWith('gen-lang-client')) {
+  delete process.env.VITE_GEMINI_API_KEY;
+}
+
 /**
- * Resolves the Gemini API key across server-side runtime environment variables (GEMINI_API_KEY, VITE_GEMINI_API_KEY, GOOGLE_API_KEY)
- * or explicit client-supplied key header.
+ * Resolves the Gemini API key across server-side runtime environment variables (GEMINI_API_KEY, GOOGLE_API_KEY)
+ * or explicit client-supplied key header, filtering out any non-key client IDs.
  */
 export function resolveServerApiKey(providedKey?: string): string {
-  if (providedKey && typeof providedKey === 'string' && providedKey.trim()) {
+  if (
+    providedKey &&
+    typeof providedKey === 'string' &&
+    providedKey.trim() &&
+    !providedKey.startsWith('gen-lang-client')
+  ) {
     return providedKey.trim();
   }
-  return (
-    process.env.GEMINI_API_KEY ||
-    process.env.VITE_GEMINI_API_KEY ||
-    process.env.GOOGLE_API_KEY ||
-    process.env.API_KEY ||
-    process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
-    ''
-  ).trim();
+
+  // Primary: GEMINI_API_KEY from environment
+  const geminiKey = process.env.GEMINI_API_KEY?.trim();
+  if (geminiKey && !geminiKey.startsWith('gen-lang-client')) {
+    return geminiKey;
+  }
+
+  // Secondary: GOOGLE_API_KEY from environment if it's a real key
+  const googleKey = process.env.GOOGLE_API_KEY?.trim();
+  if (googleKey && !googleKey.startsWith('gen-lang-client')) {
+    return googleKey;
+  }
+
+  const viteKey = process.env.VITE_GEMINI_API_KEY?.trim();
+  if (viteKey && !viteKey.startsWith('gen-lang-client')) {
+    return viteKey;
+  }
+
+  return (process.env.API_KEY || '').trim();
 }
 
 // Initialize server-side Gemini client with user-agent header and resolved key
 function getAIClient(customKey?: string): GoogleGenAI {
   const apiKey = resolveServerApiKey(customKey);
+  // Ensure process.env.GOOGLE_API_KEY does not shadow apiKey if it was set to a client ID
+  if (process.env.GOOGLE_API_KEY && process.env.GOOGLE_API_KEY.startsWith('gen-lang-client')) {
+    delete process.env.GOOGLE_API_KEY;
+  }
   return new GoogleGenAI({
     apiKey,
     httpOptions: {
@@ -119,10 +147,20 @@ async function callWithRetryAndFallback<T>(
         err?.message?.includes('resource_exhausted') ||
         err?.message?.includes('quota') ||
         err?.message?.includes('Quota') ||
-        err?.status === 429 && (err?.message?.includes('quota') || err?.message?.includes('exhausted'));
+        (err?.status === 429 && (err?.message?.includes('quota') || err?.message?.includes('exhausted')));
 
       if (isQuotaExhausted) {
         console.warn(`[Gemini] Model ${modelName} returned quota exhausted / RESOURCE_EXHAUSTED. Immediately switching to dynamic linguistic translation engine with knowledge base rules.`);
+        return fallbackFn();
+      }
+
+      const isKeyInvalid =
+        err?.message?.includes('API_KEY_INVALID') ||
+        err?.message?.includes('API key not valid') ||
+        (err?.status === 400 && (err?.message?.includes('API key') || err?.message?.includes('INVALID_ARGUMENT')));
+
+      if (isKeyInvalid) {
+        console.warn(`[Gemini] Model ${modelName} returned invalid API key error. Falling back immediately to dynamic linguistic translation engine.`);
         return fallbackFn();
       }
 

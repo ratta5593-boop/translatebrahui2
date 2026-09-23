@@ -868,6 +868,30 @@
   ],
   "translationLogs": [
     {
+      "id": "log-1790152717327",
+      "sourceText": "آپ کیسے ہیں؟",
+      "sourceLang": "urdu",
+      "targetLang": "brahui-arabic",
+      "translatedText": "نی جوڑ اُس؟",
+      "createdAt": "2026-09-23T08:38:37.327Z"
+    },
+    {
+      "id": "log-1790152678224",
+      "sourceText": "Good morning",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "صبح بخیر سنگت",
+      "createdAt": "2026-09-23T08:37:58.224Z"
+    },
+    {
+      "id": "log-1790152671204",
+      "sourceText": "The weather is very pleasant today",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "اِراڑے موسم بھاز خوشگوار ءِ۔",
+      "createdAt": "2026-09-23T08:37:51.204Z"
+    },
+    {
       "id": "log-1790152159830",
       "sourceText": "i study in class one",
       "sourceLang": "english",

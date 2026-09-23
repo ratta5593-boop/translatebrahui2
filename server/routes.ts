@@ -170,10 +170,14 @@ apiRouter.post('/translate', async (req: Request, res: Response) => {
       return res.json(correctionResult);
     }
 
-    const providedApiKey =
+    const rawApiKey =
       (req.headers['x-gemini-api-key'] as string) ||
       (req.headers['x-api-key'] as string) ||
       apiKey;
+    const providedApiKey =
+      rawApiKey && typeof rawApiKey === 'string' && !rawApiKey.startsWith('gen-lang-client')
+        ? rawApiKey.trim()
+        : undefined;
 
     // Dynamically translate text via Gemini with runtime environment variable and key fallback
     const result = await translateText(cleanText, sLang, tLang, {

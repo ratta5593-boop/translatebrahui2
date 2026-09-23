@@ -20,7 +20,6 @@ import {
 import { Language, TranslationResult, GrammarRule, DynamicLanguage } from '../types/index.js';
 import { safeFetchJson } from '../utils/api.js';
 import { dynamicTranslateSentence } from '../utils/dynamicTranslator.js';
-import { translateOnClient } from '../utils/clientGeminiTranslator.js';
 
 export type BrahuiDialectOption =
   | 'Sarawani (ساراوانی)'
@@ -368,25 +367,17 @@ export const TranslationView: React.FC<TranslationViewProps> = ({
     setCorrectionError(null);
     setTranslationError(null);
 
-    const clientApiKey = (
-      (import.meta.env.VITE_GEMINI_API_KEY as string) ||
-      (import.meta.env.VITE_GOOGLE_API_KEY as string) ||
-      ''
-    ).trim();
-
     try {
       // 1. Send request to translation backend endpoint
       const res = await safeFetchJson<TranslationResult>('/api/translate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(clientApiKey ? { 'x-gemini-api-key': clientApiKey } : {}),
         },
         body: JSON.stringify({
           sourceText: textToTranslate,
           sourceLang,
           targetLang,
-          apiKey: clientApiKey || undefined,
         }),
       });
 
@@ -397,43 +388,16 @@ export const TranslationView: React.FC<TranslationViewProps> = ({
         return;
       }
 
-      // 2. Client-side Gemini fallback if backend is unavailable
-      if (clientApiKey) {
-        try {
-          const clientResult = await translateOnClient(textToTranslate, sourceLang, targetLang, clientApiKey);
-          if (clientResult && clientResult.translatedText) {
-            setResult(clientResult);
-            setCorrectionText(clientResult.translatedText);
-            setTranslationError(null);
-            return;
-          }
-        } catch (clientErr) {
-          console.warn('Client-side Gemini translation attempt error:', clientErr);
-        }
-      }
-
       if (!res.ok && res.error) {
         setTranslationError(res.error);
       }
 
-      // 3. Fallback dynamically translates the ACTUAL input text sentence
+      // 2. Fallback dynamically translates the ACTUAL input text sentence
       const dynamicFallback = dynamicTranslateSentence(textToTranslate, sourceLang, targetLang);
       setResult(dynamicFallback);
       setCorrectionText(dynamicFallback.translatedText);
     } catch (err: any) {
       console.error('Translation error:', err);
-      if (clientApiKey) {
-        try {
-          const clientResult = await translateOnClient(textToTranslate, sourceLang, targetLang, clientApiKey);
-          if (clientResult && clientResult.translatedText) {
-            setResult(clientResult);
-            setCorrectionText(clientResult.translatedText);
-            setTranslationError(null);
-            return;
-          }
-        } catch {}
-      }
-
       setTranslationError(err?.message || 'Network error occurred during translation');
       const dynamicFallback = dynamicTranslateSentence(textToTranslate, sourceLang, targetLang);
       setResult(dynamicFallback);

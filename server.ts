@@ -5,6 +5,15 @@ import { apiRouter } from './server/routes.js';
 
 dotenv.config();
 
+// Ensure non-API-key client IDs (e.g. Google Cloud OAuth client identifiers starting with 'gen-lang-client')
+// do not shadow the valid GEMINI_API_KEY in the @google/genai SDK
+if (process.env.GOOGLE_API_KEY && process.env.GOOGLE_API_KEY.startsWith('gen-lang-client')) {
+  delete process.env.GOOGLE_API_KEY;
+}
+if (process.env.VITE_GEMINI_API_KEY && process.env.VITE_GEMINI_API_KEY.startsWith('gen-lang-client')) {
+  delete process.env.VITE_GEMINI_API_KEY;
+}
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
