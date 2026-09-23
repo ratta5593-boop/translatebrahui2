@@ -1,0 +1,1067 @@
+{
+  "grammarRules": [
+    {
+      "title": "Indefinite Nominal Suffixation (-as) in Demonstrative Predications",
+      "category": "Morphology",
+      "pattern": "دا + [Adjective] + [Noun] + ءس (-as)",
+      "explanation": "In Brahui (especially the Sarawani dialect), indefinite singular nouns in demonstrative equational constructions are marked by attaching the enclitic indefinite suffix '-as' (orthographically represented as 'ءس' after a silent/vocalic heh or vowel-final loanword). When translating an indefinite equational statement (e.g., 'A test sentence' or 'This [is] a test sentence'), the proximate demonstrative 'دا' (dā) precedes the attributive modifier and the head noun inflected with '-as'.",
+      "confidence": 88,
+      "status": "verified",
+      "dialect": "ساراوانی",
+      "examples": [
+        {
+          "incorrect": "دا آزمائشی جملہ",
+          "correct": "دا آزمائشی جملہ ءس",
+          "englishGloss": "This is a test sentence / A test sentence"
+        },
+        {
+          "incorrect": "دا جوان کتاب",
+          "correct": "دا جوان کتاب اس",
+          "englishGloss": "This is a good book"
+        }
+      ],
+      "inducedFrom": {
+        "sourceText": "Test sentence for queue",
+        "initialTranslation": "",
+        "correctedTranslation": "دا آزمائشی جملہ ءس",
+        "sourceLang": "english",
+        "targetLang": "brahui-arabic"
+      },
+      "sourceType": "user_correction",
+      "verifiedBy": "admin",
+      "id": "rule-induced-1790076462459-ch90m",
+      "createdAt": "2026-09-22T11:27:42.459Z",
+      "verifiedAt": "2026-09-22T11:27:49.357Z"
+    },
+    {
+      "title": "Vocative and Social Address Integration",
+      "category": "Syntax",
+      "pattern": "[Greeting] + [Noun/Address Term]",
+      "explanation": "In Brahui social interaction, standard Persian-derived greetings like 'Subh-e-bakhair' are considered incomplete when addressing a specific person. The language requires the addition of a noun or address term (such as 'sangt' for friend) to complete the social communicative act, reflecting the Dravidian emphasis on relational context.",
+      "confidence": 95,
+      "status": "active",
+      "dialect": "Standard",
+      "examples": [
+        {
+          "incorrect": "صبح بخیر",
+          "correct": "صبح بخیر سنگت",
+          "englishGloss": "Good morning (friend)"
+        }
+      ],
+      "inducedFrom": {
+        "sourceText": "Good morning",
+        "initialTranslation": "صبح بخیر",
+        "correctedTranslation": "صبح بخیر سنگت",
+        "sourceLang": "English",
+        "targetLang": "Brahui"
+      },
+      "id": "rule-induced-1790074810468-9sz6t",
+      "createdAt": "2026-09-22T11:00:10.468Z"
+    },
+    {
+      "title": "Lexical Precision and Idiomatic Surface Reference in Standard Brahui",
+      "category": "Lexical",
+      "pattern": "[Noun] + -nā + baj (surface) | [Verb] + -okā (active participle) | [Verb] + -ro (future negative)",
+      "explanation": "The correction reveals three critical linguistic nuances in Standard Brahui: 1) Idiomatic Surface: The 'surface' of water is idiomatically referred to as 'baj' (literally 'back') rather than 'tāl' (plate/flatness). 2) Active Participles: 'Flowing' is best captured by 'barokā' (coming/moving) rather than 'tolokā' (sitting/static). 3) Future Potentiality: To express 'might not be' or 'will not be', the future negative suffix '-ro' (mafro) is required instead of the simple present negative '-o' (mafo). Additionally, 'chaghli kanning' is the specific lexical choice for 'throwing' an object like a stone.",
+      "confidence": 92,
+      "status": "active",
+      "dialect": "Standard",
+      "examples": [
+        {
+          "incorrect": "دیر نا تال ءِ پرغک",
+          "correct": "دیر نا بجے پرغک",
+          "englishGloss": "Breaks the surface (back) of the water."
+        },
+        {
+          "incorrect": "تولوکا دیر",
+          "correct": "بروکا دیر",
+          "englishGloss": "Flowing (coming) water."
+        },
+        {
+          "incorrect": "ارزان مفو",
+          "correct": "ارزان مفرو",
+          "englishGloss": "Will not (might not) be easy."
+        }
+      ],
+      "inducedFrom": {
+        "sourceText": "Prologue\nBetween your fingers you hold a stone and throw it into flowing water. The effect might not be easy to see. There will be a small ripple where the stone breaks the surface and then a splash, muffled by the rush of the surrounding river. That’s all.",
+        "initialTranslation": "پہلوال\n\nنی تینا ہوشخاتے ٹی اسٹ خل اس تورِس او دادے تولوکا دیر ٹی شاغس۔ اثر خننگ کی ارزان مفو۔ اراڑے کہ خل دیر نا تال ءِ پرغک، ہموڑے اسٹ چنکو لُوݪھ اس مریو او ولدا اسٹ چھپ اس، کہ ہندنا جوزہ غا دیر نا توار ٹی بِننگ مف۔ بس ہندادے۔",
+        "correctedTranslation": "پہلوال\n\nنی تینا ہورتے ٹی خل اس ارفس او دادے بروکا دیر ٹی چغلی کیس۔دانا اثر خننگ ارزان مفرو۔ اراڑے کہ خل دیر نا بجے پرغک او دیر ٹی کائک، ہموڑے اسے چنکو گڑدو لہر ئس جوڑمریک او ولدا اسٹ چھپ اس، کہ ہندنا جوزہ غا دیر نا توار ٹی بِننگ مف۔ بس ہندادے۔",
+        "sourceLang": "english",
+        "targetLang": "brahui-arabic"
+      },
+      "id": "rule-induced-1789748751051-9xdlm",
+      "createdAt": "2026-09-18T16:25:51.051Z"
+    },
+    {
+      "title": "Strict SOV Word Order and Locative Case Suffix for Destination",
+      "category": "Syntax",
+      "pattern": "[Subject] + [Noun + -ṭī] + [Verb]",
+      "explanation": "Brahui is a Dravidian language requiring strict Subject-Object-Verb (SOV) word order. When expressing motion towards a destination (e.g., 'to Quetta'), the destination noun must be marked with the locative case suffix '-ṭī' (ٹی) and the inflected verb must be placed at the absolute end of the sentence.",
+      "confidence": 98,
+      "status": "active",
+      "dialect": "Standard",
+      "examples": [
+        {
+          "incorrect": "ای ہنوٹ کوئٹہ",
+          "correct": "ای کوئٹہ ٹی ہنوٹ",
+          "englishGloss": "I Quetta-to went"
+        }
+      ],
+      "inducedFrom": {
+        "sourceText": "I went to Quetta",
+        "initialTranslation": "ای ہنوٹ کوئٹہ",
+        "correctedTranslation": "ای کوئٹہ ٹی ہنوٹ",
+        "sourceLang": "english",
+        "targetLang": "brahui-arabic"
+      },
+      "id": "rule-induced-1789744750103-ri7zp",
+      "createdAt": "2026-09-18T15:19:10.103Z"
+    },
+    {
+      "title": "Induced Rule from Correction: \"How are you?\"",
+      "category": "Morphology",
+      "pattern": "\"نی جوڑ اُس؟\" -> \"نی جوڑ اُس، خیرہ؟\"",
+      "explanation": "User submitted 100% correct translation to supersede previous output. System induced replacement pattern to enforce correct morphology and dialect phrasing.",
+      "confidence": 88,
+      "status": "active",
+      "dialect": "Standard",
+      "examples": [
+        {
+          "incorrect": "نی جوڑ اُس؟",
+          "correct": "نی جوڑ اُس، خیرہ؟",
+          "englishGloss": "How are you?"
+        }
+      ],
+      "inducedFrom": {
+        "sourceText": "How are you?",
+        "initialTranslation": "نی جوڑ اُس؟",
+        "correctedTranslation": "نی جوڑ اُس، خیرہ؟",
+        "sourceLang": "english",
+        "targetLang": "brahui-arabic"
+      },
+      "id": "rule-induced-1789671510436-3votu",
+      "createdAt": "2026-09-17T18:58:30.436Z"
+    },
+    {
+      "id": "rule-sov-syntax-01",
+      "title": "Strict SOV (Subject - Object - Verb) Word Order",
+      "category": "Syntax",
+      "pattern": "Subject + Indirect/Direct Object + Main Verb + Auxiliary",
+      "explanation": "Brahui strictly requires verbs to terminate the clause, differing from English (SVO) and retaining northern Dravidian syntax.",
+      "confidence": 98,
+      "status": "verified",
+      "dialect": "Standard",
+      "examples": [
+        {
+          "incorrect": "I hinot urā-ṭí (SVO)",
+          "correct": "I urā-ṭí hinot (SOV) / ای اُراٹی ہنوٹ",
+          "englishGloss": "I went into the house"
+        },
+        {
+          "incorrect": "O kunēk eleş",
+          "correct": "O eleş kunēk / او ایلیش کُنیک",
+          "englishGloss": "He/she eats bread"
+        }
+      ],
+      "createdAt": "2026-09-15T08:00:00.000Z",
+      "verifiedAt": "2026-09-15T08:30:00.000Z",
+      "verifiedBy": "Brahui Linguistic Board"
+    },
+    {
+      "id": "rule-case-genitive-02",
+      "title": "Genitive / Possessive Suffix (-na / نا)",
+      "category": "Morphology",
+      "pattern": "[Noun/Pronoun Stem] + -na",
+      "explanation": "Possession is formed by affixing suffix -na directly to the stem. When used with 1st person pronoun \"kan\" (me), it forms \"kan-na\" (my/mine).",
+      "confidence": 99,
+      "status": "verified",
+      "dialect": "All",
+      "examples": [
+        {
+          "incorrect": "I pin Ahmad e",
+          "correct": "Kan-na pin Ahmad e / کنا پِن احمد ءِ",
+          "englishGloss": "My name is Ahmad"
+        },
+        {
+          "incorrect": "Da urā nī",
+          "correct": "Da nā urā e / دا نا اُرا ءِ",
+          "englishGloss": "This is your house"
+        }
+      ],
+      "createdAt": "2026-09-15T09:00:00.000Z",
+      "verifiedAt": "2026-09-15T09:15:00.000Z",
+      "verifiedBy": "Brahui Linguistic Board"
+    },
+    {
+      "id": "rule-case-dative-03",
+      "title": "Dative/Purposive Case Suffix (-ki / کی) and Accusative (-e / ے)",
+      "category": "Morphology",
+      "pattern": "[Noun/Pronoun] + -ki (for), [Noun/Pronoun] + -e (to/accusative)",
+      "explanation": "Direct object receives -e when definite, while beneficiary/purpose receives -ki (\"for the sake of / to\").",
+      "confidence": 96,
+      "status": "verified",
+      "dialect": "Standard",
+      "examples": [
+        {
+          "incorrect": "Dā kitāb dē kan",
+          "correct": "Dā kitāb-e kan-ki ēte / دا کتاب ءِ کنکی ایتر",
+          "englishGloss": "Give this book for me"
+        },
+        {
+          "incorrect": "O khane kan",
+          "correct": "O kan-e khant / او کنے خنت",
+          "englishGloss": "He saw me"
+        }
+      ],
+      "createdAt": "2026-09-16T10:00:00.000Z",
+      "verifiedAt": "2026-09-16T11:00:00.000Z",
+      "verifiedBy": "Linguist Admin"
+    },
+    {
+      "id": "rule-ablative-case-04",
+      "title": "Ablative Postposition Suffix (-ān / آن)",
+      "category": "Morphology",
+      "pattern": "[Origin Noun] + -ān",
+      "explanation": "Movement away or origin is denoted by suffix -ān attached to location or person stems.",
+      "confidence": 95,
+      "status": "verified",
+      "dialect": "Standard",
+      "examples": [
+        {
+          "incorrect": "I bass shahr min",
+          "correct": "I shahr-ān bassuţ / ای شاہر آن بسٹ",
+          "englishGloss": "I came from the city"
+        }
+      ],
+      "createdAt": "2026-09-16T14:20:00.000Z",
+      "verifiedAt": "2026-09-16T15:00:00.000Z",
+      "verifiedBy": "Linguist Admin"
+    },
+    {
+      "id": "rule-lateral-fricative-05",
+      "title": "Voiceless Lateral Fricative Orthography (ݪ / lh)",
+      "category": "Orthography",
+      "pattern": "Perso-Arabic [ݪ] <-> Roman Latin [lh]",
+      "explanation": "Brahui features the distinctive voiceless lateral fricative /ɬ/ preserved from Proto-Dravidian. In Perso-Arabic it is written as ݪ (lam with small v above) and in Latin Roman as \"lh\". Never substitute standard l or kh.",
+      "confidence": 97,
+      "status": "verified",
+      "dialect": "All",
+      "examples": [
+        {
+          "incorrect": "balkul / balikh",
+          "correct": "baݪ / ba-lh (feather / wing)",
+          "englishGloss": "Wing or feather"
+        },
+        {
+          "incorrect": "mil / milk",
+          "correct": "miݪ / mi-lh (ewe / sheep)",
+          "englishGloss": "Sheep / ewe"
+        }
+      ],
+      "createdAt": "2026-09-17T02:00:00.000Z",
+      "verifiedAt": "2026-09-17T03:00:00.000Z",
+      "verifiedBy": "Orthography Committee"
+    }
+  ],
+  "corpus": [
+    {
+      "sourceText": "Test sentence for queue",
+      "sourceLang": "english",
+      "targetText": "دا آزمائشی جملہ ءس",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "",
+      "dialect": "ساراوانی",
+      "contextNotes": "",
+      "contributorName": "Test User",
+      "contributorRole": "User",
+      "verified": true,
+      "status": "approved",
+      "sourceType": "user_correction",
+      "inducedRuleId": "rule-induced-1790076462459-ch90m",
+      "id": "corp-1790076462461-8k80",
+      "createdAt": "2026-09-22T11:27:42.461Z"
+    },
+    {
+      "sourceText": "Good morning",
+      "sourceLang": "English",
+      "targetText": "صبح بخیر سنگت",
+      "targetLang": "Brahui",
+      "alternativeScript": "",
+      "dialect": "Standard",
+      "contextNotes": "",
+      "contributorName": "Brahui Scholar",
+      "contributorRole": "Linguist",
+      "verified": true,
+      "inducedRuleId": "rule-induced-1790074810468-9sz6t",
+      "id": "corp-1790074810470-assb",
+      "createdAt": "2026-09-22T11:00:10.470Z"
+    },
+    {
+      "sourceText": "Prologue\nBetween your fingers you hold a stone and throw it into flowing water. The effect might not be easy to see. There will be a small ripple where the stone breaks the surface and then a splash, muffled by the rush of the surrounding river. That’s all.",
+      "sourceLang": "english",
+      "targetText": "پہلوال\n\nنی تینا ہورتے ٹی خل اس ارفس او دادے بروکا دیر ٹی چغلی کیس۔دانا اثر خننگ ارزان مفرو۔ اراڑے کہ خل دیر نا بجے پرغک او دیر ٹی کائک، ہموڑے اسے چنکو گڑدو لہر ئس جوڑمریک او ولدا اسٹ چھپ اس، کہ ہندنا جوزہ غا دیر نا توار ٹی بِننگ مف۔ بس ہندادے۔",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "Pahlvāl\n\nNī tēnā hūshkhāte-ṭí asit khal-as tūris o dāde tūlokā dīr-ṭí shāghas. Asar khaning-ki arzān maf-o. Arāṛe ke khal dīr-na tāl-e parghak, hamoṛe asit chunako lūlh-as mare-o o valdā asit chhap-as, ke handunā jozaghā dīr-na tuvār-ṭí bining maf. Bas handāde.",
+      "dialect": "Standard",
+      "contextNotes": "",
+      "contributorName": "Community Contributor",
+      "contributorRole": "Native Speaker",
+      "verified": true,
+      "inducedRuleId": "rule-induced-1789748751051-9xdlm",
+      "id": "corp-1789748751051-63nb",
+      "createdAt": "2026-09-18T16:25:51.051Z"
+    },
+    {
+      "sourceText": "I went to Quetta",
+      "sourceLang": "english",
+      "targetText": "ای کوئٹہ ٹی ہنوٹ",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "",
+      "dialect": "Standard",
+      "contextNotes": "Verb must be placed at the end (SOV) and locative case suffix -ṭí must be attached to Quetta",
+      "contributorName": "Brahui Linguist",
+      "contributorRole": "User",
+      "verified": true,
+      "inducedRuleId": "rule-induced-1789744750103-ri7zp",
+      "id": "corp-1789744750103-738c",
+      "createdAt": "2026-09-18T15:19:10.103Z"
+    },
+    {
+      "sourceText": "How are you?",
+      "sourceLang": "english",
+      "targetText": "نی جوڑ اُس، خیرہ؟",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "",
+      "dialect": "Standard",
+      "contextNotes": "Adding polite informal greeting suffix",
+      "contributorName": "Brahui Speaker",
+      "contributorRole": "User",
+      "verified": true,
+      "inducedRuleId": "rule-induced-1789671510436-3votu",
+      "id": "corp-1789671510437-cpqb",
+      "createdAt": "2026-09-17T18:58:30.437Z"
+    },
+    {
+      "id": "corp-001",
+      "sourceText": "How are you?",
+      "sourceLang": "english",
+      "targetText": "نی جوڑ اُس؟",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "Nī jor us?",
+      "dialect": "Standard",
+      "contextNotes": "Common everyday greeting to a single person",
+      "contributorName": "Dr. Abdul Rehman Brahui",
+      "contributorRole": "Linguist",
+      "verified": true,
+      "createdAt": "2026-09-15T09:00:00.000Z"
+    },
+    {
+      "id": "corp-002",
+      "sourceText": "I am fine, thank you.",
+      "sourceLang": "english",
+      "targetText": "ای جوڑ اُٹ، منتوار۔",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "I jor uţ, minatwār.",
+      "dialect": "Standard",
+      "contextNotes": "Polite response to inquiry about well-being",
+      "contributorName": "Gul Khan",
+      "contributorRole": "Native Speaker",
+      "verified": true,
+      "createdAt": "2026-09-15T09:30:00.000Z"
+    },
+    {
+      "id": "corp-003",
+      "sourceText": "آپ کا نام کیا ہے؟",
+      "sourceLang": "urdu",
+      "targetText": "نا پِن انت ءِ؟",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "Nā pin ant e?",
+      "dialect": "Sarawani (Kalat)",
+      "contextNotes": "Asking someone's name politely",
+      "contributorName": "Fatima Mengal",
+      "contributorRole": "Native Speaker",
+      "verified": true,
+      "createdAt": "2026-09-16T11:20:00.000Z"
+    },
+    {
+      "id": "corp-004",
+      "sourceText": "میرا نام احمد ہے اور میں کوئٹہ میں رہتا ہوں۔",
+      "sourceLang": "urdu",
+      "targetText": "کنا پِن احمد ءِ او ای کوئٹہ ٹی رہنگوہ۔",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "Kan-na pin Ahmad e o i Quetta-ṭí rahengova.",
+      "dialect": "Standard",
+      "contextNotes": "Self introduction with locative suffix -ṭí",
+      "contributorName": "Ahmad Zehri",
+      "contributorRole": "Native Speaker",
+      "verified": true,
+      "createdAt": "2026-09-16T15:40:00.000Z"
+    },
+    {
+      "id": "corp-005",
+      "sourceText": "Where is the hospital?",
+      "sourceLang": "english",
+      "targetText": "ہسپتال اراڑے ءِ؟",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "Haspitāl arāṛe e?",
+      "dialect": "Standard",
+      "contextNotes": "Inquiry for directions",
+      "contributorName": "Admin",
+      "contributorRole": "Admin",
+      "verified": true,
+      "createdAt": "2026-09-17T08:10:00.000Z"
+    },
+    {
+      "id": "corp-006",
+      "sourceText": "ہمیں پانی چاہیے",
+      "sourceLang": "urdu",
+      "targetText": "ننے دیر پکار ءِ۔",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "Nan-e dīr pakār e.",
+      "dialect": "Standard",
+      "contextNotes": "First person plural dative construction",
+      "contributorName": "Zainab Raisani",
+      "contributorRole": "Linguist",
+      "verified": true,
+      "createdAt": "2026-09-17T09:15:00.000Z"
+    },
+    {
+      "id": "corp-welcome-sarawani",
+      "sourceText": "Welcome to Brahui translator",
+      "sourceLang": "english",
+      "targetText": "براہوئی مترجم ٹی بخیر بسس",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "Brāhūī mutarjim-ṭī bakhair basus",
+      "dialect": "Sarawani",
+      "contextNotes": "Welcoming greeting in Northern / Kalat Sarawani dialect",
+      "contributorName": "Brahui Linguistic Academy",
+      "contributorRole": "Linguist",
+      "verified": true,
+      "status": "approved",
+      "sourceType": "initial_seed",
+      "createdAt": "2026-09-15T08:00:00.000Z"
+    },
+    {
+      "id": "corp-welcome-jhalawani",
+      "sourceText": "Welcome to Brahui translator",
+      "sourceLang": "english",
+      "targetText": "براہوئی مترجم ٹی خیر ات بسس",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "Brāhūī mutarjim-ṭī khair at basus",
+      "dialect": "Jhalawani",
+      "contextNotes": "Welcoming greeting in Southern / Khuzdar Jhalawani dialect",
+      "contributorName": "Mir Gul Khan",
+      "contributorRole": "Native Speaker",
+      "verified": true,
+      "status": "approved",
+      "sourceType": "initial_seed",
+      "createdAt": "2026-09-15T08:05:00.000Z"
+    },
+    {
+      "id": "corp-welcome-rakhshani",
+      "sourceText": "Welcome to Brahui translator",
+      "sourceLang": "english",
+      "targetText": "براہوئی مترجم ٹی وش اتکئے",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "Brāhūī mutarjim-ṭī wash atkē",
+      "dialect": "Rakhshani",
+      "contextNotes": "Welcoming greeting in Western / Chagai & Nushki Rakhshani dialect",
+      "contributorName": "Chagai Cultural Circle",
+      "contributorRole": "Native Speaker",
+      "verified": true,
+      "status": "approved",
+      "sourceType": "initial_seed",
+      "createdAt": "2026-09-15T08:10:00.000Z"
+    },
+    {
+      "id": "corp-001-sarawani",
+      "sourceText": "How are you?",
+      "sourceLang": "english",
+      "targetText": "نی جوڑ اُس؟",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "Nī jor us?",
+      "dialect": "Sarawani",
+      "contextNotes": "Common everyday greeting in Sarawani dialect",
+      "contributorName": "Dr. Abdul Rehman Brahui",
+      "contributorRole": "Linguist",
+      "verified": true,
+      "status": "approved",
+      "sourceType": "initial_seed",
+      "createdAt": "2026-09-15T09:00:00.000Z"
+    },
+    {
+      "id": "corp-001-jhalawani",
+      "sourceText": "How are you?",
+      "sourceLang": "english",
+      "targetText": "نی دراخ اُس؟",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "Nī drākh us?",
+      "dialect": "Jhalawani",
+      "contextNotes": "Common everyday inquiry in Jhalawani dialect",
+      "contributorName": "Abdul Qayyum",
+      "contributorRole": "Native Speaker",
+      "verified": true,
+      "status": "approved",
+      "sourceType": "initial_seed",
+      "createdAt": "2026-09-15T09:05:00.000Z"
+    },
+    {
+      "id": "corp-001-rakhshani",
+      "sourceText": "How are you?",
+      "sourceLang": "english",
+      "targetText": "شما چتون ات؟",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "Shumā chitōn at?",
+      "dialect": "Rakhshani",
+      "contextNotes": "Common inquiry in Rakhshani dialect",
+      "contributorName": "Naseer Mengal",
+      "contributorRole": "Native Speaker",
+      "verified": true,
+      "status": "approved",
+      "sourceType": "initial_seed",
+      "createdAt": "2026-09-15T09:10:00.000Z"
+    },
+    {
+      "id": "corp-003-sarawani",
+      "sourceText": "What is your name?",
+      "sourceLang": "english",
+      "targetText": "نا پِن انت ءِ؟",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "Nā pin ant e?",
+      "dialect": "Sarawani",
+      "contextNotes": "Asking someone's name politely in Sarawani dialect",
+      "contributorName": "Fatima Mengal",
+      "contributorRole": "Native Speaker",
+      "verified": true,
+      "status": "approved",
+      "sourceType": "initial_seed",
+      "createdAt": "2026-09-16T11:20:00.000Z"
+    },
+    {
+      "id": "corp-003-jhalawani",
+      "sourceText": "What is your name?",
+      "sourceLang": "english",
+      "targetText": "نا پِن دیر ءِ؟",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "Nā pin dīr e?",
+      "dialect": "Jhalawani",
+      "contextNotes": "Asking someone's name in Jhalawani dialect",
+      "contributorName": "Sardar Zehri",
+      "contributorRole": "Native Speaker",
+      "verified": true,
+      "status": "approved",
+      "sourceType": "initial_seed",
+      "createdAt": "2026-09-16T11:25:00.000Z"
+    },
+    {
+      "id": "corp-003-rakhshani",
+      "sourceText": "What is your name?",
+      "sourceLang": "english",
+      "targetText": "تئی نام چے انت؟",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "Taī nām chē ant?",
+      "dialect": "Rakhshani",
+      "contextNotes": "Asking someone's name in Rakhshani dialect",
+      "contributorName": "Rashid Chagai",
+      "contributorRole": "Native Speaker",
+      "verified": true,
+      "status": "approved",
+      "sourceType": "initial_seed",
+      "createdAt": "2026-09-16T11:30:00.000Z"
+    },
+    {
+      "id": "corp-urdu-name-sarawani",
+      "sourceText": "آپ کا نام کیا ہے؟",
+      "sourceLang": "urdu",
+      "targetText": "نا پِن انت ءِ؟",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "Nā pin ant e?",
+      "dialect": "Sarawani",
+      "contextNotes": "Urdu to Brahui name query (Sarawani)",
+      "contributorName": "Fatima Mengal",
+      "contributorRole": "Native Speaker",
+      "verified": true,
+      "status": "approved",
+      "sourceType": "initial_seed",
+      "createdAt": "2026-09-16T11:20:00.000Z"
+    },
+    {
+      "id": "corp-urdu-name-jhalawani",
+      "sourceText": "آپ کا نام کیا ہے؟",
+      "sourceLang": "urdu",
+      "targetText": "نا پِن دیر ءِ؟",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "Nā pin dīr e?",
+      "dialect": "Jhalawani",
+      "contextNotes": "Urdu to Brahui name query (Jhalawani)",
+      "contributorName": "Sardar Zehri",
+      "contributorRole": "Native Speaker",
+      "verified": true,
+      "status": "approved",
+      "sourceType": "initial_seed",
+      "createdAt": "2026-09-16T11:25:00.000Z"
+    },
+    {
+      "id": "corp-urdu-name-rakhshani",
+      "sourceText": "آپ کا نام کیا ہے؟",
+      "sourceLang": "urdu",
+      "targetText": "تئی نام چے انت؟",
+      "targetLang": "brahui-arabic",
+      "alternativeScript": "Taī nām chē ant?",
+      "dialect": "Rakhshani",
+      "contextNotes": "Urdu to Brahui name query (Rakhshani)",
+      "contributorName": "Rashid Chagai",
+      "contributorRole": "Native Speaker",
+      "verified": true,
+      "status": "approved",
+      "sourceType": "initial_seed",
+      "createdAt": "2026-09-16T11:30:00.000Z"
+    }
+  ],
+  "knowledgeDocuments": [
+    {
+      "filename": "brahui_ergative_case_rules.pdf",
+      "title": "Brahui Ergative Case Rules",
+      "fileSize": 71,
+      "type": "grammar",
+      "pageCount": 1,
+      "chunksCount": 1,
+      "sampleSummary": "As a Brahui linguistic archivist, I have summarized the provided text as follows:\n\nThis document formalizes Brahui's split-ergative alignment, specifically requiring subject pronouns to adopt an ergative marker when paired with transitive verbs in the past tense. It establishes a structural framework for pronominal and verbal categories, providing a syntactic standard common to the core Sarawani and Jhalawani dialect groups.",
+      "chunks": [
+        "In transitive past tense, the subject pronoun receives ergative marker."
+      ],
+      "id": "doc-1789755300831-en7y",
+      "uploadedAt": "2026-09-18T18:15:00.831Z"
+    },
+    {
+      "filename": "jhalawan_vocab.pdf",
+      "title": "Brahui Jhalawan Dialect Vocabulary",
+      "fileSize": 93,
+      "type": "dictionary",
+      "pageCount": 1,
+      "chunksCount": 1,
+      "sampleSummary": "Brahui reference document \"Brahui Jhalawan Dialect Vocabulary\" containing vocabulary lexicons, morphology rules, and syntactic patterns.",
+      "chunks": [
+        "%PDF-1.4 1 0 obj << /Title (Brahui Jhalawan Dialect Vocabulary) >> endobj trailer <<>> %%EOF"
+      ],
+      "id": "doc-1789755280281-p8tl",
+      "uploadedAt": "2026-09-18T18:14:40.281Z"
+    },
+    {
+      "filename": "brahui_glossary.pdf",
+      "title": "Test Brahui Glossary 2MB",
+      "fileSize": 2097152,
+      "type": "dictionary",
+      "pageCount": 1,
+      "chunksCount": 50,
+      "sampleSummary": "The provided document appears to be a corrupted or empty file containing only recurring PDF header fragments rather than actual linguistic data. Consequently, it contains no information regarding Brahui grammatical rules, lexical categories, or dialectical variations.",
+      "chunks": [
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF ",
+        "%PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF %PDF-1.4 1 0 obj <<>> endobj trailer <<>> %%EOF "
+      ],
+      "id": "doc-1789754720458-x2vh",
+      "uploadedAt": "2026-09-18T18:05:20.458Z"
+    },
+    {
+      "filename": "large.pdf",
+      "title": "Large Dictionary",
+      "fileSize": 350000,
+      "type": "grammar_guide",
+      "pageCount": 1,
+      "chunksCount": 50,
+      "sampleSummary": "As the provided text sample consists solely of repetitive filler content rather than actual linguistic data, it contains no discernible grammatical rules, categorized vocabulary, or dialectical information. Consequently, this document cannot be evaluated or summarized as a legitimate Brahui reference work in its current state.",
+      "chunks": [
+        "Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui voc",
+        "abulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary an",
+        "d grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar ",
+        "text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahu",
+        "i vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabula",
+        "ry and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and gra",
+        "mmar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text ",
+        "Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui voc",
+        "abulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary an",
+        "d grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar ",
+        "text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahu",
+        "i vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabula",
+        "ry and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and gra",
+        "mmar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text ",
+        "Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui voc",
+        "abulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary an",
+        "d grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar ",
+        "text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahu",
+        "i vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabula",
+        "ry and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and gra",
+        "mmar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text ",
+        "Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui voc",
+        "abulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary an",
+        "d grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar ",
+        "text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahu",
+        "i vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabula",
+        "ry and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and gra",
+        "mmar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text ",
+        "Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui voc",
+        "abulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary and grammar text Brahui vocabulary an"
+      ],
+      "id": "doc-1789754494251-3uef",
+      "uploadedAt": "2026-09-18T18:01:34.251Z"
+    },
+    {
+      "filename": "Brahui Qaida.pdf",
+      "title": "Brahui Qaida",
+      "fileSize": 2353403,
+      "type": "grammar",
+      "pageCount": 32,
+      "chunksCount": 1,
+      "sampleSummary": "As the Brahui linguistic archivist, I have reviewed the *Brahui Qaida* provided. \n\nThis foundational instructional text serves as a primary pedagogical tool, focusing on the Brahui alphabet, phonetic character combinations, and essential vocabulary through structured drills. It emphasizes standard linguistic patterns and orthographic conventions for beginning learners, though it maintains a focus on general acquisition rather than distinct regional dialectical variations.",
+      "chunks": [
+        "-- 1 of 32 -- -- 2 of 32 -- -- 3 of 32 -- -- 4 of 32 -- -- 5 of 32 -- -- 6 of 32 -- -- 7 of 32 -- -- 8 of 32 -- -- 9 of 32 -- -- 10 of 32 -- -- 11 of 32 -- -- 12 of 32 -- -- 13 of 32 -- -- 14 of 32 -- -- 15 of 32 -- -- 16 of 32 -- -- 17 of 32 -- -- 18 of 32 -- -- 19 of 32 -- -- 20 of 32 -- -- 21 of 32 -- -- 22 of 32 -- -- 23 of 32 -- -- 24 of 32 -- -- 25 of 32 -- -- 26 of 32 -- -- 27 of 32 -- -- 28 of 32 -- -- 29 of 32 -- -- 30 of 32 -- -- 31 of 32 -- -- 32 of 32 --"
+      ],
+      "id": "doc-1789754361065-uzed",
+      "uploadedAt": "2026-09-18T17:59:21.065Z"
+    },
+    {
+      "filename": "English to Brahui Dictionary.pdf",
+      "title": "English to Brahui Dictionary",
+      "fileSize": 1987610,
+      "type": "dictionary",
+      "pageCount": 276,
+      "chunksCount": 50,
+      "sampleSummary": "This dictionary serves as a comprehensive lexicon documenting Brahui vocabulary through an English-to-Brahui translation framework, supplemented by a formal Romanization guide for Perso-Arabic scripts. While the primary focus is on lexical entries ranging from A to Z, the text functions as an academic resource that preserves the standard Brahui linguistic form through the collaborative editorial efforts of the Brahui Academy.",
+      "chunks": [
+        "ENGLISH-BRAHUI DICTIONARY -- 1 of 276 -- 1 Brahui Dictionary (English to Brahui) Albert Duncan Dixey Reviewed by: Dr. Hafeezullah Sarparra Brahui Academy (R) Pakistan, Quetta. -- 2 of 276 -- 2 (All Rights are reserved with Brahui Academy) Name of Book: Brahui Dictionary (English to Brahui) Author: Albert Duncan Dixey Review and additions: Dr. Hafeezullah Sarparra Supervised by: Dr. Salah ud Din Mengal Publisher: Brahui Academy (R) Pakistan, Quetta. Price: 600/- Year: 1921 1st Edition: 1995 2nd Edition: 2022 No. of Copies: 500 -- 3 of 276 -- 3 Content No. Content P. No 1. The English Brahui Dictionary Dr. Salah Uddin Mengal 04 2. English- Brahui Dictionary by Rev: A. DUNCAN DIXEY Dr. Abdul Rahman Brahui 07 3. Preface (1st Edition) Professor Aziz Mengal 09 4. Preface (2nd Edition) Dr. Hafeezullah Sarparra 11 5. Roman Transliteration of Perso-Arabic Letters 13 6. Lexicon (A-Z) 15-275 -- 4 of 276 -- 4 The English Brahui Dictionary It is our endeavor to preserve and promote the Brahui language, literature and Brahui cultural heritage, and popularize it to as many people as possible. Local people as well as non-locals have done valuable works on Brahui language. Among them, apart from Ge",
+        "rmans, Russians and Indians, British Orientalists also have a big contribution. However, the step-motherly treatment of the Brahui language by its own people is not a new thing, but it has been going on for the last Khans of Kalat. As this dictionary, by Duncan Dixey, was sent to Khan Kalat for publishing, after it was written, the Brahui Khan excused himself from printing and publishing it and returned it, saying that they had no money to print this precious work to preserve. Even after that, there have been repeated attempts by Balochistani politicians to eliminate this language under a certain deliberate plan. One such attempt was made by the NAP government in 1972. Not leaving a box for Brahui language in the 1998 census is another example of this kind. -- 5 of 276 -- 5 Thus Brahui has always been neglected by the politicians of Balochistan. It was not easy for the British to establish a foothold in the state of Kalat without learning the Brahui language, because in order to rule here, they had to learn the language so as to deal with its people. Hence the British Raj also fixed a scholarship for its scholars learning Brahui. In the early days when the Christian missionaries ca",
+        "me here to preach Christianity, the religious Brahuis Muslim tried to thwart their mission in their own way and chose their language as a medium to awaken the Brahui masses. Durkhani School was such an institute defending Islam directly and promoting Brahui indirectly. However, since the Brahui Academy has been established, the work of preserving the heritage of Brahui language and literature has built up. Due to Khan of Kalat's unwillingness to publish it, the dictionary was handed over to the British Museum for archiving, from where it was brought by Dr. Abdul Rahman Brahui and given to Brahui Academy for publishing. The dictionary was first published in 1995 by the Brahui Academy but at that time it was printed in the same script (common English script) as written by Duncan Dixey, so it was difficult -- 6 of 276 -- 6 for a non-Brahui, let alone a native Brahui to know the correct pronunciation of the words it contained. But before printing the second edition it was assigned to, Dr. Hafeezullah Sarparra to review the dictionary and rectify the mistakes of 1st edition, Dr. hafeezullah Sarparra, due to his linguistic friendliness for Brahui, has painstakingly composed it in phoneti",
+        "c Roman script as well as written Perso-Arabic (Nastalik) transliteration of the words in it, so as to pave the way for not only native Brahuis but also non-Brahui researchers and students to be benefited from it. Some revisions and additions have also been made to the dictionary, it is hoped that it will now be a useful work for the people having interest in Brahui language. Dr. M. Salah ud Din Mengal Chairman Brahui Academy (R) Pakistan, Quetta -- 7 of 276 -- 7 English- Brahui Dictionary By Rev: A. DUNCAN DIXEY Rev: DUNCAN Dixey was attached with Mission Hospital Quetta. Here he learnt Brahui and compiled an English to Brahui Dictionary in 1920. Next year in 1921 it was typed and in December 1923 a copy was gifted to British Museum London. One typed copy was in the library of Dr. R. Holland which he borrowed me and I myself typed three copies of it. After Independence 1947, a copy was sent to Government of Pakistan Karachi which was forwarded to N.W.F.P Frontier (Khyber Pakhtunkhwa) for publication but it was returned as Brahui language was not spoken there. Then it was sent to Government of Balochistan, which was forwarded to Khan of Kalat. However, Kalat Government showed its i",
+        "nability to publish it and the typed manuscript was returned. During my stay in Britain in 1979, I had the opportunity to go through it again, on my return to Pakistan I handed over a typed copy to Brahui Academy Quetta. Due to paucity of funds it remained unpublished until 1994. I wanted to add a note about the original typed manuscript but without my consultation it was published as in those days, I was in Makran. For the information of readers, I give some facts about the original typed manuscript, which is spread over on 110 pages. The page No’s 99 and 100 are blank, and other facts are below: -- 8 of 276 -- 8 Words in English pages Nos No. of words A 1-5 261 B 6-12 314 C 13-20 399 D 21-25 259 E 26-29 151 F 30-34 275 G 34-37 262 H 37-42 94 I 42-45 102 J 45-46 42 K 46-47 42 L 47-51 189 M 51-55 256 N 55-57 97 O 57-59 78 P 59-65 237 Q 65-66 15 R 66-71 230 S 71-84 595 T 84-90 286 U 90-92 68 V 92 15 W 93-98 238 X --- --- Y 98 26 Z 98 3 By publishing this dictionary, it is now saved for generations to come. It is useful for those who are interested in Brahui language and literature. Dr. Abdul Rahman Brahui -- 9 of 276 -- 9 Preface (First Edition) Dictionary plays an important role in",
+        " the introduction and promotion of a language. In 1906 Mr. Duncan Dixey, started the work of compiling a Dictionary in Brahui language, but somehow the author could not complete and publish it. However, in 1921 it was completed and handed over to the Indian office library in the form of a manuscript, where it remained dumped for more than a half century. Dr. Abdul Rahman Brahui during his stay in England visited the said library and after weeks of strenuous search was able to unearth the manuscript. In spite of his own personal engagements he had to work hard for days in order to get a typed copy of the manuscript. Dr. Abdul Rahman Brahui was kind enough to accede to my request and handed over a copy of the same for my personal record. Mr. Salah Uddin Mengal took over the charge of the Chairmanship of the Brahui Academy in 1994 and under his dynamic leadership the matter of printing of the books was given special consideration. Taking advantage of this opportunity, I decided to -- 10 of 276 -- 10 make publish the unpresented work of Mr. Duncan Dixey in the form of a valuable Dictionary. After almost 75 years of laying foundations of this excellent job, I have the honor to present t",
+        "his great pioneering work of Mr. Duncan Dixey, in the form of a Dictionary, through the Brahui Academy. I sincerely hope that this book would render a great service to the people interested to gain knowledge about Brahui language. Prof. Aziz Mengal November 10th 1994. -- 11 of 276 -- 11 Preface (Reviewed Edition) Brahui is the oldest and the only Dravidian language of Pakistan. Henry Pottinger was first who introduced this language and its grammar to the West by his Travelogue “Travels in Sindh and Balochistan” in 1816. After that many writers and linguists analyzed and wrote on Brahui. During British rule over Kalat many English officers learnt and wrote on Brahui language, Duncan Dixey was also one of them, who during his job learnt Brahui here and started writing a dictionary in 1906 and after 15 years he succeeded to complete his book, but could not publish it then. About a half century after its completion this book was discovered by the pioneer of Brahui research Dr. Abdul Rahman Brahui and he handed over this unique work to Brahui academy for publishing. Its first edition was published in 1995, reviewed by Professor Aziz Mengal. Dictionary plays a vital role in preserving th",
+        "e cultural heritage of a language, I feel myself lucky and honored to be assigned the review of this important work done a century ago on Brahui language by a Non-Brahui. I have made some important revisions and additions in this book and tried to rectify the mistakes made in 1st edition also added the transliteration of words to make it easy to understand and well spell the Brahui words. -- 12 of 276 -- 12 No doubt, this precious lexical work of Brahui in English has much importance in the literary history of Brahui language. This book contains a number of borrowed words from Arabic and Persian languages which are commonly used in Brahui language, in spite of this, the Dictionary also preserves plentiful words of Brahui origin, some of which are archaic in Brahui language now. I am much thankful to the Brahui Academy specially the Chairman Dr. Salah ud Din Mengal for assigning me the important job of the review of this book to serve my mother tongue. I hope that the new and revised edition of this Dictionary would be much charitable for the students, scholars and teachers of Brahui language and also for the non-speakers to learn the lexicon of Brahui language. Dr. Hafeezullah Sarp",
+        "arra 12th October 2022. -- 13 of 276 -- 13 Roman transliteration of Perso-Arabic letters. Brahui Transliteration Brahui Transliteration ےتمصم ( Consonants ) بbپp ت،طtٹṭ جjچç ح ، ہhخx دdڈḍ رrڑṛ ز،ذ،ض،ظzژż ص،سsشś غġفf ک،قkگg لl ڷ ɬ مmنn ںñوv, w -- 14 of 276 -- 14 اہہیئآوازںی ( Aspirated Voices ) ھبbhھپph ھتthھٹṭh ھجjhھچçh دھdhڈھḍh ھکkhھگgh وصمت ( Vowels ) آāءa اےēءi ایīءu اوō ا وū -- 15 of 276 -- English-Brahui Dictionary Duncan Dixey 15 English Transliteration Brahui A Abandonment Tark رَتک Abate maççiṭ manning چٹمننگم Abduct narrifing نَفنگ Abide tūling تول Ability liyākat ایلق Abject xwār وخار Abortion çūça tamming تمنگوُچہچ Abound bhāzīaṭ اھبزیاٹ About bābat aṭ, bāra aṭ ابتباٹ،ابرہاٹ Above buṛza, kaṭumāē نَزا،اکٹآئ Abreast gwar وگ ر Abroad pēśan نشیپ Abscess çuṭ چ Absent ġaēr hāzir ریغاحض Absorb posing وپش Abstain pārēz kanning/ اپرزی / رپزیہگننک Abundant kōṛ وکڑ -- 16 of 276 -- English-Brahui Dictionary Duncan Dixey 16 Abuse kirēng رکنی Abuse to kirēng tinning رکنیت Abuse (a term of) ġaṛdal (to dirty women & girls) ڑغ دل Accept manning, haō kanning مننگ ،وَہ گننک Accident ittifāk aṭ اتاقاٹ Accompany asija hining, awar hining,tud manning اہساج / اوار ہننگ د،ت مننگ Accomplish purā",
+        " kanning, xalās kanning وُپراگننک،الخسگننک Accurate huśār,barābar ہشاار،ربارب Accursed hiṭpiṭ, balazīr ہپ،ہلبزی Ache xaɬ خ ڷ Ache to xaɬ kanning خ ڷ کننگ Asidity gwarsoç وگ روسچ Acquaintance drustī-rāstī, wakifī دریتسرایتس Acrobat bāzīgar ابزیگ Across dāpār ēpār دااپر ااپیر Act amal مع Acting amal kanning معگننک -- 17 of 276 -- English-Brahui Dictionary Duncan Dixey 17 Active çālāk اچالک Actor amal karōk, adākār معرکوک، ادااکر Actual asal, aslī الص،الص Acute saxt خس Add to hisāb kanning اسحبگننک Addled sarband رسدنب Address ḍass, pata ڈس،تپ Address (Term by man to woman) xizm خَم Adjoin to awār lagging اوار لگ نگ Administer sevanj karōk ویسجنرکوک Admire sifat kanning تفصگننک Admit to dāxil kanning دالخکننگ Admonition pant نپ Adopted son dīn anā maɬ دنیانئ م ڷ Ador to sujda kanning جددہکننگس Adult bāliġ غلاب Adulterate ganda kanning دنگہگننک Adulterer syākār, zinākaār ایسہ اکر،زاناکر -- 18 of 276 -- English-Brahui Dictionary Duncan Dixey 18 Adultery syākārī, zinā ایسہاکری،زان Advance (of Money) takavī توی Advantage khaṭ, fāida ھٹکافدئہ، Adverse xilāf, muddaī الخف،دمع Advice pant, nasīhat,salā نپ،تحیصن،الصح Advise salā kanning الصحگننک Advocate wakil ویک Adzes tēśa شیت Affect to (for",
+        " ill) sīṛing سِ َ گن Afraid to be xulīng, xuling خلنِنگ/خلنگ After pad, pizzēr, guḍ د دپ،نَی،گ Afternoon pēśīm ِمپنِشی After pains padīkō xaɬɬāk دپوکی خ اڷ ک Afterward guḍ, guṛā ڑُگا گد، Again padāē, pēndwār دپائ،دنیپوار Again (Back) wā,guṛā, lōjār, pēndwār وا،ڑُگا،ودلا،ولاجر، دنیپوار Against xilāf, muddaī الخف،دمع -- 19 of 276 -- English-Brahui Dictionary Duncan Dixey 19 Age wahī, umarمُع ویہ، Agent gumāśta مااہتشگ Agree ṭahing, ittifāk kanning تہنگ،اافتقگننک Agree to upon ṭahing, ṭahēnging تہنِنگنگتہنگ/ Agreeable xwaś وخ ش Agreement ikrār, kaōl ا رق ار، وق ل Ahead kāṭum āē, mustī اکمٹآئ یمشی، Ail to (of children) til kanning تگننک Aim niśāna kanning اشنہنگننک،رظنہلنگ Air Tahō وہت Airs (to give oneself) tahō tinning وہتت Alarmed xulīng, hījing ِچنگہیخلنگ، Alas armān ارامن Albino pīnçul, pīnsul, pīnçō, pīçō چوو،پنِیل،پنِنشل،جپنِی ِ و پ Aleppo halab بلح Alike hamrang, barēbar مہرگن،رببی All kul, drust, ġuṭ, muç, giṛe, tīva ُک ،درتس، غ،م ، -- 20 of 276 -- English-Brahui Dictionary Duncan Dixey 20 گَہ،ویتہ All at once asīka tō ا سنِکہ وت All (within a little) burasēṭī س رُبئ ٹ All day drust dē, dē drust درتسد ے/دے درتس All night drust nan, nan drust درتسنن/نندرتس All around çārma kund",
+        ", çar pāra ġāē اچ رہمڈنُک، اچ راپرہ اغئ Ally pallav śarīk وّلپ رشکی Alleviate subak kanning ُسگننک Allow illing ال Allowance zōba, bhatta, tanxwā ھنہتزوہب، ، وخنتاہ Almond bādām ابدام Almost kam u vad مکوود Alms xaērāt ریخات Aloes sabar بص Alone tanyā اینت Aloud kūk, saxt anga tawār جنسوُکک، نگااوتار -- 21 of 276 -- English-Brahui Dictionary Duncan Dixey 21 Also ham مہ Altar (for sacrificial shrine saint) kaōś وکش Alter badal kanning دبلگننک Although aga ki اہگہک Altogether muçā ا م Alum piṭkī پ Always har waxt, miṛōīَ رہوتخ،م وئ Amazement haērānī ریحان Ambition saxtingā, himmatī جنسنگاا،تمہ Ambitious hubbī یحی Amble dugāma hining دواگہمہننگ Ambush to çāp xalling اچ پخلنگ Ambush ling in tukکُت Ambush place of tuk jahī کُت ہج Amid niām, niāmaṭī اینم، اینم ٹئ Ammunition tīr u dārū ریتودارو Ammunition (Taken on a tribal raid) masāla اسمل Amuse xwaś kanning وخشگننک -- 22 of 276 -- English-Brahui Dictionary Duncan Dixey 22 An asiṭ, as اس،ئ Anarchy fasād اسفد Ancestor muskī, muskōī, pīra مشکووئ،ریپہی،مشک Ancient waxtīā ویتخ And ō, wā, a او،وا،ء Angel malāik, firiśta المکئ،رِف ہتش Anger ġussa غصہ Angry to get xafā manning افخمننگ Angry to be xafa manning افخمننگ Angry to make xar kanning ",
+        "رَخ گننک Anguish bēkarārī ےب رق اری Animal sāhdār, gungdām اسدہار،گنگدام Aniseed Izbōtk ازوبت Ankle bēḍī/bhēḍī, xūṛt band ڈیب ی / ھنِددیتوُخ، ڑ ت دنب Ankle-rings pādēnk اپدکنی Anniversary (to celebrate Muhammad PBUH death) sāl tinning اسلت -- 23 of 276 -- English-Brahui Dictionary Duncan Dixey 23 Annoyed to be çiṛing, çiṛēngingِ ڑچ گن، َخ پِنگنگ Annual sālīā ا ِس اسل Anoint to pās kanning اپسکننگ Anointing pās اپس Another pēn, ēlō نیپ،الی Another time pēndwār دنیپوار Answer varandī/ javāb tinning وردنی/وجابت Ant mōrīnk ِ ومری Antimony surma رُسہم Antipathy aks کع Antipathetic aksi سکع Anxiety fikirَ ف Any harçi رہ ہچ Anyone kas as سکئ Ape bōllū و وبل Aperient julāb جاب Apologize māfi xwahing اعمیفوخانہ Apology māfī اعمیف Apostle rasūl روسل -- 24 of 276 -- English-Brahui Dictionary Duncan Dixey 24 Appeal fariād kanning رفایدگننک Appear pāś manning اپشمننگ Appearance nazar, vēs, śakal رظن،وسی،کش Apple sōf وسف Apply tixing, arz kanning, çharp kanning چنگ،رعضگننکت، رچ پکننگ Appoint mukarrar kanning رقم رکننگ Appraise (to corps) dāna bandī kanning داہندنبیگننک Appreciate kadar tinning/ kanning دق رت، دق رگننک Approach kēb kanning بیکگننک Approval manzūrī وظنمری Approve to kabul/ pasand/",
+        " manzūr kannng بق ل،دنسپگننک،وظنمر گننک Approved manzūr, pasand وظنمر،دنسپ Apricot zardalū زردول Apricot seed xasta اخہتس Aqueduct māzū امزو Arbitrate munsafī kanning یگننکمنصف -- 25 of 276 -- English-Brahui Dictionary Duncan Dixey 25 Arch mēhrāb رحم اب Archer tīr xalōkā ریتولخاک Argue bēhs kanning, kast kanning ثحب َکگننک کننگ، Argument behs ثحب Arise baś ب Arise to make baś kanning بگننک Arise baś ma شبہم Aristocratic raīs ریئ Arm (upper part) bāhur, çāllik, bānzul/ bānçulرُہ اب ، ّل، اچ ابزن ل / لجتاب Arm (whole) bāzū ابزو Armlet bāzū band ابزودنب Arms silāh ِس اح Armament hathyār bandī ایھتہردنبی Armor hathyār ایھتہر Armpit baġal لغب Army laśkar, faōj رکشل،وفج Armies many ṭip پ Around giṛd, çārma kunḍ َ گ د ، اچ ڈنُک رہم -- 26 of 276 -- English-Brahui Dictionary Duncan Dixey 26 Arrangement bandōbast دنبوسب Arrange to band u bast kanning دنبوسبگننک Arrest halling, halifing ہلنگ،ہلفنگ Arrive rasēnging, sar manning سنِنگنگ،رسمننگر Arrive to make rasēfing, sar kanning سنِفنگ،رسکننگر Arrogance takabbur َ ت Arrow tīr, sum ریِت ،س Artery raġ رغ Artillery tōp وتپ As dahun دنہ As many as handaxas دنہاخ As much as dāxas داخ As before must ānbār مشٹآن ابر Asafetida hing ہنگ Ascend sarbālā",
+        " رس ابال Ascertain tehkīk kanning قیقحت کننگ Ascetic paxīr َ جیِرت Ascites jalandar دنلجر -- 27 of 276 -- English-Brahui Dictionary Duncan Dixey 27 Ashamed śarminda, lajjī رشدنمہ،جل Ashamed to make xijālat kanning اجختلگننک Ashamed to be xijālat manning اجختلمننگ Ashes his سہ Aside to take tanyā kanning اینتگننک Ask harrifing ہَگنف Ask to for xwāhing وخاہنگ Asleep tungān تان Ass (wild) gor xar وگرخ Ass (domesticated) bīś ِ ب Assassinate xōn kanning وخنکننگ Assault julav kanning جوکننگ Assemble muç kanning مکننگ Assembly majlis, muççī یمچسلجم، Assessment jāç اج چ Assessor jāçōk, jāç halōk اج وچک،اجچولہک Assist to kumak kanning/ tinning, mux tafī kanning مکگننک/ت،مک تکننگ Assistance hamrā, madat, kumak مککرمہاہ،دمت، -- 28 of 276 -- English-Brahui Dictionary Duncan Dixey 28 Associate to with mux tafī kanning متگننک Asthma hub sāhī, dam kaśī ہاسیہ/دمشک Astonish haērān ریحان Astray gumrā kanning گمرَاہگننک Astray to go rad taming تمنگرد Astrology najūm وجنم Astrologer janūmī وجنم At last nēṭ, āxir ٹین،آخ Attach zabt kanning طبضگننک Attack a julav و ج Attack to julav kanning لج کننگ Attack (riding party) ḍung ڈگن Attend xaf tōning فخوتنن Attendant xizmat karōk ذخ تمرکوک Attention xiāl ka",
+        "nning ایخلگننک Auction līlām لنِلام Aunt tāta اتت Authority vassāt, muxtiār, ixtiār واّست، جننِاار،ایتخرم -- 29 of 276 -- English-Brahui Dictionary Duncan Dixey 29 Autumn suhēl ِ س Avail fāida arfing افدئہارفنگ،ریخگننک Avarice jūfa, hirs, lāliç وجہف،رِحص،الل Avoid pārhēz kanning اپرزیہکننگ Await çari, intizārī manning, nazar tōning اچری، ااظتنریمننگ ، رظنوتن Awake to be baś manning شبمننگ Awake to sar kanning رسگننک Awake (to keep) baēdari kanning دیباریگننک Awake to up (Trans) sar tinning رست Awake baēdār, samāī دیبار،امسئ Award fatwa tinning وتفہت Aware saī یئس Away murr, pēśan رُم،نشیپ Away from home (of flocks) vānḍi واڈنی Awhile maççi, jaṭṭas جہ،م ج Axe tafar (Russian tapuk, finish and Turkish tapur) رفت Axle ṭūmbav وٹبم -- 30 of 276 -- English-Brahui Dictionary Duncan Dixey 30 B Baby çūça, çunāنُچ وُچہچ، Back baj, pad, padī, xēr ب،تد، تدی،ریخ Back (again) va, valdā وا،ودلا Back (to take on ones back) bad kanning دبکننگ Back (to turn on ones back) baj tinning بت Backbite to paçār/çuġlī kanning ُچکننگ اچپرگننک، Backbiting paçār پار Backbone mux anā haḍ مانئ دہ Bad bad, ganda, xarāb دب،دنگہ،خاب Bag (to make a leather) kīt kanning کِکننگ Bag (of leather for flour) kīt ِ ک Bag (gr",
+        "ain) gwāla وگال Bag (small one) tūra تورہ Bag (clothes) buxça جہتچ Bag (small) lōt ولت Bag (of carpet work) ṭikkī ٹ -- 31 of 276 -- English-Brahui Dictionary Duncan Dixey 31 Bag (made of date palm leaves for dates) katil ک Bag (small one) piçk جکت Bag (for covering teats of animals) żāla ژال Bag (of sheep or goats skin) hīzak ہِ َک Bag (for ghee) zik زک Baggage sāmān اسامن Bail zāminنِم اض Bake to bising بشنگ Baked bissun ب Baker iraġ bisōk, nān wāī ارغبوک ،اننوائ Bald ḍāk ڈاک Bald-headed garrī َگی Ball gōlī وگیل Ball (of thread or string) giṛik گَ ک Ball (of sewing cotton) kutk ک Ball (of the eyes) ṭēla ہلیٹ Band (horsemen) ghōṛav وھگ ڑو -- 32 of 276 -- English-Brahui Dictionary Duncan Dixey 32 Bandage paṭṭī پ Banish kaśśing کشنگ Bank (stream) karrak, rahī, kandī د کَ ک،ریہ،ک ی Barber hajjām اجحم Bare liġiṛ, lūç, vakka لَ،لوچ، وک Bare to lūç kanning لوچکننگ Barefoot nat śapād تن اپشد Bark to ġwakking, vakingِک ِک،و وغ Bark a vakkāra و اّکرہ Bark (of walnut tree used for dye) muzwāk زُمواک Barley sā اس Barn jwāl وجال Barren (Women) sanṭ س Barter adlī badlī ادیلدبیل Base bēkār اکیبر Base born kōṭikī وکٹ Bashful śaram karōk, lajjī یلچرشمرکوک، Basket kaṭūr, ṭōkarī کور،وٹرکی -- 33 of 2",
+        "76 -- English-Brahui Dictionary Duncan Dixey 33 Bat śaōpirrik ش و ِپک Bat (wooden for washing cloths) paçōnk وچپن Bat (and ball games) ṭilli gwāzī ِٹابزی Batch (a small) kaṛd َ ک د Bathe to bēśōling ےبوشل Bathe to (ceremonial at burial) savāb kanning وثابکننگ Bathing ġusulسُغ Bathing (ceremonial of bridal couple) sarśōdī رَس وشدی Battle jang نج Battle-axe zin زن Bay-color kumīt ِ ک Bay-color (dark) muśkī یمشک Be manning مننگ Bead xwār وخار Bead (stone) purung رپ گن Beak sunṭ, ṭūmb س،توم -- 34 of 276 -- English-Brahui Dictionary Duncan Dixey 34 Beam tamba, tīrریِت تمنہ، Bean mung منگ Bear a riçh, mamma ا رھچ،م Bear to sagging سگنگ Bear the great (because like a charpai) khaṭ ک ھ ٹ Beardless kōsavوَس وک Beat to piṭṭing, xalling, ṭaping ت،خلنگ،ت Beautiful zēbā, luddan, xuśsūrat سزابی،لدن،وخ ص وورت Beauty zēbāī زابیئ Because ant aki اتنکئ Bacon to kaththī kaning, iśāra kanningَک گننک ، ااشرہکننگ Become manning مننگ Bed khaṭ ٹھک Bedding bērum, bistira ریبم،بَہ Bee śahd nā hīɬ دہشان یہ Beetle gūgaṛā گوڑگہ Before mōhn, must, muh مہن،مشٹ،ہم -- 35 of 276 -- English-Brahui Dictionary Duncan Dixey 35 Beg pinḍa د پ ہ Beggar pinḍōk, paxīr پدوک ، َجیِرت Begging to pinḍing د پ گن Beginning to sar",
+        "/śurū kanning رس / رشوع گننک Behind pad, pizzer, xēr دپ َ،ن ی ،ریخ Behind ones back padī, puśtشُپ دپی، Belch gārting اگرن Belief īmān اامین Believe to īmān tixing yā hataring, bāwar kanning چنگایرتہگن،تاامین ابورگننک Bell (esp. camels) śōśing وشش Bell çiṛing, çiṛīng خَ گن،خَنی Bellow buxing چنگت Belly-band mux taf, piḍkaś مفت،تدک Below kēraġ, śēf, kī(used in compunds) ریکغ،فیش،ک Belt (a cartridge) hamēl ِلہمن Benevolent saxī خس Bequeath wasīat kanning وتیصگننک -- 36 of 276 -- English-Brahui Dictionary Duncan Dixey 36 Bereavement ġamī مغ Beseech minnat kanning, minnat arfing مگننک،مارفنگ Beside rahī, mās ریہ،امس Best kul ān śar ُکآنرش Best-man śābāla اشابل Bet śart xalling رشطخلنگ Betroth sāng kanning, giring tinning اسگن گننک،رِگ گن ت Betrothed (Noun) sāngī اسگن Betrothal sang اسگن Beyond pār (with ē or dā) اپر(اےایداےکاسھت) Bhusa pug پ Biceps bask ابس Big bhallun نھلت Bilious ust haṛsēnging سنِنگنگاتسڑہ Bill hisāb اسحب Bin (earthen) for grain) kūnḍī, kabūlī, kohlīوُک ڈنی، کویل، وک یلہ Bind tafing ت -- 37 of 276 -- English-Brahui Dictionary Duncan Dixey 37 Bird çuk چ Birth wadī manning, mādarzātī امدرذایت،ودیمننگ Birth to give çuna xaning نُچ خننگ Bite to gaṭ halling, bā śāġing گہل",
+        "نگ،اباشغنگ Bite to (take out of) gānḍ kanning اگڈنگننک Bite of snake ḍang xalling ڈگنخلنگ Bite and a sip gaṭṭ u gulum مکننگگلگو Bitch minḍ د م Bitter xarēn, talx خنی،لت Bitterness xarēnī خینی Black maun مون Blackguard gaḍar ڈگ ر Blacksmith lōṛī ولڑی Bladder çurrōdān, āvxāna رُچودان،آواخہن Blade (of corn) xīt ِ خ Blade by blade tal tal لتلت Blame (Noun) dōba, tōhmat دوہب،مہت Blame to dōba xalling, دوہبخلنگ،مہت -- 38 of 276 -- English-Brahui Dictionary Duncan Dixey 38 tōhmat xalling خلنگ Blanket kēs, kambal سیک ، لبمک(اپکس) Blast a uff ا ف Bleach to pīhun kanning نگننکپیِہ Bleat gagallāra, ġarrāra الگگرہ،رغارہ Bleat to gagalling (of goats) گلگلنگ(رکبویںاک) Bleat to gāring (of sheep) اگرگن(ڑیھبوںاک) Bleed to (tnrs) ditar kaśśing کشنگد ِ رت Blessed mubārak ابُمرک Blessing barkat ربک Blind kōr وکر Blind to kōr kanning وکرگننک Blink pirring ِپگن Blister to pūtṛō tinning وُپڑتوت Blister to become pūtṛō halling وُپڑتوہلنگ Blister pūtṛō وُپڑتو Block to one’s way mōhn halling مہنہلنگ Blood ditar درت -- 39 of 276 -- English-Brahui Dictionary Duncan Dixey 39 Blood vessel raġ رغ Bloom phull لھت Blot dāġ داغ Blow to uff kanning ا فکننگ Blue nīlī یلین Blunder rad kanning ردگننک Blunt kunṭ ک Boar ",
+        "hūkam, sūar وُسر ہومک، Board taxta ہتخت Boast to lāf xalling, jak xalling الفخلنگ،کج خلنگ (ااقمحہنابنیترکان) Boat bēṛī ڑیبی Body jān, but, jind, tēn د تُب،ج اجن، ،نیت Bog mēn نیم Boil çuṭṭ چ Boil to make to lār tinning, paɬɬēfing, kaṛhing پلنِفنگ،الرت، ڑک نھ Bokhara plum ālūbuxāra آولاخُبرہ Boldness bahādur, dilāwar, sattī اہبدر،دالور،یتس -- 40 of 276 -- English-Brahui Dictionary Duncan Dixey 40 Bondman mē ےم Bondwoman çhōkarī وھچ رکی Bone haḍ د ہ Bonfire jamjalāī, maç جلائ،مجم Book kitāb اتکب Bore to (hole in) ṭung kanning نگننک Border sīm, dang, had میس،دگن،دح Border (or edge of mantle) pallav و پ Born duvī د و ی Born to be wadī manning ودیمننگ Borrow wām halling وامہلنگ Bosom baġal لغب Both hartōmāk, tōmā, tōmaġā, tōmakā رہ اوتامک،وتام،وتما،وتم Bother to ghaṭ kanning, kaṭum haṛsing ٹھگ گننک،اکمٹہَش Bottle dung دگن Bottom kēraġ, mās, punḍū ریکغ،امس،پدو Bought to be xarīd manning خدیمننگ Bound tafōk وفتک -- 41 of 276 -- English-Brahui Dictionary Duncan Dixey 41 Boundary sīm, dang, had میس،دگن،دح Bow (and arrow) bil ō sum لِب وس Bow (quiver) bil ō jāba لِب واجہب Bow to down xūkkingوُخِک Bowl (spout) kūnza, razān وُکزنہ،رزان Bowl (for milking) gōzī وگزی Bowl (wooden) sark رَسک Bowma",
+        "n tīrandāz, kamāngirرِگ ریِت ادناز،امکن Box sundūx دنسوخ Boy mār امر Bracelet (beads) dastūnk دسون Bracelet (silver or ivory) bāīnkِ س ابئ Brackish sōr وسر Brain milīِم Branch śānk, śāx اش ن،اشخ Brand to dāġ tinning داغت Brass birinjرِب جن Brave to be satt kanning سکننگ -- 42 of 276 -- English-Brahui Dictionary Duncan Dixey 42 Bravo śābāś اشابش Bravery bahādurī, satt اہبدری،تس Brave nar mazār, bahādur, sattī, maṛd رن زمار، اہبدر،یتس،ڑمد Bray sarring رسگن Bread iraġ ارغ Bread (dough cooked round on hot-stone) kurnū و رُکت Bread (baked in heated sand) śit س Bread (a broken piece) tirīt رِتی Bread (baked in embers) śūnza (use also of scrap of bread) شوزنہ Bread (offered as alms) ṭikkī ٹ Break to kiśking, pirġing, کشکنگ، ِپغنگ Break (out in boils) hūrr kanning ہورکننگ Break (of dawn, fall of darkness) taming تمنگ Break (out of disease) taming تمنگ Break (of cloths) harringing رہپگنگ -- 43 of 276 -- English-Brahui Dictionary Duncan Dixey 43 Breakfast swāra وسارہ Breast xad, gwar دخ،وگر Breasts (having) xadī دَخی Breath sāh, dam اسہ،دم Breathe to sah halling, dam kaśśing کشنگاسہہلنگ،دم Breached (to be) ṭung manning نمننگ Breeches śalwār ولشار Bribe a vaḍḍī, ruśwat وڈی،روشت Brick xiśt خ B",
+        "rick make xiśt xalōk خولخک Bricks to make xiśt xalling تشخخلنگ Bridal-food mālista (bread with sugar and ghee made for groom two days before marriage) لشنہام Bridal-procession jannَج Bride barāmī ربام Bride-prize labb بل Bridegroom sālum (called ghnewṭ/badshah اسل ،وھگٹ،ابداشہ -- 44 of 276 -- English-Brahui Dictionary Duncan Dixey 44 on marriage day) Brides maids jānī اجن Bridge laġām اغلم Bridle (to a camel) mahār śaġing اہمراشغنگ Brigand rāhzan رازہن Bright rōk روک Brim (of cup) karrak کَک Brine bēdīr, sōrdīr ےبانئدی،وسردی Bring to hating, hataring, hatiring ہننگ،ہَ گن،ہَ گن Bring to forth hīning, çunā xaning نُچ خننگ ہنِننگ، Bring to up sāting, sānbhing ھنگپیاسن،اس Bring on one’s self kaṭum uṭī kuning اکٹٹئکننگ Board firāx, patan رِفاخ،تپ Broadcast kil, çāṛ ُک ،چاڑ Broadcast to sow kil kanning ُککننگ Broken to be piṭṭing ت Broken (of language) surut رُس ت Brook jō وج -- 45 of 276 -- English-Brahui Dictionary Duncan Dixey 45 Broom rōfa روہف Broth bēdīr ےبدی Brothel çakla حکلہ Brother īlum, (used in vocative) addā م(ارتحاماکدناہیئ)اداپِلا Brother in law xāspar اخپس Brought up sar رس Brow burwānk رُبوان Brown bōr وبر Bruise to kuṭṭa kanning, pirifing کنہکننگ، ِپ فنگ Bruise a pirōk ",
+        "ِپوک Bruised kuṭṭa کنہ Bruch to xaṛkaṛa kanning خَ خَہکننگ Bubble gōrav وگرو Buch guṭṭa غنہ Bucket dōl ڈول Buffalo mēhī یمیِہ Bug manguṛَ م Build tafing, jōṛ kanning ت،وجڑگننک -- 46 of 276 -- English-Brahui Dictionary Duncan Dixey 46 Builder jōṛ karōk وجڑرکوک Bull karīgar, xarās اکررگی،خاس Bullet sum س Bullet pouch tīrdān ریِت دان Bundle putunk ئ Bung to up buj kanning بگننک Bunged up buj ب Bunnia baxxāl اخبل Burden bārēm, baḍ ابرمی،ڈب Burgle to pirġing ِپغنگ Burial janāza انجزہ Burn huśing ہشنگ Burrow xut چ Burrow to xuting خننگ Burst traxing رتخ Bury kaḍ kanning, kabr kanning, gōr kanning ڈھک گننک،ربق/ وگرگننک Bury to (as children in certain tombs) romī kanning رومگننک Bush būṭav و وُبت -- 47 of 276 -- English-Brahui Dictionary Duncan Dixey 47 Bustard çaṛz ڑچز Busy ghaṭ, maśġūl ٹھگ ،وغشمل But magar, wale, lēkin رگم،وےل،کیل Button (wooden in nose of camel) lānṭhī الیھٹن Butcher kasāb اصقب Butter xassīیّسخ Butter milk lāusī, xasun, mas,ُس الویس،امس،اخ Butter to make xassi kanning یّسخ کشنگ Buttocks gillik, puśtwān گلک،پوان Button sadaf دصف Buy bahāṭ halling اہب ٹہلنگ By xuṛk, rahīā, māsā خَک،ریہ آ،امسآ By all means nā nak kanā xank اننانککنخ(احمورہ) By accident radīkā ردکی By mista",
+        "ke radīkā ردکی Buzz żūnging ژوپگنگ -- 48 of 276 -- English-Brahui Dictionary Duncan Dixey 48 C Cabbage gōbī وگیب Cackle kakaring رَ گنکک Cage pīnjira رَہچپنِی Cake (of dough cooked round on hot-stone) kurnū و رُکت Cake (a small round) ṭikkī ٹ Calamity musībat, balā تبیصم،لب Calf roṛ, gōsāla روڑ،وگاسل Calf (un weaned) purrāp رُپ اپ Calf (leg of) pinnī پ Calico çhinṭ ھنٹج Call tawār kanning, baṭinging پننگنگوتارکننگ، Call (out for) marrām kanning, çīhānṭ xalling ّرمامگننک،حیِہااٹن خلنگ Call (the Azan) bāng tinning ابگنت Calm çuppپُچ Calomel pāra nā kuśta کشنہاپرہان Calve to hīning ہنِننگ -- 49 of 276 -- English-Brahui Dictionary Duncan Dixey 49 Camel huç چہ Camel (Bactrian) pēsirak پَِِک Camel (male) lōk ولک Camel (female) ḍaçī ڈاچ Camel (calf) hirr َ ہ Camel (2 year old) çatr َ چ Camel (3 years old) tryāñṛ رِتایڑن Camel (riding) jammāz, mahārī جاز،اہم ری (herd) Camel bag گب Camel (smooth haired) lērī ریلی Came-man huççī یہچ Camel-driver julūs لجس Camel(a piece of leather used for divination) mazaṭ زم ٹ Camel (neck-lace) kanḍī ڈنکی Camel-saddle pākōṛa/pākṛō اپوکڑہ ،اپوکڑو Camel (hair) kās اکس Camp urā kanning, vatāx kanning ا راگننک،واتخگننک -- 50 of 276 -- English-Brahui Dictionary ",
+        "Duncan Dixey 50 Camping-ground hankēn, watāx ِن،واتخہنکن Canal ḍōr ڈور Cancer xarpuṭ خپ Cane bāns ابسن Cannon tōp وتپ Canter çār nāla اچرانل Cape ṭōp وٹپ Cape (of gun) ṭōpī وٹپ Capable lāix الخئ Capacity tuwān, was وتان،وس Captive kaēzī َ ِ ق ی Caravan kāfila اقفلہ Cardamoms pōṭā وپاٹ Care sanbhāl, xayāldārī اھبنسل،ایخدلاری Careful sanbhāl karōk, xayāl اھبنسلرکوک،ایخل توک Careless bēsamā ےبامس،اغف Carelessness bēsamāī ےبامسئ،لفغ Caretaker (of grain tappodār, وپٹدار،اکروا -- 51 of 276 -- English-Brahui Dictionary Duncan Dixey 51 in Kachhi only) karawā Carpenter drākāñṛ درااکڑن Carpet kōnṭ, ġālī وکٹن،اغیل Carpet (rough of goats hair) garrak گک Carrot gazzir گر Carry (away) danning دن Cart gāḍī اگڈی Cartridge kārtūs اکروتس Cash naġdī ندی Case to biṭing ت Case lots to tīr biṭing/ śāġing/ tinning ریِت ت/ اشغنگ/ت Caste xōm وخم Castrate xassī kanning یّسخ کننگ Castrated goat xassīā matِ حشنسن اام Castle kōṭ وکٹ Cat piśśī پ Cataract (disease) mōtī pānī ومیتاپن Catarrh pūśār وُپاشر -- 52 of 276 -- English-Brahui Dictionary Duncan Dixey 52 Catch to halling ہلنگ Catch fire to xāxar lagging/ halling اخخلگنگ/ہلنگ Catechise to sawāl ō jawāb kanning وسالووجابگننک Cattle māl امل Cattle (pen or she",
+        "d) gēḍ, geṛ ڈیگ،یگ Caul burxa رُبہخ Cauldron (small) Leonda lōhī ول یہ Cause sawab وس ب Cautery dāġ داغ Caution xabardārī, saīdārī ربخداری،یئسداری Cavalry rasāla راسل Cave ġār, bhāḍ, kōḍ اغر،اھب ڈ،وکڈ Caw to kāġing اکغنگ Cement to gaç kanning چکننگگ Cement gaç چگ Census mardum śumārī رمدمامشری Centre niām اینم Century sadī دصی -- 53 of 276 -- English-Brahui Dictionary Duncan Dixey 53 Ceremony rasm رمس Certain yaxīn ِنِجنت Certificate sanad د س Chafe gussēfing گشنِفنگ Chain zamzīr ززمی Chain (for shutting door) kaṛī ڑکی Chair kuṛsī ڑُکیس Chamber kōṭhṛī وکڑھٹی Chance ittifāk اافتق Change to badlēfing لنِفنگدب Change badal دبل Channel (rainy water) gwazz وگ ز Channel (open) rōdīna رونی Channel (underground) kārēz اکرزی Chap to traxxing رتخ Char to pōġ kanning وپغکننگ Charcoal pōġ وپغ Charge to tōhmat tixing چنگتمہت -- 54 of 276 -- English-Brahui Dictionary Duncan Dixey 54 Charity saxāwat, xērāt اخسوت،ریخات Charm to hudda kanning ہدہکننگ Charm jādū, hudda, tāvīt, tāvīz اجدو،ہدہ،اتوی،اتوزی Chasm kaḍ, ġōḍ ڈک،غوڈ Chaste pāk dāman اپکدانم Chat to hīt kanning, gap xalling تیہگننک،پگخلنگ Chatter to hab hab kanning بہبہگننک Cheap aṛzān اڑزان Cheat rēfing, ṭaggi kanning, gwāzī tinning رتِ،یگٹگ",
+        "ننک، وگازیت Cheating luççī, rēfing ی،لچ ِ رت Cheek kalak لک Cheese panēr رینپ Cheese (to make cheese from buttermilk) xar xurūd خخود Cherish to xwandī kanning وخدنیگننک Cherishing xwandī وخدنی Chest ḍōbar, sīna ڈورب،نیس Chew to xasāling اسخل -- 55 of 276 -- English-Brahui Dictionary Duncan Dixey 55 Chicken pox trīnzuk رِتزنیک Chief sardār رسدار Chikor kakkav و ککو Child çunā, çūça نُچ،وچہچ Child (of tender years) bahiśtī یتشہب Children alwād اولاد Child birth çunā nā xaɬ نُچ ان خ ڷ Chill to laṛzing ڑلزگن Chill pūśār وُپاشر Chin kāḍī, zanū اکڈی، وزت China çīn یچ Chirp çir çir kanning خَخَ گننک Choice to leave open giçēn illing ِنالجنگ Choke to trujjing نَ خ Choked up sarband رسدنب Cholera ḍākī, wabā ڈاک،واب Choose to bining, giçēn kanning ِنکننگجنگت، Chop off guḍḍing گدگن -- 56 of 276 -- English-Brahui Dictionary Duncan Dixey 56 Chop kutr kanning کَ کننگ Chosen giçēn marōk ِنرموکجنگ Christian masīhī, īsāī یحیسم،اسیعئ Church kalīsā, girjāgir اسیلک،رِگاج Churn to poring وپرگن Circle çakkarرّکچ Circumcise to sunnat kanning سکننگ Circumcision çal burrī, sunnatī یسنیلچ رُب ی، Circumspection samā امس Circuitous valval ولول City śār, اشر Civilized xwanōk, xwaninda وخاونک،وخاپدہ Claim dāwā ",
+        "دوعی Clan ṭakkarّکٹ Clap çāp xalling اچپخلنگ Clasp baġal kaśī kanning لغبشکگننک Clay śūrr شور Clean to safā kanning افصگننک -- 57 of 276 -- English-Brahui Dictionary Duncan Dixey 57 Clean to (hair) maśing مشنگ Clean safā, sāf افص،اصف Clear safā, sāf افص،اصف Clerk munśī یمنش Clever huśār ہشاار Climate āb u hawā آبووہا Clime lagging لگنگ Cling licking چنگل Clock ghaṛī ڑھگی Clod of earth ḍōk, pōḍ ڈوک،وپڈ Cloke to bāl kanning ابلگننک،مشٹگننک Close to keep aḍ اڈ Close near xuṛk خَک Cloth gud, puç گد،ب Cloth a coarse cotton kōra وکرہ Cloth for keeping bread biśēnk بشنِنک Clothe to bērifing ریبفنگ Clothes made pōśāk, kōkurرُک وپاشک،وک -- 58 of 276 -- English-Brahui Dictionary Duncan Dixey 58 Cloud jhammar, kōkir جھمرَ، ِک وک Clove lavang لوگن Coal pōġ وپغ Coal mine khāñṛ اھک ڑن Coarse sāda اسدہ Coast karrak رکک Coat small śaluki یلکاش Coat long felt zōṛ زوڑ Cobble to ganḍing ڈنگ گن Cobbler mōçī ومچ Cock bāngō ابگن Cock crow bāng ابگن Cohabit aning ان Coiled to round val tinning ولت Coiled in a circle ṭikkī ٹ Coitus of animals hāling اہل Cold pudēn تدنی Cold pudī تدی Cold in head pūśār, sarōsk, lāmpūś وُپاشر،رسوس ، الوپمش -- 59 of 276 -- English-Brahui Dictionary Duncan Dixey 59 Collect mu",
+        "ç kanning/ manning مگننک،ممننگ Collection muççī یمچ Color rang رگن Colt kurra رُک ہ Colt a yeanling lavanḍ/ lahunḍ لوڈن / دلہند Column tamba تمنہ Comb to xaṛ xaṛa kanning خَ خَہگننک Comb iris, sarand ارس،رسدن Combined awār kanning اوارگننک Come to banning, baring ت، رَب گن Come to out pēś taming تمنگشیپ Come back again bēr kanning ریبکننگ Come to opportunely karēm banning اکرمیت Comfort to tasallī kanning, dilāsa kanning یلستگننک،دالہسگننک Comfortable āsūda آوسدہ Command to hukum tinning مکحت Commandment hukum کح Commence śurū kanning رشوعکننگ -- 60 of 276 -- English-Brahui Dictionary Duncan Dixey 60 Commerce saudā girī وسدارِگی Common ām, las اعم،ل Companion sangat, ambal لمنتگنس،ا Company tud د ت Company to go in with tud manning تدمننگ Compare to bēṭ tinning ٹیبت Compass any quarter or point kibla قنلہ Compassion to have tars kanning رتسکننگ Compel lāçār kanning, tang kanning الاچرگننک،گنتگننک Compensation iwzāna غواضہن Complain faryād kanning, gila tinning رفایدگننک،گلہت Complain to backbite çuġli kanning ُچکننگ Complaint śikāyat, faryād, gila اکشی،رفاید،ہلگ Complete barābar, pūrā ربارب،وُپرا Comprehend puh kanning, sarpand kanning تہہ کننگ،رسدنپگننک Compulsion zōr āwarī زورآور"
+      ],
+      "id": "doc-1789754220190-bpzc",
+      "uploadedAt": "2026-09-18T17:57:00.190Z"
+    },
+    {
+      "filename": "Brahui Qaida.pdf",
+      "title": "Brahui Qaida",
+      "fileSize": 2353403,
+      "type": "dictionary",
+      "pageCount": 1,
+      "chunksCount": 50,
+      "sampleSummary": "The *Brahui Qaida* serves as a foundational pedagogical primer, outlining the basic structure of the Brahui alphabet, phonetic vowel-consonant combinations, and essential syllable-building rules. It organizes vocabulary into thematic clusters suitable for early learners, while emphasizing standardized orthography to preserve the language's distinct linguistic heritage across its varied dialects.",
+      "chunks": [
+        "%PDF-1.4 % 5 0 obj << /Type /XObject /Subtype /Image /Name /Im0 /Width 3496 /Height 4960 /DecodeParms << /K -1 /Columns 3496 >> /BitsPerComponent 1 /ColorSpace /DeviceGray /Filter /CCITTFaxDecode /Length 4 0 R >> stream @X> xj? Z }; ? iQn J 4 B\"&a K a . 6 G@ t! 8 A w t B P P . - (} R- 5 h GCQ . WT \" AR KXP E # 9 E Q 8 m\" AU V G h!- A K DuHh/AZ / Z A > 5 ; E nQ@ k # E ` ! ) @ I !X -j ` k W Kn 5A P h5N uW 0 s \" v P nV $ m . ! %c 0H> $p [q e S G DD- ! A: ~ @ CM z P ? P a N T ڪ E # qt p . l { X j C _ G\\n: 4 YU [mua i :TP i h 4 h H[X el & ZH9 oC A \" j kp gc mz[ 4 u ?PT =mi m KI # [W +imn dt Z - V K 4 k N # # d [e P M # : E ! e . U * @ %v,or:O h5 W mt k P UB $ i: A \" K}:l/ <3 } p R g > ] C V: H C m @ v\\6 xV CW Q J K > G^ ZW A T q 2 $4 X\": : U Dt K a W u Z n k ڰ IS n Av v] ! t G kT* R 6 u V a4 I T E J :h]*D T :(} ڤP * m iZO 7 +I^ C 0 ۯui M J or TF ta Dt KL H u \" F iR 6 M Rp K t K s $ 'M zA-a z GX ~ % x~ ]y أZ GV W _ k A % e I' k Z C t . 5T (~ t YC C *Uo * 0E t }; J u R m$ t Wk^ 4 ; -5 J J t ' n { e : o v/ ' *gjKW# GV ^ -u K (u # I M+ *n * E j ~ h%{ ] 5^ _]V j V w GGj % kU v #[z T i N & C ce ^#Zt PA HI N T] wN 2: B t N a q 2:. ! v H # ( Y V wZ / A2 J W d g 9 @ n b > R R 5 . G g + # d ] j M",
+        "> # \" *V V % A e> 5L # ihDL 0 8 (zWXU# B {B N { R6 Iڪ xiQ6 # d R \" z $ $GHa5 $ k I ;E } j V J + n t [V R:Z Ai> @ C & # 4 n C# E ! C R OJ:I 5PE: Z :@ q^& o=~ aj+B {]' * n u t ^ dt (t [ xi Z R up +ihCx g B \" Zj ; \" {) 9Va r UU P P = + I \" k [ j ~ ^ |%i4 @ EUzm6 j B zI(A p {@ [UJ J] = @ XR: ,!T # in j kv A'i Q (wKA P p Y M a $At T Xmt 6 [2Q $ !] Te SN [2BQ -p Dt q \\5X@ V !UI fB (T $ ~ u ٗ ! '2 _I WI 0 w ~ ؒik A;I iJ #J zumaR k b # z P I + M` M(i P ؄ GL a 4Ai4 *V & A a(\\2:'B 0 [ *U xm Bw > C V Z *J # ' m H 0e# ! A& {A : :j qd ) RDt ^ N Yt 5U P NA 2 n , # G k p Hx M : 8 8 KE XI i8 i Adt N i f U kL t p M {/d-F i$ ]/ 4 $ D O Z# V : R x~ F J i+I' du aRK * q[ yڋ I h i& =6m uM4 H\\ Z]i O BT ]; ml%U :z 5 T U Q v 8N W AW }> RAimm-:(v C % vh QJ -4 R j : : B .GNa& r: . ? t # G % Y w dtGLoA=Z~ P q Au# % e 2[A*V V IA t U \" 'g l: @ & 1J M ~ h J j J M 2 m@< 2 A- m < 5 P i& ` pXih- z B b 5 J C @ p@ q :# V#I z t@ P j h*b : GJ [i. ] i\\tGY mX0Q P J E t A # o J a 1y C Kp h& . M dtHDpX e kK C# > tGA Rl 4 Z \"* V & t : 3 I: PJ 0 4 \" M t-& A. z# i]l*J { iY p C d K x Ht / !ml! V a0 L V I$ hS # _J-,2 8A 8 P ,q BMSASH &GZ (r pD}{ ` $ 5 C GGa J K ' ) M M'h- UJ T S! AiC < eoHPGuDu V)- 8J Z Uh$ $P ZX x D8 ! J 5A+j)",
+        " {kP \" T # M V L* X , a i+ O ] 5AU 4# j V 'A ;T * T Pd4 M$ (~ %d G 4 . ike 6 U * T ? Rn t ;Q Y :T ADB({W n T C * a :IU B(t (,SH=$ E \\ A4 % Tٻt u $ TT mGz WT 8[ @ + S V V. E W T I( D u < I I$ * Z (wY i \" $ T J MU GM9 $ V ,UF 0 A = h xCC HW H _I; C uPhB K ! l N ,t! M . GOP@ J 5 (t ?a -3 P XIB n t \" ; AB 0 l $/H2 S H* x` P fo P ` WC(t* Q C xAD> 4 ! (t TG E tGI 6 d ! \" f (u $ Z A9 i1 h [ 8P V] G * [V#Wa a Dt N RY \" ؊B f S N K@ b , V B(r c !. 6 R V)& A N! 6 I( h # J % ]P Ai gi Z oI :H -P UUa b!e ^ \" QTES|t 4 e # F \" 8 3j T! 0 C t+ 5 : HA :# \\+ \" H KP $ \" Y]I D$ C ,Xm [h \" - \" %\"S D P Z HE XBy\" v[ - XZhZQ0 H : B{- D ^ G# T\"& R vGQ @ X X V o \" B t } @ 0 B ' 8 Q > N I A E m E P h4GB qDt@ B\"& GE t!L\": 8e T& ;: :8 @ > DDN# 1 4 B h*d i xDM GB(# P Z ! E P a8 D lDN t' A Bh aP @ N !eY^U 9H( % I H B ! B A # K # . % q T (v 9C F $ D(J g Dtw P RK :d ,,% \":; f h DP m$ $P :. # T$ ) C RP TC $J ! $1 25H P #hDB(| C d5 4! :H m E ZF @ * 8 @ 8! ` e: DK GUP (r )xH & EB . D Ej' . l BGG tB#hD P Dm A \"q V! h t B\"T$P f $T E BI 6 . dt!j B ] B!!* 8 i N B D > H . * c b\"\") [@ !$+ D T A : H PJ 0 ! B t} Q Z+ ] 6, )wF tS Xf K $ - B(t$t%: 3R6 P +z P DL E 4 B j T$t P & < \" (T10 H V* 4\"J # :i! + A(I kB% Bq HB Lp & t$ 2 - ",
+        "$tqU Hr ] Bq a ) # DR S k P ; %) Ba a q\" a x uI B\"m .& f !# 0 N# # xi A[ D a B! ! & A t O 8 I\" p f [ P ( H b !6 I . K <69NS R . !B\"\" F m t9ta B \"HG tj@ t < p DS.i& \"\" B f ! i A <0 j k \" tkE H s SqQ + 8\" f \"q Q DU @ 4 T # # \" N! \" E $.GBh B\"- Z \"] B] A **hD P < < !Z C Dh R. p `! hP(HN ! :P \" F Du \" 9ؚ h ! rQ B\" # V P \" Z ل (t\" B! 8APDt E B 6 4, HfD + +! = z P tA r $d 4 QI t)0I !M 0 a tv \" p e XY P h u E k# ] P ` l D<$ C (t h \" $ ]F mfB t 6% dh (& ' 8PDz#D 8U 2 8&( @ J , Q # : P : @ \": \" : $4 : B! t BA . d$ xe X C :2 N : #du I ` M & $ P up x4 *A$ @ (z H0 (xE pduX ;[AA uBHr . g b3 I : W \"$V~I . eC 7X G@ X@ / g``x $ W C; UPT m /d ] }$- GEe T 4 D A;HC. f 8*Aj :. H 2 E=, 2>] A :H e DE PZL J p Q $ < ^ h j p AB2U@ B : (p A2 -5 ) E )u (r A2 @ Q P u A 9 ( G uH1FC D ) p (z $ H < % C @ A oH p I < UQa p A 7 t ! # X Ur R 8 B) \" xk w ( \" r K C CXr * p D2 l2 uA (a 8Ij A A z 9 h $!%I ]Y 3 e \" ! !% \" &<E D GW S E $ $9G0 Ra G hP H A GA GJ X 6 Q ) (q 0P P .KO PD ' A^T XMQ0 R P` D )k & A ) GBW$I0Dt 2 \\ E & % n IY f E j bW[@ HE 0 (t t] ]B# q * d oZ (u < w lL!:#ja > ` 8 ( j C P F[ n) 0 (tR j d t 1 I : T Z}0 O \": UQ j O 0I> J $ $ C { Pz (r ' 8 A & @ ; H<(i 8 j # 5N0 b h5A\" T ZH2 )N T@ ] e M GT < \" A R <6 ",
+        "8LB YA@ R.) # h\" (r A ! 1 ' p<4 42 x9 ! 9 z : \": \"' bWSA v6 8vsqF @ GF I A (p i 0 W~ tD $ e I GR 8 v,! ( & xH% 7 ; :OJ t Y i I # =% 0 duT=7X:P t P $ duX 1 ! v a GTC / B /N P # ! geh!t( `<36 ^v (\" y B( r 2N L |\" t @ / : w I y Dt Z> H $ A =n @ .; ADA o A SuM J zr c r BAuD3G m P BO 0 } % # Rk i-V P t Qf( iB p U n $ ڈp h $ xJ U^ A2K ]BF ] (tU O H A [ ba -> *A ( ' ) CK I C A : } B&h!^ ( A B\" o` V (t [ I4 A : B* @ X j]\" > B)-! # T C l 9 9tx : D E!P@ X 8 A $tf (u ] $!` (B : a $t] GO- BK 2;# >] A ;P \": DX @ !B [ E R T H* KK N T & QV@ $ 8 [B U q T b% @ E R :l # e 4 . V 4@ S R TI a C ' \":X M ^ Dt ,\" c 8' R A ]5 t A 4 ( .C 5 1Am& MQC & ! [ # > P Q n8F wA6 ABA B @& x d2 RH t\"u 2 \\xe aB E I 8@ 3 - 2 : cQ T (u G\\' Pa Vq U Q U # a' 2 ) Ic# e i (tGA 8 J uC n B& >! A Y9V vGA' 0B 2:m i A r 8B! r *P t $GL ` X7C O @ Cdt]\" UI v ! Z 3u; $ YRtK > & t GOp (z F jJ A C I 'Ge X a A # kl/f B$t+ DT[ P (p Z d, I+ I B F A - \"\"\" ?H Y G E: Z H P 0 A \"]% = % $F L*# [ B\"$b ! 48 u{L C D` h FK # ( B\"& ( [i ,# GF 4 ) A \" 4$ \"#h Q C w P v ' # 0] :h ( %w [ V Nٖ,* A A * 0 zb A )$L} 8e Q A !a% T a Z i m jv @ : (r i* x rښs( (kR |Rn 2 [HXMla,Z N B S\" h\" ;0 ) B N m ) Rj - : GH a5 W } F # a : C t A (~ p a Wm Z , - ! f` MXW !L ",
+        "? 4 ;. n F t E hC# B u` = Jr 0 2 m \" P D 8} j u[e ۴ m ^ $! ] # z m n- i n # $ _ A h6 [ # 8l A= i 6H D A B\"G^ - V. \" K t ao q ] x`v c J \\\": kaF۰ (} j ^ T$ M O 5 h:D6 (} U b [Zr \"?]/ H r h P 0 Z G ]CE ب@ 2 k S > - A (c(}: 7 C ! %ـ/] A \" I,'KD ) Ha #t (y _c P M - G a +# 1zv. *J iDF K G EHJK N R A 6wV t \\1# /HZ Gd A # <aktw4 v,,8P \":# 8j G z G ) z +G| +(t D+t h^ P 4a (t . C(} b H& ^ & + 8 . 8b)'J 8~ j Du H s z h$ Qb @ VC elUC SL (}~1&hB XI A m h ! $ # :# < T n ؈+! :K F t ) P X\" J h ! Xu a N؈I A %a h$GHB h4 ) I Dt[ \" ]b A Z i @ A \" Dt$B!h @ # tm C P $ z i $\"a PA B $ &) M I T lC %( F C j $ j G \"f $ # J , ; F M H q : V- < +fa\" A :D( l0 8R (\" ! D U 6 HPD0? !# J@ %A X e $Ba E \" 8\": H(\" ! A e C J\" eU # B TP $ U +T*e B B% P Du A a % Da HDa ! GE \" E 8 H$ E Bm PH : h d i } C q $(D ! 8Z l+ ' H :3By : 8ID I% y S E \"&h D *Ch(A! A q E |!GT] E K u D# E! S * U P # h ARE T K @ H A [dt_# @m tR x # $ 8d M$ Du * a \" C J & (xC ! A$ I ` gp ($ 8\\C APT eA %24` . 4 \\[. G : #% @ U E Q Z. H p N4 x, R F A Q l B Q . $ 24 A% DuI +DsC % Jd\\ ! AR2 A A 4I.P tdB# bI <5 BFSA A Beh L 0 \" A 8B4 GiH # C H 0 ( @< %A r٬ A4 $$3G U T A A ! :K { B (u@ H O P # B(,B h q C T 3 H , PE` j a T J H% x] 8@ \":* e S 0 @ ( )<DDR ! $ $ B ",
+        "P (t 3 D6 GQayL$AP B A x I4 B 2 r C % 2: C \\ ! 8 $$ l i 9R! P $ Q ! l 2 ! PG b \" K Y A A B m BA * $ )l A# 4 ! AD Du j# I $ \" Q Gb t- % ) gcz 9N C B . A PE E DQ .!Hj U D % h) J p\\ 0V ( S t]U(Z @ c \" AT)% a4 ! 9D 9 :h* - [jH( Y\\ ' ! ! Z * HR B ! d f D o H2 * ! D (uH (r C J HC i \" % Ce ! \\ B C (z d C B DK[T H ! $ E XBp64 # P dP H \" + a j / Dt- (t $ j ! dpmD3 ;dU # \" p M 2 @ E@ ,pP@ t ( ` # i 0 f ]D! E C - u P R ! 0Gc D H tYL L # #mB! !` cL 9 DE # l 09M Y A \"B \\b9k ( -u w b N xYm,\" 21 2 7 p 9f +c Rq. Qz , Y Yl$O [ ` BGR e F 6 ! <ye FE 0 ,! J6 C SL. N)l %, U h ; B]KaIb# P a b % !J$tq,D ym N ۚ< Z Yg*R B E Dn[tD kEM% :(BAP M m DE 4q$G\\ ! #E W e5 R < \"V * J ` oMl< , J e R Z \" ) Ye*C ye Gc *tq t; + D ' th @ -hDJ 8B R$ F ,HhGtYD m D-SL B' R M TD :6 # i A , !0 (( BGC| 4T A UI ږr q g)XR7 ۊR * . A m % B & W\\&\"GU h w : m [ R _ K n zX W A W |*uvچ * 7v xK A E % xI_ C } ? ' \" u kv ij W[ A : v6W T p # + n Uڽ k c J W +[ 1a: C U { Qi l ة B Q ] }8 a: t L-E7 e Z X u L\" ]i Z ~ (Yl)& 6 PDu n; ^ i D _W Z XU Q] ]Ij \" }R ڴ \\ k u -i \";v l M V 0 6 Ci] C[}D . uT\"]v ~ d M A <q G e ihn H , 4 (}' NP U ^ kw d(T \\n } GT |HR Y Ie ) ur $ o ATS E-t . b#WT \" $+ X [@KoX W 7 ^ _ t OI$ Mz } t E Z ~ a=ۆ J }7 P\" e { {WkZ S V",
+        "4 t ) : U[~ o C Z ({o ] _T : z { 8 ? YC UJ _ i v l ' zq] }] _ W S u M j i> ]f m Q(}{ KU t 7 a Z \" V I= %ڠ } IU% & n t KH28 $ H J: 0 zh_ %A} 8k GKV QC ^ - kJZ Mx ~ u ~ . y\\ { H ' p \" ?KI k n 'Z L- *# $ i 1 In 7 > 0i N { V * J : ^ 6 ~ P [T [ 9. % }$ $ j {J i% (E A ]= 5 O E: + z(wU ^ 5 O _ ]h. P /:M_ ]\": ]\" i[ckTP O ?I [ o w [{ $ C }%K ~ 8_j C OU _ (J w 4 /A w_ } kW P Z# J {Dua t U # z(}' > h% l28 + ڪ O j) : O}5KH'otP R n?U_ t iS } W 9C I!OOp M_ # } ?A i H GK # D}z $ Iu E? J) Dt U\\w P P |w W & z y (w] dq > i% . 3 : hw w ]b t 8V . M8 4 -Q K 4 v J o Io V\"P ! ? % u \\wZ I E 9o > p [ G B p U ?] _ 2( i . P 2 T n5Bq W c # F9C Q +M t 2 Du G h F ]1 > \" } ; (}o 4 B G Zx N # i GM^ k } G Q X \" . ~ } ] :K / kj zZ w # I t- ~ ]W VB c W_{ J W RI 6; u z P Y Dt /qMw} /V\\uX V V iW_ v ( b E E~ تR G X > KxAn: ):R T > G/N S $ i[ , w ?N Z\" t UN ;mTt Q v t څz ~4D [ q uN V ] T/ H R F C m } C : N 1Q Y ?j n # r %iXdr !^<9 ^ C r F xV G ?I JM B D l $ ; T GDt ! t4 L G i6 L>0 B o +j 4,\" P = z i 2 $ C ! a^ \" R ] \" v G ]&-W # 5 f z J U )%i[N D q A m u U L > SB m {muMxV I2;v K V CWo C J8 F$ ] v pD}A 8Z J *I ) a 8/ ڠ 0 J : U Zh u ` t: _X@ kD47Y \" . B b H? z $ E GV QC. ( h @ (P T!$ ] ! I [ T W OX T' Ua, wh0 c []5K [ W, ",
+        "u U vD x : l 2 & 8 & K 6 ;J J UO k m {ua G a) Bw H p Zm V - zr -e a [B ILP| q Dtv 1 S %- AH y (@ B ! - G\\ R h c GTva j | mR v! j >G ez udt ( 0 8 < 5 n& Z R M<2 ۞ a zb # Pi bc 2 Z \"1 e P p , ( 0 4 } * ]m \" t U B $ M ) Dq0 I XU dugc H` T6 'B ;ou M C n I lg |GOMh A [ N u ] (M Z :m t ] . R h Mi J dt - \\v۰ oym . pt p n ({ /T C ~ J P I9l }4 a J =CDtQv } b GI E :0 r 0 \"\" i= ]0 wN 8 . 7 @ B S (~ f (pp n B4 x3 .G@ Z MPt, HCH4 A gpf GA & ]% H Q 4 TF4 ( ڴ fh# @ C qj V ! B( & & : 8 ]Q T u R:u@ C` Mb # dtG[ a h%h[A ]? mR @ C0 = ; 5` & ! d| H N t$ + $A : $ Dt E # @ f & ' Tv;# h] :c# m J \" VG j Z E 0BA\\p I\" \"E ha2: + \":r i I 7j1t ]!! 9 J) $! p j q h2 I [QE GA MiN r٢l\" & A P A gs C1 :# : ;L $! 2:&H 'tHPCIS# >G & P !i H 1 Y y c CM Rq E (q M \"! ! \" i . B Khs# Z * ( :# {# R X 8m + \" \" \"\" 8Dt ! N ! eI B! , Z H s# D2A ) J ! HU !! $P ! r -, + q P J Z AHd 6۾) $!$ I $,!i T r 9[@Hl @j . S \" n :# 2 9Nq DDG , N ! E !J# x/ vE @ Z @ ` E 08! ۃJ M + ! Q m 4 ! WZ 2 , P B ! \"J : P g Q :6 $ T ( Ic x+ M Z lj xi l$* 8 u \" 7a$ E t G B) E CI L ( l P A w) eaPV (P Tm `V! m @k# B (u L)C U M$! 9 U I; , B4 C 2 'K \" M d d !! :i A : B 0J P *%h u Z ) Q B 8)m X\" Dt)! T) P GX d Q 6 h B G $ p e $ j 0Dt ADl h 6 B ( @ yt \" C au R A",
+        " 8! \"< F i )XA6@ R G Dtv # @ xQ B1A @ 2 Dp<3 P V@ pP P ( { oe6B QE 0b Q CA W D A@ g8 Sd : n B #Z0 DDt B i! # (p z H`pB X I$ A \\ $ Aw eM B& GL 8I T B !D .@ )D ! A Y p *w! 9Wa D6 w(s B- $ 9 R ; ^ DD T wt # b A Ip E- @ r ! W G ) B0 {+ G 4 v 8 tV A * z# n @ t % k :{ \\ (M- / S = KukE & $=0 1 k G # \": n - # } z PSjd t R p[ C ُ zt o i & k V i + % [ u W{Z U] o Z x W uk t In Z} IK b j u M j I_ v i I v ;Q U t l t [h'w [ P 4 ^8 Mn *U kI I& j n [ M 5 7 E t J Z k 4 P \" v 6P Ew R 8 ]p \" ; & A m o ) g ) $ C] l Z $ # x@ G v m uـon + Z~B H n O N A N K Zk I$ B t i< } I J G E N P $ (6 w S @ v r: 28 GO T C k B6 j ] { : I \":E a V C :J ! ) % ujGUi ? 4 8\" MUT_ GL4 W /uH'A : m[ [ X^ 4 IKIW =Z p R m[& U<5 E ZD ] p I E F u N t N oV I ۢ [m E o[ XIt }m; UO [ {^ $ I= ; ]h _ ~ o $P m'U :~ ] /IP# T M V ]^ k * Z(t ۪M (m }Zi_I P kC_ + t ~ R ^ # zb r: 7UN ۫ O u }> ^ OU n (w wE k ؗZwhv wH ] K p # QS T m t } I$ 6 uV # ] $ }m. P n % ^ o \\N u j z W n ~ۭ I i 7K u - t V m*N ] F J R _[ N Iz[ U m I% o T a7 P :UM_ - V kk } ^ uk # ۻP m I uL: ] _{ %_w } iwi Ium i [ # M _ k W _ k k % M * wj C C M } cJ 6 %K, n p ZA- # P . K ' _ K A Oiu J i I ] P - Q n z (t - ?[ ;T ^ ڰ i [ o[ O T ں i. _[ w kUw {I [ MUu = * O O[ ] j j i T ^ ZW_ +",
+        " U t }zT ?K_I u + P ^ wI i BM5v : B W ZE R~ } kmZ}: \" }ڪ ot # { h -'w & FUڼ7U # Z +]=?[ H am+UM x^ n [ 8I= l5j k[in (}{i: m{\\ C Z# Zo X > U N (@ 'v im N ڵZ ] Z okI$G]w O { uT (}{o]V Z k C a> UoMRF l66 R uJ n \" Y\\5 = m = ?T l\" 'h =.! ;wۄ Z RM + C P t QC I $ E; C 4V ZE t @ ; zu) (z@ z(| /cQq !Zm C P M i$P 44 C k & \" ) F b & K v & A = * t .\" $t # O# ' Dt] j6 # ^SCK I D BGE B C x ) E YM(A V \"a @ 2 h h\"8 ! : D NP 6 6 Ba h\" A A t] h\" JM Q # # A4 SJ CV B (u|B O!# P @ 0 n & C \" g J10 4 BG X! P 7 D$ YN 8 (x SBI 9V %# ( :2 y A J G@ fhCx < t8 N\" C q DH [$$ ! > Dt;FB t]$]$ B ` C \" fZ 0 S A @ H H . & b_lD Q. I L SB lDZI! H RE RT \" E tyDt I 8 D \"dB6 . 0V p ^ (bN Eh&= B} Bv: (v tGB 18 +t HF \" > AZ &G s 4v \" Ut l j S 7 UuF v) [a O w *n 3 S V t J (}q8 pX IC h P me44 uI xQ S c A V !# P 0 )M ! ~P F \" [ڈA P ` : Dt n Jh 6 S ] # V \\:(u C (s xQc mZC (v q t a =$P ۽-VۦG- $ # [ U ;I2 : KK y I m6A [u m P [m U t m [{ -SI : w } J a n 8 'x 1 i j. # E t Q# t Z g R:N r:6 E< \"\" 7 \" db ظ We # DGBGE K B% B\"6 (v \"% [lr: :# t R P UI ( G^ MHD kQ# 8 h ! % E _ @ 6 ] tq i T ! O :+ b ] B E v1a yv M U Cp ! UW } A (uR1RkhzZ \" G: 'l^+ \" H $ h\" {5! }hD\" 0@ {Db D w N P ][ _ (t& ;C F' # Y V 8 &( `} 0 c D # T\" Y 0 , Wt l{ [ +M' h",
+        " u~ \" $G\\ y A :Q { P ( Q C 45 x M f !H # ) q^ (zw kt W hj d yH J \\ J!6 Ui7 H ! D v . ;O U , $ (v P RP ( % | F h]6 - E ) \\\" \"7 qU-p4 D1 U HJ * $[ 6 M N M # 4E Q F).Y J RE 2 Bz $ b C yXBY #V \" iP A 5]% j [ F t t u P : : w A v tB[ !# \", v nT C F t B wE - Z2B $[ , $ D6 % D EU T t s XV \\ B 4mV @ DD ( N $ B$tP B)$m$a B1: : B& $taK` N[ E;H - 4Q: \":mD 6 $ n b #! DN! (BtG 6: N ! E H H D ! R M A :8 y 8\"?Gf N [ F %U P@ & C ! \"y( ! 8 % B} P #!T41 ! \"X 'fi 2 F 1$$ j! 0 C h AF' B y6N M P 0 P C-p$/ B j B S B f B k DtM \" \" D TI P t 2 D B J D 7.R^ - Q E 2 Q L Q # IDi & V 2 4 \"n & AA \" & . .gj j R BJM %H j B&k H B@ I $] I $؄ ؉]\"6 Gfh CKEi J r D t C@ D \" z A ڤ h G ] E: J iN ? A2 t ; 4$I D + \" AC e S B u * # A qI. EBe H !+ R;tGD F \\H D \" # o !e- 0BGA t# CD N B] T O$ DR\" : < H K $ CEy \"! *\"& N!e # HG J 4 ;B3B ) RB BjB&h HD @ t% L N A e B um W Bm B]2 \"J L# . L\": B K J R B&hDDA 0 # h + C # Z L\":$ N# < # D E b$t$t A A 1 @ DH 0 -) FZ A < t\"\"] B H@ QhI HO $ F vB+ ;YF Zt! E#,I X B E 6 + ! O, *!. B [b2 BGE Gx Ge l . (t * D F F 3Em L @ R(D \" ) DPA # , Q ' m ) D bv !S GA tFAhi : H Tq E B, 0 I L Hl \"GB\" B,RF ؂ W 0 $t$\"4E GeH # h % B U L @ V \" E A D ! h 14 e5M B D\"HK - (z \":l d_# . I Gx Q: : a !H` D DDD Qe7 A 8FT",
+        "@ $ . ' Go 'aH 2,C XF - I * E B N D F@h DN! L I t&BH P $Bٓ !b E ; $ P F D v O!0 D 8 Dt\" ] A Ga K <K T! (y B# $ \": . G \" DJZ Hh R!hMH ! S !S\" 2 H 8 \"a I! e, V 0 HhO X GB] R YGu! A M ' . : ! E \" B%\". \"B:!H E R. q @ 4 $ t\" n\" * # # \" Kt ) Q EB0 ! !. b Z SW A # ! H 4HI $h !2P ] | !> ڽ D B T B] K 0 \") @ B] B 0 N G @ h !< ;0 K h H D t\"q (P $t] , +dD . #hDL!# ;P HE ] L *K H : & m2 ) Cgz h \"& E B r ! q t $&J DH 6 + DDD A F O P EB @ D $& @ t) DtM ] $'T\"y D - @ E E D j # 6 B\"GE \" DM Y @ T N!8 I K H !Ra B\"8hP 4B[ R $tD B) Dt] $tm H :H hD ) F u BGF 'kh G t\"\"UQ (~\" B$t ejS. T Q @ D - - tEQ E w A <Re 8!# 'BW E WKC B D!; m Bh 'B G w \" By IP QZH 3C D 2 ' oZ %( D D r > # B P @ S L m BW T Db ! M BM12 A % ] %m b\"&hH @ ED # @ N Q %Z(V : . . S+ X M D) \" F \"a H H ! % hH DH xR D FZ!0 \" D QC W & B]$ B\"] y Gih 6 ! % : . ! . BH : P ' I&S 9Be + B\"\"\"#T M DJ B B pB] 2 b\" C D $\"] D B ] F B% \" z B$t GGbha BGM 4& ) ET) tq nV D ! 0 q Dt$t X \" $ ! T 0Ba B] # q B< 0 @ EH . \" D F ! I ] B} R( E V . D C P \" H DM . tCF ؗ@ $ EI B n& $ D eZ` e LN! D M t, 2 ! iF }%HM > !H h $Q @ $ G2;. $U Q& h k A P ! !s* R !uI$ . %dU&$ C 0 \":. m r ( &h HS. 8 1 DIu P k @ $1$\":. ! a ! t' FTT D ! * H . F R X :h) ` B' \" B H M 0E $ K r@ 0L ( +",
+        "P 1 4B [; BhY(Bf ! H ]2:Hb% \\ *BEL & 5 A (t E K dt& E @ K Lb ] hDD BGD > % \"q A P ]U @ = b $t 8R 0Q A ) ل\"' E \" @ 'M ] B u \"y Dk ' H2 ) ! \"h C 8Bf D * q ?A\" =v ! #; . O\"B > PGb f h $!0 2 P BFAH / M! . *HB(t $ :$$ 0 8B t8 H t\"\"* . 1 Fh 0 L \"\"\" \" $ 9M (qka& I t\" S eA[ U @! b1'J l ; ( > @ F % GB Io8M G \\ST I 6& . \"J m $ ! Mm Hd E E | ! :# @ D I B P 2: E{ Y BP . E C : t] t$4yBM) = 8 H hB R (\\0 I E 7 * DD B]Pt < ! U f q <4 \" eZa ! ] - I A$ q IYC v J jd T w @ F T z \":8 5dtI TR # :RZ F i1 GR v :T # 6 A = GCP # # f G B\"\"M A . J@ EF hZ L C h ! O PP v E P @ \\$ :e$ % _ (p ( AlDhR0 Z A kE ; f. * tm2 * t C i, @ pH X$ \" C I t GH (\" ڈ i\" t p ] m4D\"14 : DF LA h FI 6 S ~ t] A M$#` : AN b aS \"$t $@ A B] B . > A \": @ 7| t,DS ! t R:$a-z !H ( A ]hE{ ` t B A =p I E [T*) Qmv A M U p g \" [M$ %# 2 C % 4 OB ^ Jt D S t I A 8UD C o q ? P 0 * ) (j Uk XE i 8! N E . zA*K M2 ziR Z a 8H ;, A4 / 1e KAPi $ # \\R{ I q A <\" DuI? e \" $ B l zu * -, j RgRDt j I i !Pu GKm$ J C Wi 2 N : u - v mB \" A\" ]& UU ( Bj ^ 'P -(p A T BO Fhb # C\\r GM+m E%H U@ F hBUH& U D $ . h4 C,r uuJ A w \" t d U W *l9 I] P A C 4 , !d S (p B -R # } O EI a H( AOh0B ab 4 % 8I e Y k q ^\" 0V 0 J iC/ D| (z M &m O H 'A+ye W\\DD0I V H . 'T P }k \" o $ M<SA ; ",
+        "yhZ Mj %j AG|* M% & $ $ W!H QS\\7I [ V U Q } m Dp Ii Hm A ;U T ABJd % & P u & I+ $:t 8I : _ = I-* * 8 p i* L% H ; T IR s M4!j i$GT A ] :(uh P {n T } ! HV |\": * - Y\":~ Rf WA P C PI PUP A0 A^)$ Dut t P M $ J5 BMuT & 4 4 S m% > \" E(j J $ L B N P m (p A%# X ! r J C a % @ # z P $ : H 0 Q%$ V 6 'ز %|0 7aP8U B+ A' AB $ M6 Z oq $ AB E L $ T U [Z A@ P j C : I qzT ^\" QO )' ^w) % P . \"\"Wt I 4 B kaR E vd 8Z 2,W ` Dt D$ T Ci #-W M; v l\\ $! p L\" N E P $ HR & u, %L( 4 hB ] GQ \" S]-0H u PA ] C A D KH0 }B J 0 P ^ F M K V ' kMzOdt!j i v Ij C Dt Dt \" / A ]W U HBM gi 4$ A C T SH OZt 0 T \" C Q CAt $ ]$ S 4 \" \\F + &I E SZ Sv ( )au (t}PZ ZAS ` ! Wm%ai(Ie I I i5 ( L U;^ Y $ M` XC Ia (p (}UU AQ S 5T a $ A : 6 UI 4 ; i + Hl w Q p Xa v_# p ( 2i t $ & P0I , i+2 Dp$ m5 G !6 4 TP ` I p : ; \" oI+ 9C m: ( t tl2 $ % 2 m : & \" L-DB** IZ a l- GA ? : P $ W E * GDt'` ! P T ; P 0 \" U$5X%iSa T * ku؆GGd ڂ(y J . 0 S a ? P9@e A: ( * Q B (~ MRIB @ O A e%: @ ڵ# h 1 B# eX! K` \" V ) ihDP V z @ ( KN > ) ` I6j@ : v $ I p<# J h\" hdO# > \" # 8 TDE vP Gd WMDY L K :# u# \" Q du e ! \" B j U= BN T 4 # \":# \" kP U S aRdpV# a A \" A ~ * Dt A2 U# T}h, 28 G 7 >, @ BJ N C B D GK ia$ ! P w M & =& QE % I 5 @ ( V \" I J / vf ]a 8FU( A I w \\B2 E # \"",
+        "1 PkQM iA ka\" v 8H X- IA*R & $ 2 : # + *pIl 8C ڄ 2 N NGUT P\" (t> Tr P 9 a E C \\a . V i7 N R ! Dt2 8Y \" A : H - T Q 2: A # ڤ )PDt 4 B Y N ;U ! :W BdtN 2' & $ ,& + P \"C $4 (vGN L%i$ U` u S @ P i AU I [L&) BA I J t ;4Ah [ 3kKImi=.G@ R P @ & ?M j # l 9 &, HIPJ $ Z#@ Ia R:[ P BL Bm B i t B AU : A H * W C R. * (t K D0T \" , +B v KZ ] ] hG A! E 4 m ({TGT e AC !Pd A &CXC U O @ 1 7P A+ R H& \\DDPB\" , JI $ QT C V 2 ; a :A G e J \\ DtA `Q r & ` % h 4, t - TQ I Q ;V A: Hdt ;0)tG ; * GB $ ] % r *R AN G E @ 0 # R: ! 4 } \" ! A O Dt] | D| G# P d # ^ a )( IC 2:. ] kQ w@ H (q $#h R ,0P , I : B$Q ; EoI J dt K ]b #D_C# # A5i ) U ( (q 'h T ! $ : i$ AI5I I& ، @ : ۤ B ' *A ! i= H Ca5i L\" X 9 8 A @ $ Z# Z t\"\"\"4 ` ؠ7 0 ` % WA] S ) 8E 4 R(t AR +H-0 4 Z A]& BCa0 D( 4 Bk (t T DYXM 4 . AF Q a6 *# \\ ( P d3 I M% W . # A A E Q 2:j 4 (P # ( a s/X * Z] 5 8I Dm B\"GY}!xT N 3D Q 2: B GJ \": C \" & $; # : hP MR $ : \"\" T] $ j Ge` 8(H M W \":He R [@ i(C ! 9VP -V p j h$+ # ABI $ B B t T A$ 0 V A p ( T h6 $ 0M0A & P GDudA r < $ 0 09XSڄv #. V \"4 (\" q M=RQ d vj # D v u V ' Aj % ' d1 v \" V D0B ! \": 4\\ zJ4 Z h H a X < I Pa+ 7 e: ! D4 A <$ & 8L l\" Du : C : * c](b2 (p 6 # A d B `j4 \" {\" UL5 6 i, C \\ F m H$P + Yt\"\"# 4 v F t e8A )4 % P ",
+        "!m R& Z N1t2 P UA 9 I AXpC R # A m W& ' t h H5!$ : t d, T ` V 9 8 W \" ؠA DDZ# ڡ N j M 5li_ l) <: Dt! Cxa ! n 4 :E IA Ast ! J 8% B2 a PLZ# ~ \"? * RAZ J ] A 0 @ ! j? P v P Z m Xx9 h n m8A 68 u xj endstream endobj 4 0 obj 30284 endobj 6 0 obj << /XObject << /Im0 5 0 R >> /ProcSet [ /PDF /ImageB ] >> endobj 7 0 obj << /Length 48 >> stream q 419.520 0 0 595.200 0.000 0.000 cm /Im0 Do Q endstream endobj 8 0 obj << /Type /Page /Parent 1 0 R /Rotate 0 /Resources 6 0 R /MediaBox [ 0.000 0.000 419.520 595.200 ] /CropBox [ 0.000 0.000 419.520 595.200 ] /Contents [ 7 0 R ] >> endobj 10 0 obj << /Type /XObject /Subtype /Image /Name /Im0 /Width 3496 /Height 4960 /DecodeParms << /K -1 /Columns 3496 >> /BitsPerComponent 1 /ColorSpace /DeviceGray /Filter /CCITTFaxDecode /Length 9 0 R >> stream [E*? K > RDu # 4MG L )L D 2 N y 'Q4I I y I u) T # ! hڈ u) 0 h 0 a $t G gD d A M : t Q0 :$ MhD ! C) y FS D ! N$ :: 0 \"kIJ` h m $u hM D . 0 a 8 N @ b\"\"CB' MQ Bf 'D !2 *e 0@ H # . m !8 $ ! jS: !8 E t1 D & B L\"B 0 @ ( \"$ . ! R F De2. H F D S$#D& N\" E B]Jf a D ! & b\"m @ D . ( By D 2 A ] Du) D' D SS@ d \" BGF B D R KF \"aR 6 t\"y Q6 bN Mb ! mJkT\"aDe5 @ Q. ! : M! D % !H . \"9M Q6 ( 1 4yD & h % u : @ b2 & mDD| DHڔ Z. \"f ",
+        "j F +F O! ) J N\" DO\" SD @ bF! M )Q L# M DGB} D ! M, . $\" ! L)`t] Fh !# \" A 6 h \"#, Q L, % 1 -Q, )L,! L !5( P ` C A mDJ ) 4_ 3Q B0 S L# S D . \"\"2 %E: G FhD C 4E ) d\"10 % DD h B' \"V H &hO\" JaZ $ 1 hD ! DS L)LT C 6 4\" b \"jA % O\" t C) !. JS @ D Q 9 ! : #40@ & S> R N#j' % mJ` %Q 1 ! q Q DmJd\" e R uFh \" H , JS B& B& nd ` :! e. ) f \"'Ba d 5 @ De0 !\" [d D ( 4F D FS hO! & )L X b& M ) $jBU :- )4 Eq%) Dm F nd @ ` F \" - ! C) G 6 q `) BtQ\"H KB0@ I5) % R 5) h 0 K e DDJ h YA D U l.T M$ , i F b$ 0 !0 u-3 D NP - K hD $t% M \" Za T . D F\"& T#D\"\" 6 Kl Bm B%uD1 D z6 [jH 0 t\"J \\ ! B> & F ' F B% \" 0 A l$ D D\" D $'z#E-: t \" B% e GahL( QD t] b \"2 #i @ A ] ( Qt\"\"M D4% #-: E\" D\"% # ) K f # m b1 @ N T B- \\ ڪ B\"2 *R> ta J )Ez !, D < Kt \"'Tv4 F BjFh % J 'DB Z h y U } B\"\"\"&18 D B E $DM BN 0 \"F!: N ! #hI Z M # < !8 L (E 4\"a @ B\"a \"$tf Ze & $] h !8 $ T\"m H ! D b] a BGC N % . ZB\"18 * !\" b* H * B} : 5 , N O A $ f % \"% @ B' n 0 ! \"$I & !. 6 #hDK @ G `tC@ B@ F \"\"\" F M H . h < !He l @ A D \"\"m # D 4] %H Bm t$taKL\"-14 ' & i B\" BGB \"GQ(BG@ N! Zu a P K \"$ G Fj% Q % @ e B t' !. PtEP Gz! @ \"YT h 2 & B$t$ 6 Mm : 8 % D\"T! 4&h !\"h \" i A hN! D D h B\"L!# M BGD] D$\"Q ! \"HE C+B b ' B'c 8 R . B BGB$u < DN ! Z N B& . ! T 0 !$)Lr DH J",
+        " \"\"' A ] t] L Bh tHD K \"$ Q G B B\"y ) Ze DMH E & L j% Dm DD B2 \":HF d GG` X!'E DH 0 H Bw4] tv]Ja M b'bhe0B& h Bq h - D$t& ! By b ' B1 l, J )L'BL!8 P C-4 @ D F E! DbGI h ( z#hHhFZe A i i YV d BvMKMI -1$N 0 v P P V \"'D1;ZG C T Z j BM C-1 DN : eKE B1, M 6 Z` 1 TK(\"- < Zd B] 7 P@ KB ) &(S ] i @ \"Y C) t\"GQ BaH E i E h(Fh $1# & HL#D1- Ab N!6 a Dt\"D hD ! Z> ` n a4% #j\"' A t$B. `b-B & \"& . $ ) HN \" \"\"q . D Z hA # ( ! d0 #! Ba$] : . !$\"\"F\"l E! bP !& h !# A ! ! D U T# Zb DDbS% Y Q # b$ U L B\"' -A$v E C : a L# f @ue hDH B% !# B \"# : ! &hJ 0 6 < ! B B% @ua \" e0& DO\" D = B, ) 0D D F ' m Fj$tA DDbCB N D Q @ O\" C # : . M B H . !3C : \"$ DDO . N) D] B! \" CHD ! y $ta tGDt}DN#h ! E! @ \"a A $t C : ! h !# :& h \" h # \"$ % B\" 1 I B N! % Z N\" L\" 2 kBF\" 5BvT H (B DI G B\"1 J ) 4Z DF Q- hG hM B# :V H tmH z 0 (E C \";KB tG@ E DD R BGB} \"P \"v h HD Qh Bf D H ! ]D @ Y\\T % K@ . ! . 1 J N e0. @ + # 4HD] @ HjS hO\" R A \"hH d Bm :$ BKQ qDL tvP hD ! : B <N D du $ : . HD F A @ B$ : @ FZe( @ B\"'khJ O 6 :4E F DL\" > R 6 BGR M : K 'F hDb t # B q ' #R a ! H DK 4D\" N!4R L d! # D] A & d: @ B'd # ْ ;*B F B#Z$! % @j . v Ez E C-0D\"GB\"' P N R H )L*\"t) !3F _Tq Ba vV U ! Q; A $t\"] b ] Bq GcHDI N( ) BGDt\"\"] ! u-b \"' 6 ] B\"WTB @E3R ]d",
+        " hA th IP nB; DDK FZ \"[ > *Z (DD M% ! l J n K 4% !; GcHe0 !< e R tM Qt$ M B&P DD Z:! B& ] qD\"f M . tP A !& \" HL B] 2P H ; a a ! L- \">GE: & H D K + DD !/ tq 6)F R i . @ Kt h & h B'u# 'eH )hD . ! 6 D 2 M #-RhDI M Q BGE HN % ta 4 M R j B\"] h 0 D ! LL Gf *. ( F E:q 4\"& B D \":& D # a D !# tq \"\"\"v Ze DDHDZP +D4a R BvX :2 Db\"] u q $' Bd Bm ! @ e T BvX z ttR B ZD b . ! 5-0$ 7 \"a B1 @ (D \"M Q ږ R; B d,) YM ` & A 73E I \"! $u , ! DI j +(D I jZ @ BM ! D a 7 \": u y Db& 4B ) . \"M #5A @ F e ) t\"8! (Dt\"[ $ MD R & h , hB # } ! I 10 Ku U i ]D D A e+) B FY \"n:$#hD R $M T A )j BWYFAhD & H R R@ Y Dv 3QH 6 N D !0 F A U T \"\"\"\"a A # Eqtd& D e4 L H ;$E b f R \"2 YE \" %R B\"\"v :& h DL\" $ R tGB uE- @ O % \"' $Rل' Ba GDJ u4$ F \"M 2 pT] HjZb v] \"$b ! N K r * U B( B] D4\"CE Bf I4M P ; oR) D4\"dT nB \" s DDDF& q F E B' m U h \"\"\"\" B\"HF Q M tW 6 h h H \"\"@ G L 6 \" A Y9 F 6(FBH # \"M B&E !. B\"] Bv ! tGE a C-1$[ D 6 Z ! B DE! 8 CQ 6 \" DDJ d BF\"tP DD ! 3Bm t] 2 K@ B! h # , 6 D *B' g . N\"& JD\"\"\"v$ K k \" D 6 LFCI BGC hD + DD : A , ( X D $t\"dR M & &u2 t\"] F \"\"Y- H ! B0 K \" DD sD E B\"A !DD B\" GsB[ FJ H :0 I 6 D$|A ] D4\" & h t] ZH#hH \"& f \"& \"\"\"\" 6P F DIt]Kb FCH \"D$tv B\"$ F& \" t\"] @ FjY P GDf Z $ A h + tf } \" &؄ # E d $] . F& hDA",
+        " $ B(B[ @ B D 6 ]DJ jF BY4B\"W Bd > D !0 d D # B\"vZ P L\"uhK N !Z< \" v Dbf DA :# : Z DD P@ DJDY& h 1 Fh < ! mR0 J h $ B\"%z\" G`hK @ 0 Z I E \" REsT%- B) . 2 ) h 2 E Z O %$a A Bf + M . \" P B IZ0 DMI&T i ] E 5 B D # t Ep N ْ# d D !, $ DDK e BW B[ hO 'BY1 A \"$4% Fh *; B BN fb 6 O!3D ! } F r NS@B FbK L! %HD > D & &PeVR V V (r + 9VR h 8 - \"hN! 0 4I B} fQ \" ' JD$ ] D HI \\ # D . g4@ Bq %q hD U D N! * * @ N # MJ\"P $ H L Z. N! @ O 2 Ba !8 e D\"$t\"\"@ Y*Dt\"\"GFF BuB$ K0t$ #Dm P ز T # Bq D !6 D r n F t &hDD 2V * Ey o D 0B$ 3B\"] \":+ !;T@ q 41 ! DDD B $ d\" 6 D E # B !JY F )\"o4uB !> D > q$\" E \"] $t\"GBv F 4\"d BR# B\"M - B% tBd hD & !(E ) h F Bm ڪ> Db ,!) 6 GsI$\"\"$B B\"]K3D$ @ \" DDM L# $Y J 6 J ؒ. #hHhH FY B\"& t\" !# $# 0 4 B\"\"} E N!. DU * E B $E \"' A d BN ;KBq h }$] 6 $t\"1 ) P Bd& mM R F % M i E oZ Hh f , O \"E 0 6 f $ !b> . D H B& , B]2 R &SP t] A y D D ! 6 R )F dH Ze \"h B0 . @ 6 \"q hDJ @ O2+ RA . B 2%D D4\"\"\"' & ږ` b P d ! t&h Dm A j[ D\"q 4 t$ B\"F * f$E \"a @ B1 BR hO! M tkB\"L Ka\": u m $4m 4\"] Gi - \"\"& m D] t] B$m Bvh !. : B B\"\" 0 :, h [ 6 \" DDM R p N$ !> @ , 4y ) d \" fEhL B\"EQ \"\"# a JZ\" $tS 6 !. [ ! h 8 )d Eu ] : . Q c: \"! ] G #8 J5a H $! D \"I! f #h N+ z \"%Z D um!) tkF t] D ADD Z \"\"\"\" 0 4Y \" ڣ$ # H ' F $ ٢",
+        " ^ ! $ s u $ lG b& tI @ 8=xE R ! F % b} q LYڴK - Q \"@ D4KB . B% i Db vh 4Gb G D @ . 4 b' 4 D{ - # ! !. @ آ +j b\"} B\"@ % $ HB-]0 q$y D > L\"tV A h _ I B] F h Q { M B\"a BN ؉ : @ H 6 5a BGF B L @ 0 3DeZHN E tq T Bq 6\")$\"= M Bm \" t' \"\"$- D $)k- ; . * B tHEi B$ ! B ) L e ) 4 Q G UB\"\"] 4CB'E|IZ :# G ;[~, jV \\ AB m ) XT t] : ! 3BI 4G DL \" 6 . Dt P e )9^V r B$t\"% 7B d $ 4 \"a * r p A P J $ P DH ' m D$ 8 Dy 7 7 _8 ge(D ! B& b- & ( BB& $} $ & ] $ ] a3aU% H B\"E tqSmS vvX !3E \"GI$m E RB# M j h L P G \"f DDD ,D !\"Y h7; X ) l3 $ & @ \"GB \"j [ B ;H M 0 #hJ < $ N G` 'b O4IX B% B] # + ! P E G 0 D t T T t% # # A 6 ZX tؑ (r q HX C q B Bv QN 0 ; M YB P R3B\"GGT\"' D > iCb4 .'e N ) 6 g` p /|S p P j: @ TP Xmv V \" m B\"\"] Dt<l R O@ h B 8 . # GD ^ xb U $ 4 PCW L E $4' N F F X ih =&؇H R:l D ! 8 'B% C K i $ !6 P I D\"} !6 ؗB !G(s 6 + v 1 Z 'E !> ! bGH > C(t A- L\" jvJ Dhn A ~. I # Mol E p@ DL 5 F 4P N t I %] Hdt B& ٪ q 4 GW ? A gk H\" 1 E F x j # * I N GG Q h B'c Cq S ; ! 8k # C5 hI ` F \"a + j* ڄ, A GU E pU]DB # \" B 'i ) L KI N due n\\ &G F i 2: {Gd #Z0 !! h D\"S d( p C :+h dpY D y D] A + P GM 1: B$ \" ! T BB\" Sۆ ! % B! e, ! ؄ ! P @ 1 CM!! (T!# EB2[F tdj B] e # % - d| ) \" A Dt \"\"jP <D a ~ H R>G A8 9 & \"]2 # - BGE: 3 < (",
+        " H }2 n8Du I . '* \" \" tG \"] #i! v! EX \" $. RHj ( 8 wBGE A 9 T ! \" wR C ! v@ t (pF ) )T)Y[(* AC ) dbGDph F $ G P @ @ r $tG@ \" < V B e 6 0 x4 P : L ZA ( # :8 Ba 0 ! I :# ` ( ) Ua a ;# f !pAD t, ( \"\"% EB0 ] H # @ % x0 @C F LB ( \"dR D ! #oH 9 t2 # s q rN G 6 #D CE d \"$ty !! l ! 6 g+ ! : <3 ( @ B ! 6 # @ D h 6 & I , i \"8C0 j $ M hM q B > : K S q Bq e E :3@ < I B\" X * 2B H a2 A y c ]D Y ) G hD !< D CF G 3 / vG CLq x* @ p E BN L! O\" DD !/ a # ue hQ . E \" X < (p B\"G D ! 8 t& (i f d ( r xf a C , \" m O B\"\"GB$ , + !. : i M =8@ P 4 g) B S DY Q E B%: @ r G ; = DDZd HY (r pAa , ) B& 0 j !6 A C H A 8! T e S @ ) * ( @ Y & \"' &] B0 !# 8 # o A tAY A $\"F& 4%uhN! I Z Z3G T U A h 0 Fh I du : ! % \" H ! Z H k 9 F ! 0 @ # % q L @ DDD nta B EB B L' D !4D B . F@ a \\4} Q B B B} G & L / N B B! 7 @ p@ GFhDD B9 G (r DD % 5 H # . 'g $ B _ . !< ta GD$5 B YNPr BP \" _# #B * {Ba B h O H 8j . D \"8,` A # e C- Zq# # HA > D V 8 N B #h \" a P w) A [+ 7 ( ' dt Fh ! # TBa b! $ L! 8 HDDDR R:! \"A ; :H !0 Ij :# @ A C# ] \\ 4BM CT) D G G B. E \\ :d # t& L + r Jd5* b > # . \": A e8BG 0@ DDDJD$ Q ! ! # h ! ! , A 9 . U AA 9M5 d( 2 ) Bq \" r Dt T) B$ a \"q , A P # 8g A I A \"a @ DDA @ G \" BY !6 HA : XB \"& 8B B Q & h & ! G a CPp [ @ N !` ",
+        "* i -9 *bq A 8 R ! H b. DH ZD R P @ d2 ` $8 E . A 4* (r 8 @ ڳ :0 \" hR ! : Q B! d2 s 9 A E > D # @ \" #j M $ )H q I e. a A E ! < G4 r H T(A ؗB 8 3 r = / HD \"GA * e9L 9C 0 a ( $& T \"\" K K S # :. R# jY H NP MHRi 9 * *( N PDt hH $& 2 UB ! O E DDD \" A[ 8 YP A eqL LA GM P , . BC0r # T P DO\": e@B] tf 0BG@ $ ! . Z P D ! C :'B$ta RA \" bD A 9 8 h HH ! ! = B] A ) tN f H Y gi L! \"a @ j 0 D D & GB\"P 0 B B\"K !6 l Bq -2h! D ! TCB A Bf # > D # @ FY H 5 # @ H 9 S A + !# S0L d, 'd E J B\"GE B& c42 Bv 6 B L @ . V BW% - !2 A % \"] # D !< 0 D Q W# !. 6 S ;TA \"& Ep h F B ;H D !;B0 \"GD < O o 2 PS 0 @ K J D P 8 e : 1` J B& DK Dv] B0a ' b< H - H at\"\"\"\" t\"v* D ! R H F%xRC wZ ' V R F E )KL H DD 4BW . DE$ \"$t9 # Dq B%u M s hL\":;JEB+ B : m J\"\"\"a E D @ 2 #Z B> e . DD ! % } t !4E QK04#B\"y F \", r ( bD *h b t$4m E t\"&E Db'Tm &JI!# ) \"a FhK% f M h t\"] B\"a ` BGD ` R t] K9 !%H $ ) ]K & A , R Z # 0 D BGB$t\"% a Q)V D DDYVR & h B&J I B 3C, -A m D 0 ! Z DH @ E UK9j0 < HDDDD 0 L Bq B& ! 1 'G F N BdR \" hD 4\"\"N Y \"\") G !. 2 B' V 2H B B\"j@ ( B RP B& N# YU S) 8!. % 8 :! J jA \"q \" dS ! I D L B% $] $ @h - @ M l DIt$t& @ H DJ D V ,! l D B#h 2 N . HD . A ! P Y BV y \"& D F$ta B B$ T$4& ] qt\"$ BWV !. D F u !6 B A \" (B\"] GTU E ) ( $\"\" ",
+        "\"y B$t] ! g BR! 2*DY tjE !5\"a C !\" U HDB:#! @ ! # \"\"N Q . L t\" BGE Bm BY] 2 R DA DDD D FZ 8 Y P B M \" D %: \"J W Ep \"& ty E G ڴ$ m G D ! % 2 G \"\"] t'b , # R< !> ! # R, $ _D\"dM \"L#h # GF D # \\9 'B$ . > K DYZ AEAPS @ L Q \") T :. J HD 2[D U )!H \"1 $t'Tq E q B' W*BI M . DDD \"h E F Dta B1 r \"a \"m e B! ^0 HC L# K Jt& $4d ! } p< ' ] B< !2-B Bd V i B$ (s w) p { & X F :0 / R:# . ] RH C, K QJ IL l,V * $^X <3G(r %9P DDb\"N @ ! , tq E # G Dt D D DM Y i! tB!H l A & Dp< 0 i M$\"\"HB$ DM q R. U P t8 *\"a E J 2)B\"a \"T b\"$ (r T T ! K Y D h D & GF !qK !HA S I 4\"\" YC ( B[ ta g# ) A $ HDK 2 f V M F ## ~H& B\" G L A & DtV 7KF , D #hKs # @._# / 4 B | C ] A2 $t / Kp uDGE 8d .! 6 HR hD a2 ) @ ! He R* F 3 >GE :# ; 9C # A * B) :1 D J Q a p< ] DtGE $ B t] Fhr: 6 $\":0 , W % Y, D\"d ] # B# \" B \" B\"- > . D ! :# 0 D MK1B : 4e 8 0 # eDDDDDL#hD HD 0 F L t$ 1 ;%F ## 2>] Q DK ! < H bGDt& \"m D)l 4P pB:# DDDM L!4D G C t B 2)4JY # GDs# |\" , ( d $ ! Y !& *2B6 t\"\"\"d1 (Bu@ A B, ST1\" j O 6 :# \"\"q D% H 3B] >G b G (s S @ B! % @ g * $\" DDH C s T 9C D !. I$% Z 8j # tGT DDD # $ h G B # , H KT ! , 9A q r * A[$ \"\" B (r SPB1 <6 3 s aVQ2 A IR : <4 B$tHBa t BGL S TS\\Z$ (r 6 @ N!'Em G ) A C < DD V M $tkE @ k 8@ _D$t\"' wR3B\"\"\"0 GI \"\"$4CF B$I",
+        " :. . NA s @ T HD -! 8 \"t' 3T\" 09C 9C r $\"! 9Pg) 'j % N C !F R ) !& !; E \"& t] Bm Q / B# DFS@h 0 D GF e: DHh ! % B\"& e ! 6 5 B% D N# $ L\" D !(F d3Q& G h DB Y@ # * 9A * B]Ji\"< DDD D HO k ! % ' hH E O \": 5 < > ! M . SB Bm B$ ] Z 0 MH t\"& M : D M-\"t # < O BaKaM \"$b A @ [ I . % hO :J \"N DD # @ D $# :\"4 B@ eN % 7B h ! . HK. K l $ < @ ( {G P J $! ! Z 8 : \"4BM 2 *B 7 B$ ! u DR! ] 3E ! !. hH 4B\"\"] t D\" h DA 0 : R bm G C- ] K n] ! B B$ < !& BaG :/ t D - K !> 1 0 [ J2 JQ F[: e $u F[E\\ P k ( G Q -ad ZF Dyk ID # j )VZ 4 $\"H )BB$ H5 e5f k !(T EF\"K ER Ee ] 6 D\"$# P@ F ' ta$],QC DI 4! B h ( . N! KX ehT j,bw eAH) f ! \"& J& \\tJ D JZ ; ( IK\\b %H\" + %r O 2 ' Z p r Bi` $ R -s Aq ] Z n+ I} Dt ~ O W-{ n 3 [ Q v $ Bv:OV 2Z !< 4۪b B+ GDV ?j\"= K XQ% # V M! T) xi 4 *xa HW@ gc +V C AI4) @ Z d Rt] Dy fk&U V%d m # a \"\"m m! R LMJ kF !6 % ko} e !0 K N Z # D- N A I W H Pdt$ L ' A # # @ ! C ! i2& ! MH %k 2: E<E [ R I N h 8 : S GL : 6 Db \" v tG Z @ HYtq \" C O \" C B#j 1 :0 # @ F ) V > d G SB B( : HhTL 0 {BAq t wK-P$ # 5 Do OP ) E tm @ D F f !` :. (p H$\"q h 4F \"\". l -R 0 R ! N E ( U \" M B i @ q D RY . Dt$t]1f * @ A B\" 5 B,B |E$ C a a i (E U8E @ 1 p ! h [ j\"GB @ @ ! J J ) K E EC 'B$ ?k \" {B6 I!:#4(% G C q A!E H Bm & P",
+        " C |n D\" ( M G $L+ B t 4P > 4 J t G rM 4 r)$ 4P j HP GH!> R RX (vv P&P S # b _l GI. ! !. H P%U HE \" D 6 P /H4 v]\" 9 DD K0 . L AB B! 0 R H ub H F E + gK AF U $$t \" $ 2 B\" u @ \" E C r ! . b Q + i( P # EGv 2 \"a B! R1 ^ K DDDK @ DQ A !H ( i m H E: C1 c # @ G F Q @ 9N ) D &8K T C BI\":gV ! 4 H&)$ P 3 M B R 8 A4 B(Y qHH 3 Qe@R r h2Z Z P GT) B! @ R ) $ C ڨ HhL! ( (a2 pB)0 8 aM @ %O @ I HDA !LDq t) D BtE T!@ \"y (x h! !. A u I C i ] w ! A $b! R GGf v k &' & ( R&t B} $tGI2 !# \" ) 8 X J ge( D|H hn(E T O # 2 a $:, D] dp +) Q ! J x3 G G KH4 (uH \":E 2 2 : g \"4 R j e E ( jR YC H 5$ 1 9@ j!RL dtG B$4 q % @ $ QB. -!f \"Z ` Dt$t& Z $% E d 0 Q b(D v H) DAP a 9 TB A! h!d Sj*# L 2 X w) H d: C P w0 P i, b\"\"\"\"\" g uH3 P K DD aT#Ip p \"l& & L +IxHK0 t l x # t 8 _ *Q r E# x ؒ0 X)B\"' @ + ! Z ] $ q Yl E N \"y B L$ \" db& K]a B* Dv n[# 7 B(t :# v] B0 & \"v DE\" nZ ` D kB9؇Q;V z P :. $ ]M F L! N M IC \"\" G \" !8 :P B& %B\"($ # D \"6 V 6 Z D t' I DK 0 L! D CL4 Z SG Z0 . *v H K!j6 DDDE D U 'D 0 c j# hN B\" %~Y DD Z 6 D BHBa I% W \"< Z- B O\\DHhJ & FIhL# $ r R hL \" H6 N Q HDI $ 8 V h $ J C > tw4q t& [ TL H! k ! @ A 4q #! *Fh 8 0 Be7 *AepB& H DD Re ')p 2 % B )i\" %H M # e u-r G@ ت I D] $ty a 2 DN \"] y T: -r ] B'`i n6Q!VV # R *@ V",
+        " Dt! r < L \" D @ ! i$ FGB$ GBq a k ! @ Hq 4 . F @ L B B&hR0 !! u ( $ : E a! < !6 nf @ vf 9 \"h K e9PV Q \\Q 9D $T HF J B\"\"& + \\ D ! . \": ] I I.Z 2 B] @ R< \"%Z. e A @ -qta B B& \" 2 P l !}5 H ;tP K - eYC # T6 4y B $ pCuT $ ! , 0 ! H m t\"& P ZK } BYMP dV \" ADS R> 0 - h D D ( !. ! (F # H !. ' n $t\" BGD4\"M UI B A % D u \" 2D % ta A (r + A \"& 46 , B\"Y B% ] B BGD j 8 t'd\" # ) Il B T [. 8 & D:@ \" D 'B\"GB% BGE (B\"\"\"\"\"$t] E B\"\" Y@ h 0 K e t ) GI !6 # b Q i t @ ) L Sa ښ'D R HH D N \" L$ # !# ; ] 2V Q 4M H T ! B L jV %zH DDDA I F 2G m/! + r SE h D @ K K aD B$ . H A HD ! B @ N Q c K $ @ DD # @ L# K ! D ]Iy v 8 \":. B M A tf !0 ! dT DD D ! e@! R .W A[: J&hD . !. O @ D t ! $ ] \"m B& Q; D I B E + S 2 T J KB:u 2B< HR> : @ NP N# D 6 M]YF HL tDt B\"% ] (z )l F@ L Q P N!$! 3G ٪< m ( B] @ T $ By @ B\"\" [# 6[B Dt\" + HS 6 # E AKa- * jU & tm @ 0 ! D ! ! 8TGQ D !A \"\"GI$\"a % P l 0 hJt]$ VW & # XB\"\"\"q B\"y \"F KHe [ *, H D 3B' ] t] @ i H(r \" BD|DD @ ! @ L! :# H\": S` h Q B\"GBS 4_ ( D _ B 4J RDtGa \":Lt K( h . GG t] A$\" T, D 5 Z6 y Q 6R!ِ I J 1, @ AxTI nd E B! E h ! N.\"] \"T X DM ڦ\"Z4P@ D Ii2 E D B#@ 8 (pD|D . C N# TYM F \"V B Lr ^ L! K%hE . DN+ b\") F t [\" $*E9 hp tq[ E@; S 9 * e APSeQS B(} B\"\"| E \"J \"'b d B B r UeYU ejSg",
+        "K l RD T r 9 ] < XU hR PS`i b\"YT eYNS e8H ) 9C i r qI *) b 8w vP )B 8 >GB$t' T; C BuB&K XBGDt' ! BLp * 4v , H # eq\\Sd q H DD )2 t' ]S s F<8 ` D LR,q 8 hZFJ : 4% !2*L jBG^F8 B M 6YB ' 6 \"} % ; E 6 T ! ;bq $t) 6JB$4\"G@ b t' tBa FKHL# # U(vy \\ : l6 L F \" K DK @ :2 B BM B] 'E r DB Hh < H : Q # Gc $% DD e& a @ DDM D\" 2 Z \" KwBm \"& dYC - Q d . E n m B) XG` DK Y Bd M DL f \":& e9M B v Bm \" $ JBm D - n GjW B$\" Bv \"GE R8 t\"%z! < ( D ' n i oBh $+ 3F D BK DD $ a f H GB\"& #R# lB(Eu Du @ R \" % DD Z0 R2 B] nj ! & j\"G D ; FE } # \\- G T0 @ DD ) P@ 6 q G` ! l !; I t v - tf l ! h B \"& & I 'c n # H V'gF B\"\"] Fh 3B)Kee !X u \"[ v < A( - Kb]/ ) 1]%d#i'Du TE Z y\\4 Y! % [ l _ +J k + GxO J ,h, iDkAS n U; !\\ jZki& j\" 7 t , E oj d s -w } @ > E : Iia ږ (~ o \\ YF(4 Dt A T} q QY n VGJY * ! \" Rn W 5, aH :4A R# ^\" h ;CZ $ d. R_Pli A J 6H} -a @ v\" v * F 6* ZB k a M w ^ e T ~ ]PA28 mx\" dr \" Za ,F -0 Aa CZ;Ha{D r :} @ P 0 (p\\ = [Z 8 5 iH M= U D BN b >+ R e ^ r i 4A H# v: E Pt! : E D P t H=yf : M C U HP= L A? a +S D JUM A4 J '@ *A E dQ A @! Rl nR i ` WH( q0S~ HBC d\"n R Q- 3 8 C Z\"mD 9A s a \"$$ Z 1 8 ! d . ) >\"@ =PA &j? A q ! !/W k H S` PA Z 6 # j BA-SB C a% x Rj Aq > D D V P c ) - U-HW(r (za X&@ 8r( p M2C \") B A m : =",
+        "<! b+H0L dA ? GBv* A < G$9[ J$ v q *$ 0\" V \" wz! O C $B2 T 9[&?! J I C r6 # :# 9t^# m JE B\"\"\"\"\"5 %H )S R} T P v \" mBM $ A & 6 _ 5 E . Ct \" C 2 1 B!U $ @ P B A F p\\SI N I $: t = &= H N KQ * T ! 9 p P (|>- c TM A QC ! (t#HiB dtq ! :L $( -. } e J A @ \" ! D )U \\ ' A BA $S j - <m r (s U c% RI) 8B\"\" C n 8 B kL ULH M [ \" q !; T # (BhE M ' & H96 x* PD l & $mxH\" \" 7 ! v. ,! I 8 ; t q |* \"O O A AI t I B b# h* 6[F 4 ` P P % tM I HA e49 A p 0A K 2 S A \\pC# P HB @A P AN GI Q @\\4I A H 9 9NS r m D 1 t j a P 5 ca @ 5- < E Dp@ Z, 5 E & ' i b % O.\"4 KZ XUZE J \" ~Y j E+E * d +- W o Y }2t[ % 1 B o ;: (q ٪8 ] DH 0 S X 2l > e ' z ] tL C] 2:+ ( @ N T0 pS 6oPr & S % hH !o 8 H J W BP b% H\" ^a D [ T [ plD r 4 DT/ a4a \" %, J TO!{ : - Bm*q Q YS J B r GL p T F \"l6 8DuK : DA B aEH P B 5S D ^ T > +& : P r Q , J ;K 5 % ]S . R ZH7B+ڤ xA^M $ E(] 6 wh 8 T IDA Aq j 6Q S k CM h & ! a+ U a'& \"J _i (p \"8 Du DPBA 6 . J P @ @ $ n & & @ mpz@ p # #} C ] D ' k Z lH t z# )I/ e . du $ C B% d -oU q & { - @ L E h F $ !m 3Gehz V r VE @ W \\X MU N C < P )}8n - 'I$ \" =q(I|*c GZe T _L(HJZ a' V B : $ *T ! z Cb 2 uT H )QC T , K HN )ia4 D \"1 7t)U0 'DG R e BGIBK !B'f K D( z&8N !A (Dt \"m a v p! 4 D Z6 B H D N # M A$ ! 8\":D !;5P e P HYC ! "
+      ],
+      "id": "doc-1789751885017-kupa",
+      "uploadedAt": "2026-09-18T17:18:05.017Z"
+    },
+    {
+      "id": "doc-bray-grammar-1909",
+      "filename": "Denys_Bray_The_Brahui_Language_Grammar_Pt1.pdf",
+      "title": "The Brahui Language: Vol I - Analytic Grammar (Denys Bray)",
+      "fileSize": 4194304,
+      "uploadedAt": "2026-09-14T10:00:00.000Z",
+      "type": "grammar",
+      "pageCount": 320,
+      "chunksCount": 18,
+      "sampleSummary": "Authoritative foundational treatise analyzing Brahui Dravidian roots, morphology, postpositional system, complex verbal affixes, reflexive pronouns, and comparative syntax with Dravidian languages.",
+      "chunks": [
+        "Brahui Grammar Part I: Noun Declension. Nominative case has no suffix. Genitive affix is -na. Dative suffix is -e. Locative affixes are -āī (upon) and -ṭī (in, inside). Ablative is -ān (from). Associative suffix is -to (with). Purposive suffix is -ki (for).",
+        "Verbal Conjugation: Present-Future tense suffixes for Person: 1st Sing: -va/ -uţ; 2nd Sing: -sa / -us; 3rd Sing: -ik / -e; 1st Plur: -ona / -un; 2nd Plur: -ere / -ure; 3rd Plur: -ira / -o.",
+        "Negative conjugation: Formed by infusing -pa- or -fa- infix between the root and verbal inflectional termination. Example: karing (to do) -> kappara (I do not do), kunēk (he eats) -> kumpak (he does not eat)."
+      ]
+    },
+    {
+      "id": "doc-brahui-core-dictionary",
+      "filename": "Brahui_Academy_Lexicon_Eng_Urdu.pdf",
+      "title": "Brahui Academy Comprehensive Lexicon & Terminology",
+      "fileSize": 6291456,
+      "uploadedAt": "2026-09-15T12:00:00.000Z",
+      "type": "dictionary",
+      "pageCount": 450,
+      "chunksCount": 25,
+      "sampleSummary": "Over 8,000 core Brahui terms catalogued across Perso-Arabic and Roman scripts with English and Urdu definitions, etymology, and dialectical variations between Sarawani and Jhalawani.",
+      "chunks": [
+        "Dictionary Extract A-B: Urā (noun) = House / Home (اردو: گھر). Dīr (noun) = Water (اردو: پانی). Elesh / Kūl (noun) = Bread / Food (اردو: روٹی / کھانا). Huch (noun) = Camel (اردو: اونٹ). Pīr (noun) = Rain (اردو: بارش). Khān (noun) = Eye (اردو: آنکھ).",
+        "Dictionary Extract M-P: Minatwār (adj) = Grateful / Thankful (اردو: شکرگزار). Mehrbāni (noun) = Kindness. Pin (noun) = Name (اردو: نام). Bā (noun) = Mouth (اردو: منہ). Kholum (noun) = Wheat (اردو: گندم)."
+      ]
+    }
+  ],
+  "translationLogs": [
+    {
+      "id": "log-1790152159830",
+      "sourceText": "i study in class one",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "ای اولیکو جماعت ٹی خوانوہ",
+      "createdAt": "2026-09-23T08:29:19.830Z"
+    },
+    {
+      "id": "log-1790152153213",
+      "sourceText": "i study in class one",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "ای اولیکو جماعت ٹی خوانوہ",
+      "createdAt": "2026-09-23T08:29:13.213Z"
+    },
+    {
+      "id": "log-1790074942986",
+      "sourceText": "I study in class two",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "ای دویمی جماعت ٹی خوانوہ۔",
+      "createdAt": "2026-09-22T11:02:22.986Z"
+    },
+    {
+      "id": "log-1790074862228",
+      "sourceText": "How are you today?",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "نی اینو جوڑ اُس، خیرہ؟",
+      "createdAt": "2026-09-22T11:01:02.228Z"
+    },
+    {
+      "id": "log-1790074782975",
+      "sourceText": "Hello my friend",
+      "sourceLang": "English",
+      "targetLang": "Brahui",
+      "translatedText": "سلام کنا سنگت",
+      "createdAt": "2026-09-22T10:59:42.975Z"
+    },
+    {
+      "id": "log-1790008119743",
+      "sourceText": "Hello, how are you?",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "سلام، نی جوڑ اُس؟",
+      "createdAt": "2026-09-21T16:28:39.743Z"
+    },
+    {
+      "id": "log-1790002792618",
+      "sourceText": "Water is cold",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "دیر پدین ءِ۔",
+      "createdAt": "2026-09-21T14:59:52.618Z"
+    },
+    {
+      "id": "log-1790002784181",
+      "sourceText": "I am going to school",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "ای اسکول ٹی ہنوٹ۔",
+      "createdAt": "2026-09-21T14:59:44.181Z"
+    },
+    {
+      "id": "log-1789995438498",
+      "sourceText": "My brother went to the market to buy books",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "کنا ایلم کتاب ہلوک کن بازار ٹی ہنا۔",
+      "createdAt": "2026-09-21T12:57:18.498Z"
+    },
+    {
+      "id": "log-1789995427635",
+      "sourceText": "The weather is good today and the sun is shining",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "اینو موسم جوان ءِ او خورشید تالان ءِ۔",
+      "createdAt": "2026-09-21T12:57:07.635Z"
+    },
+    {
+      "id": "log-1789995416304",
+      "sourceText": "Water is cold today",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "اینو دیر پدین ءِ۔",
+      "createdAt": "2026-09-21T12:56:56.304Z"
+    },
+    {
+      "id": "log-1789751973215",
+      "sourceText": "Brahui has ancient roots in Balochistan.",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "براہوئی نا بلوچستان ٹی قدیم جڑ آک ارے۔",
+      "createdAt": "2026-09-18T17:19:33.215Z"
+    },
+    {
+      "id": "log-1789751565669",
+      "sourceText": "Chapter 1: The Mountain Valleys.\n\nBrahui is spoken in Kalat and across Balochistan.\n\nLinguists study its Dravidian roots.",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "باب اول: غریبی وادی آک۔\n\nبراہوئی قلات و کل بلوچستان ٹی ہیت کننگک۔\n\nلسانی ماہر آک دانا دراوڑی بنجاک آتے پارہ۔",
+      "createdAt": "2026-09-18T17:12:45.669Z"
+    },
+    {
+      "id": "log-1789751540120",
+      "sourceText": "Water is the source of life in the mountains.",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "دیر کوہسارتے ٹی زند نا کسر ءِ۔",
+      "createdAt": "2026-09-18T17:12:20.120Z"
+    },
+    {
+      "id": "log-1789751496741",
+      "sourceText": "Hello friend, welcome to Balochistan.",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "سلام سنگت، بلوچستان ٹی خیر برے",
+      "createdAt": "2026-09-18T17:11:36.741Z"
+    },
+    {
+      "id": "log-1789748252415",
+      "sourceText": "Prologue\nBetween your fingers you hold a stone and throw it into flowing water. The effect might not be easy to see. There will be a small ripple where the stone breaks the surface and then a splash, muffled by the rush of the surrounding river. That’s all.",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "پہلوال\n\nنی تینا ہوشخاتے ٹی اسٹ خل اس تورِس او دادے تولوکا دیر ٹی شاغس۔ اثر خننگ کی ارزان مفو۔ اراڑے کہ خل دیر نا تال ءِ پرغک، ہموڑے اسٹ چنکو لُوݪھ اس مریو او ولدا اسٹ چھپ اس، کہ ہندنا جوزہ غا دیر نا توار ٹی بِننگ مف۔ بس ہندادے۔",
+      "createdAt": "2026-09-18T16:17:32.415Z"
+    },
+    {
+      "id": "log-1789748212244",
+      "sourceText": "Prologue\nBetween your fingers you hold a stone and throw it into flowing water. The effect might not be easy to see. There will be a small ripple where the stone breaks the surface and then a splash, muffled by the rush of the surrounding river. That’s all.",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "پیش گال\n\nنا ہوشاتے نا نیام اٹی نی اسٹ خل اس تورِس او دادے تولوکا دیر اٹی شاغِس۔ اثر ءِ خننگ ارزان مفو۔ اراڑے کہ خل دیر نا دیم ءِ توشک، ہماڑے اسٹ چنکو لوم اس مریو، او رند اسٹ شلپ اس، ارا کہ چاپک نا جو نا خولھ اٹی بے توار مریو۔ بس ہمی دا اے۔",
+      "createdAt": "2026-09-18T16:16:52.244Z"
+    },
+    {
+      "id": "log-1789747484859",
+      "sourceText": "Chapter 2: The Tradition of Hospitality in Kalat.\n\nIn the high valleys of Balochistan, a guest is honored with the highest esteem. Even the poorest home will offer fresh bread and water.\n\nTravellers passing through the mountains find warmth and protection among the tribes.",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "باب ۲: قلات ٹی مہمان نوازی نا رواج۔\\n\\nبلوچستان نا اچی وادی تیٹی، اسہ مہمان اس گیشتر آ عزت انا توڑا شرفدار کننگک۔ غریب آن غریب کور ہم تالان تازہ روٹی او دیر پیش کیک۔\\n\\nکوہ تیٹی تیر مروک آ مسافر قبیلہ غاتیٹی گرمی او حفاظت مریسہ خریک۔",
+      "createdAt": "2026-09-18T16:04:44.859Z"
+    },
+    {
+      "id": "log-1789747379905",
+      "sourceText": "Chapter 1: The Land of Balochistan.\n\nBrahui is an ancient language spoken in Kalat and across the mountain valleys. The people have preserved their culture and language for generations.\n\nToday, scholars and linguists study its Dravidian roots and unique grammar.",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "باب 1: بلوچستان نا متم.\\n\\nبراہوئی اسہ قدیم آ بولی اس ءِ ہرا قلات او غرتا نا وادی تی ٹی ہیت مریک. الس تینا کلچر او بولی ءِ نسل در نسل بچین ءِ.\\n\\nمرو، ماہرین علم او لسانیات اسہ ڈراوڑی ریشہ او تینا گونا اٹی ہیت کننگ تیا تحقیق کیر۔",
+      "createdAt": "2026-09-18T16:02:59.905Z"
+    },
+    {
+      "id": "log-1789747377795",
+      "sourceText": "Chapter 1: The Land of Balochistan.\n\nBrahui is an ancient language spoken in Kalat and across the mountain valleys. The people have preserved their culture and language for generations.\n\nToday, scholars and linguists study its Dravidian roots and unique grammar.",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "اولیکو بشخ: بلوچستان نا ڈغار۔\n\nبراہوئی اسہ مستین ءُ زبان اس ءِ ہرا قلات او مش نا درہ غاتیٹی ہیت کننگک۔ بندغاک پڑیا تیان تینا دود و ربیدگ او زبان ءِ سنبھال کرینو۔\n\nاینو، عالم آک او لسانیات دان آک اینا دراوڑی بنیاد او بے مٹ گرائمر نا پٹ و پول ءِ کیرہ۔",
+      "createdAt": "2026-09-18T16:02:57.795Z"
+    },
+    {
+      "id": "log-1789746994566",
+      "sourceText": "Brahui is a unique language spoken predominantly in Balochistan. Unlike its neighboring Indo-Aryan and Iranian languages, Brahui is historically classified as a Northern Dravidian language. Scholars continue to study its rich oral traditions and distinct grammatical features.",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "براہوئی اسہ بے مٹ ءُ زبان اس ءِ ہرا گیشتر بلوچستان ٹی ہیت کننگک۔ تینا ہمسایہ انڈو آرین او ایرانی زبان تیان جتا، براہوئی تواریخی وڑاٹ اسہ قطبی دراوڑی زبان اس گوندنگک۔ زانتکار آک اونا گنجین زبانی روایت او جتا ءُ قواعدی صفت آتا مطالعہ ءِ برجا تخانو۔",
+      "createdAt": "2026-09-18T15:56:34.566Z"
+    },
+    {
+      "id": "log-1789744742010",
+      "sourceText": "This is my house",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "دا کنا اُرا ءِ",
+      "createdAt": "2026-09-18T15:19:02.010Z"
+    },
+    {
+      "id": "log-1789744732556",
+      "sourceText": "Water",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "دیر",
+      "createdAt": "2026-09-18T15:18:52.556Z"
+    },
+    {
+      "id": "log-1789671262729",
+      "sourceText": "How are you today?",
+      "sourceLang": "english",
+      "targetLang": "brahui-arabic",
+      "translatedText": "نی اینو امر اُس؟",
+      "createdAt": "2026-09-17T18:54:22.729Z"
+    }
+  ],
+  "systemSettings": {
+    "allowDynamicLanguages": false,
+    "activeDynamicLanguages": []
+  }
+}

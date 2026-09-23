@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* Professional Traditional Nastaliq font stack (Jameel Noori Nastaleeq with Noto Nastaliq Urdu) */
+.font-nastaliq {
+  font-family: 'Jameel Noori Nastaleeq', 'Jameel Noori Nastaleeq Kasheeda', 'Noto Nastaliq Urdu', 'Urdu Typesetting', 'Nafees Nastaleeq', 'Alvi Nastaleeq', 'Pak Nastaleeq', 'Amiri', serif;
+  line-height: 2.3 !important;
+  word-spacing: 0.08em;
+}
+
+.nastaliq-input {
+  font-family: 'Jameel Noori Nastaleeq', 'Jameel Noori Nastaleeq Kasheeda', 'Noto Nastaliq Urdu', 'Urdu Typesetting', 'Nafees Nastaleeq', 'Alvi Nastaleeq', 'Pak Nastaleeq', 'Amiri', serif;
+  line-height: 2.3 !important;
+  direction: rtl;
+  text-align: right;
+}
+
+.font-amiri {
+  font-family: 'Jameel Noori Nastaleeq', 'Noto Nastaliq Urdu', 'Amiri', serif;
+  line-height: 2.1;
+}
+
+.rtl-text {
+  direction: rtl;
+  text-align: right;
+}
+
+.ltr-text {
+  direction: ltr;
+  text-align: left;
+}

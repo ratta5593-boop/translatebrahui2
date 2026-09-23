@@ -1,0 +1,6 @@
+{
+  "name": "Brahui Translate",
+  "description": "Multi-lingual Brahui, Urdu, and English translation platform with PDF knowledge base ingestion, active user correction learning, automated grammar pattern induction, and admin corpus reporting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
