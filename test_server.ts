@@ -1,7 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
-import fs from 'fs';
 import { apiRouter } from './server/routes.js';
 
 dotenv.config();
@@ -17,28 +16,17 @@ if (process.env.VITE_GEMINI_API_KEY && process.env.VITE_GEMINI_API_KEY.startsWit
 
 async function startServer() {
   const app = express();
-  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+  const PORT = 3000;
 
   // Middlewares
   app.use(express.json({ limit: '30mb' }));
   app.use(express.urlencoded({ extended: true, limit: '30mb' }));
 
-  // Health check and crawler routes for Cloud Run and container rollout probes
-  app.get('/healthz', (_req, res) => {
-    res.status(200).send('OK');
-  });
-  app.get('/robots.txt', (_req, res) => {
-    res.type('text/plain').send('User-agent: *\nAllow: /\n');
-  });
-
   // Mount API router
   app.use('/api', apiRouter);
 
-  const distPath = path.join(process.cwd(), 'dist');
-  const isProduction =
-    process.env.NODE_ENV === 'production' || fs.existsSync(path.join(distPath, 'index.html'));
-
-  if (isProduction) {
+  if (process.env.NODE_ENV === 'production') {
+    const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (_req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));

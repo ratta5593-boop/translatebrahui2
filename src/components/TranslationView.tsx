@@ -674,6 +674,7 @@ export const TranslationView: React.FC<TranslationViewProps> = ({
           {/* Source Text Area with Native Keyboard Attributes */}
           <div className="relative p-4 flex-1 flex flex-col min-h-[160px]">
             <textarea
+              key={`source-input-${sourceLang}`}
               id="source-text-input"
               value={sourceText}
               onChange={(e) => setSourceText(e.target.value)}
@@ -1086,16 +1087,17 @@ export const TranslationView: React.FC<TranslationViewProps> = ({
                       </div>
                     </div>
                     <textarea
+                      key={`correction-input-${targetLang}`}
                       id="corrected-sentence-input"
                       rows={2}
                       value={correctionText}
                       onChange={(e) => setCorrectionText(e.target.value)}
-                      lang={getNativeInputAttrs(targetLang).lang}
-                      dir={getNativeInputAttrs(targetLang).dir}
-                      inputMode={getNativeInputAttrs(targetLang).inputMode}
-                      autoCapitalize={getNativeInputAttrs(targetLang).autoCapitalize}
-                      autoCorrect={getNativeInputAttrs(targetLang).autoCorrect}
-                      spellCheck={getNativeInputAttrs(targetLang).spellCheck}
+                      lang={getNativeInputAttrs(targetLang, activeDynamicLanguages).lang}
+                      dir={getNativeInputAttrs(targetLang, activeDynamicLanguages).dir}
+                      inputMode={getNativeInputAttrs(targetLang, activeDynamicLanguages).inputMode}
+                      autoCapitalize={getNativeInputAttrs(targetLang, activeDynamicLanguages).autoCapitalize}
+                      autoCorrect={getNativeInputAttrs(targetLang, activeDynamicLanguages).autoCorrect}
+                      spellCheck={getNativeInputAttrs(targetLang, activeDynamicLanguages).spellCheck}
                       placeholder="درست براہوئی جملہ یہاں لکھیں... (Type corrected Brahui sentence here...)"
                       className={`w-full px-3 py-2 border border-slate-300 rounded-xl text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-hidden resize-none transition-all shadow-2xs ${
                         isTargetArabic
@@ -1143,10 +1145,7 @@ export const TranslationView: React.FC<TranslationViewProps> = ({
                   )}
 
                   {/* Simple "Submit Correction" button */}
-                  <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
-                    <span className="text-[11px] text-slate-500">
-                      ایڈمن کی تصدیق کے بعد یہ اصول ڈیٹا بیس میں مستقل محفوظ ہوگا۔
-                    </span>
+                  <div className="flex items-center justify-end flex-wrap gap-2 pt-1">
                     <button
                       type="submit"
                       id="submit-correction-button"
@@ -1247,6 +1246,11 @@ export const TranslationView: React.FC<TranslationViewProps> = ({
                   type="text"
                   value={catalogSearch}
                   onChange={(e) => setCatalogSearch(e.target.value)}
+                  lang="en"
+                  inputMode="search"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   placeholder="Search languages by name, native script, or code (e.g. Persian, Arabic, Pashto, Balochi, Turkish)..."
                   className="w-full pl-9 pr-4 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                   autoFocus

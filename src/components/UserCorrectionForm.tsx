@@ -254,6 +254,7 @@ export const UserCorrectionForm: React.FC<UserCorrectionFormProps> = ({
 
               {/* Compact Correction Text Area with Native Keyboard Attributes */}
               <textarea
+                key={`user-correction-text-${isArabicTarget ? 'brh' : 'en'}`}
                 id="corrected-brahui-input"
                 rows={2}
                 value={correctedText}
@@ -303,6 +304,7 @@ export const UserCorrectionForm: React.FC<UserCorrectionFormProps> = ({
                 <span className="text-[11px] text-slate-400">Optional (مددگار)</span>
               </div>
               <input
+                key={`user-correction-alt-${isArabicTarget ? 'en' : 'brh'}`}
                 type="text"
                 value={alternativeScript}
                 onChange={(e) => setAlternativeScript(e.target.value)}
