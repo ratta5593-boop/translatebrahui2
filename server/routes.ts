@@ -2,7 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import crypto from 'crypto';
 import { dbService, GOOGLE_TRANSLATE_CATALOG } from './db.js';
-import { translateText, induceGrammarRule, summarizeUploadedDoc } from './gemini.js';
+import { translateText, induceGrammarRule, summarizeUploadedDoc, sanitizeBrahuiOutput } from './gemini.js';
 import { dynamicTranslateSentence } from './dynamicTranslator.js';
 import { Language } from '../src/types/index.js';
 
@@ -185,6 +185,16 @@ apiRouter.post('/translate', async (req: Request, res: Response) => {
       forceDynamicAI: true,
     });
 
+    // Ensure zero foreign token leakage and script normalization
+    result.translatedText = sanitizeBrahuiOutput(result.translatedText, tLang, sLang);
+    if (result.alternativeScript) {
+      result.alternativeScript = sanitizeBrahuiOutput(
+        result.alternativeScript,
+        tLang === 'brahui-arabic' ? 'brahui-latin' : 'brahui-arabic',
+        sLang
+      );
+    }
+
     // If multi-dialect variants are returned, ensure bracketed dialect labels are present in translatedText
     if (result.dialectVariants && result.dialectVariants.length > 1) {
       const hasBrackets = result.translatedText.includes('(') && result.translatedText.includes(')');
@@ -208,6 +218,14 @@ apiRouter.post('/translate', async (req: Request, res: Response) => {
       const sLang = (req.body?.sourceLang || 'english') as Language;
       const tLang = (req.body?.targetLang || 'brahui-arabic') as Language;
       const fallbackResult = dynamicTranslateSentence(req.body?.sourceText || '', sLang, tLang);
+      fallbackResult.translatedText = sanitizeBrahuiOutput(fallbackResult.translatedText, tLang, sLang);
+      if (fallbackResult.alternativeScript) {
+        fallbackResult.alternativeScript = sanitizeBrahuiOutput(
+          fallbackResult.alternativeScript,
+          tLang === 'brahui-arabic' ? 'brahui-latin' : 'brahui-arabic',
+          sLang
+        );
+      }
       return res.json({ ...fallbackResult, isFallback: true });
     } catch {
       res.status(500).json({ error: error.message || 'Translation failed' });
@@ -356,8 +374,12 @@ apiRouter.post('/corrections/sync', (req: Request, res: Response) => {
       message: `Data synced successfully. Added ${syncResult.addedRules} rules and ${syncResult.addedCorpus} corpus entries.`,
       addedRules: syncResult.addedRules,
       addedCorpus: syncResult.addedCorpus,
+      synced: syncResult,
       rules: currentRules,
+      activeRules: currentRules,
       corpus: currentCorpus,
+      corpusCount: currentCorpus.length,
+      rulesCount: currentRules.length,
     });
   } catch (error: any) {
     console.error('Data sync error:', error);
@@ -514,29 +536,6 @@ apiRouter.get('/rules/active', (_req: Request, res: Response) => {
     res.json({ rules });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
-  }
-});
-
-// Robust bi-directional sync for learned rules & user corrections across environments (Vercel & AI Studio previews)
-apiRouter.post('/corrections/sync', (req: Request, res: Response) => {
-  try {
-    const { rules = [], corpus = [] } = req.body || {};
-    const result = dbService.syncLearnedData(rules, corpus);
-    if (result.addedRules > 0 || result.addedCorpus > 0) {
-      translationFastCache.clear();
-    }
-    const activeRules = dbService.getActiveRules();
-    const allCorpus = dbService.getCorpus();
-    res.json({
-      success: true,
-      synced: result,
-      activeRules,
-      corpusCount: allCorpus.length,
-      rulesCount: activeRules.length,
-    });
-  } catch (error: any) {
-    console.error('Error syncing corrections:', error);
-    res.status(500).json({ error: error.message || 'Failed to sync corrections' });
   }
 });
 

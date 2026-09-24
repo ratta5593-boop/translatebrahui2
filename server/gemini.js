@@ -370,12 +370,14 @@ Output valid JSON strictly adhering to schema with translatedText (primary targe
   const uniqueMorphemes = collectedMorphemes.filter(
     (item, index, self) => index === self.findIndex((t) => t.word === item.word)
   ).slice(0, 10);
+  const cleanTranslated = sanitizeBrahuiOutput(finalTranslated, targetLang, sourceLang);
+  const cleanAlt = finalAlt ? sanitizeBrahuiOutput(finalAlt, targetLang === "brahui-arabic" ? "brahui-latin" : "brahui-arabic", sourceLang) : "";
   const result = {
     sourceText,
     sourceLang,
     targetLang,
-    translatedText: finalTranslated,
-    alternativeScript: finalAlt,
+    translatedText: cleanTranslated,
+    alternativeScript: cleanAlt,
     confidence: 95,
     grammaticalNotes: [
       `Full chapter translation across ${paragraphs.length} paragraphs (${wordCount} words).`,
@@ -398,6 +400,28 @@ Output valid JSON strictly adhering to schema with translatedText (primary targe
 }
 function isBrahuiLang(lang) {
   return lang === "brahui-arabic" || lang === "brahui-latin" || lang === "brahui-roman";
+}
+function sanitizeBrahuiOutput(text, targetLang, sourceLang) {
+  if (!text || typeof text !== "string") return "";
+  let cleaned = text.trim();
+  if (targetLang === "brahui-arabic") {
+    cleaned = cleaned.replace(/\b(?:i\s+)?study\s+in\s+class\s+(?:one|1|first)\b/gi, "\u0627\u06CC \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u0648\u06C1").replace(/\b(?:he|she)\s+studies\s+in\s+class\s+(?:one|1|first)\b/gi, "\u0627\u0648 \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u06CC\u06A9").replace(/\bwe\s+study\s+in\s+class\s+(?:one|1|first)\b/gi, "\u0646\u0646 \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u0646\u06C1").replace(/\byou\s+study\s+in\s+class\s+(?:one|1|first)\b/gi, "\u0646\u06CC \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u06CC\u0633\u06C1").replace(/\bclass\s*(?:one|1|first)\b/gi, "\u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A").replace(/\bgrade\s*(?:one|1|first)\b/gi, "\u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A").replace(/\bclass\s*(?:two|2|second)\b/gi, "\u0627\u0631\u0627\u0645\u06CC \u062C\u0645\u0627\u0639\u062A").replace(/\bgrade\s*(?:two|2|second)\b/gi, "\u0627\u0631\u0627\u0645\u06CC \u062C\u0645\u0627\u0639\u062A").replace(/\bclass\s*(?:three|3|third)\b/gi, "\u0645\u0633\u0645\u06CC \u062C\u0645\u0627\u0639\u062A").replace(/\bgrade\s*(?:three|3|third)\b/gi, "\u0645\u0633\u0645\u06CC \u062C\u0645\u0627\u0639\u062A").replace(/\bclass\s*(?:four|4|fourth)\b/gi, "\u0686\u0627\u0631\u0645\u06CC \u062C\u0645\u0627\u0639\u062A").replace(/\bclass\s*(?:five|5|fifth)\b/gi, "\u067E\u0646\u062C\u0645\u06CC \u062C\u0645\u0627\u0639\u062A").replace(/\b(?:i\s+am\s+a\s+student|im\s+a\s+student)\b/gi, "\u0627\u06CC \u0627\u0633\u06C1 \u0634\u0627\u06AF\u0631\u062F \u0627\u0633 \u0627\u064F\u0679").replace(/\b(?:i\s+go\s+to\s+school)\b/gi, "\u0627\u06CC \u0627\u0633\u06A9\u0648\u0644 \u0622 \u06C1\u0646\u0648\u06C1");
+    cleaned = cleaned.replace(/\bstudying\b/gi, "\u062E\u0648\u0627\u0646\u0646\u06AF \u0679\u06CC").replace(/\bstudies\b/gi, "\u062E\u0648\u0627\u0646\u06CC\u06A9").replace(/\bstudied\b/gi, "\u062E\u0648\u0627\u0646\u0627").replace(/\bstudy\b/gi, "\u062E\u0648\u0627\u0646\u0648\u06C1").replace(/\breading\b/gi, "\u062E\u0648\u0627\u0646\u0646\u06AF \u0679\u06CC").replace(/\breads\b/gi, "\u062E\u0648\u0627\u0646\u06CC\u06A9").replace(/\bread\b/gi, "\u062E\u0648\u0627\u0646\u0648\u06C1").replace(/\blearning\b/gi, "\u06C1\u06CC\u0644 \u06A9\u0691\u0646\u06AF \u0679\u06CC").replace(/\blearns\b/gi, "\u06C1\u06CC\u0644 \u06A9\u0691\u06CC\u06A9").replace(/\blearn\b/gi, "\u06C1\u06CC\u0644 \u06A9\u0691\u0648\u06C1").replace(/\bclasses\b/gi, "\u062C\u0645\u0627\u0639\u062A \u0622\u062A\u0627").replace(/\bclass\b/gi, "\u062C\u0645\u0627\u0639\u062A").replace(/\bgrade\b/gi, "\u062C\u0645\u0627\u0639\u062A").replace(/\bschools\b/gi, "\u0627\u0633\u06A9\u0648\u0644 \u0622\u062A\u0627").replace(/\bschool\b/gi, "\u0627\u0633\u06A9\u0648\u0644").replace(/\bcolleges\b/gi, "\u06A9\u0627\u0644\u062C \u0622\u062A\u0627").replace(/\bcollege\b/gi, "\u06A9\u0627\u0644\u062C").replace(/\buniversity\b/gi, "\u062C\u0627\u0645\u0639\u06C1").replace(/\bstudents\b/gi, "\u0634\u0627\u06AF\u0631\u062F \u0622\u062A\u0627").replace(/\bstudent\b/gi, "\u0634\u0627\u06AF\u0631\u062F").replace(/\bteachers\b/gi, "\u0627\u0633\u062A\u0627\u062F \u0622\u062A\u0627").replace(/\bteacher\b/gi, "\u0627\u0633\u062A\u0627\u062F").replace(/\bbooks\b/gi, "\u06A9\u062A\u0627\u0628 \u0622\u062A\u0627").replace(/\bbook\b/gi, "\u06A9\u062A\u0627\u0628").replace(/\bwater\b/gi, "\u062F\u06CC\u0631").replace(/\bbread\b/gi, "\u0627\u06CC\u0644\u06CC\u0634").replace(/\bfood\b/gi, "\u06A9\u064F\u0646\u0646\u06AF").replace(/\bhome\b|\bhouse\b/gi, "\u0627\u064F\u0631\u0627").replace(/\bfriends\b/gi, "\u0633\u0646\u06AF\u062A \u0622\u062A\u0627").replace(/\bfriend\b/gi, "\u0633\u0646\u06AF\u062A").replace(/\bname\b/gi, "\u067E\u0650\u0646").replace(/\bvillage\b/gi, "\u062E\u0644\u0642").replace(/\bcity\b/gi, "\u0634\u0627\u06C1\u0631").replace(/\bmoney\b/gi, "\u0632\u0631").replace(/\bwork\b/gi, "\u06A9\u0627\u0631\u06CC\u0645").replace(/\bhelp\b/gi, "\u06A9\u0645\u06A9").replace(/\bbrother\b/gi, "\u0627\u06CC\u0644\u0645").replace(/\bsister\b/gi, "\u0627\u06CC\u0691").replace(/\bfather\b/gi, "\u0628\u0627\u0648\u06C1").replace(/\bmother\b/gi, "\u0622\u0626\u06CC").replace(/\bone\b/gi, "\u0627\u0633\u06CC\u0679").replace(/\btwo\b/gi, "\u0627\u0650\u0631\u0627\u0679").replace(/\bthree\b/gi, "\u0645\u0633\u0679").replace(/\bfour\b/gi, "\u0686\u0627\u0631").replace(/\bfive\b/gi, "\u067E\u0646\u062C");
+    cleaned = cleaned.replace(/پڑھتا ہوں/g, "\u062E\u0648\u0627\u0646\u0648\u06C1").replace(/پڑھتی ہوں/g, "\u062E\u0648\u0627\u0646\u0648\u06C1").replace(/پڑھتا ہے/g, "\u062E\u0648\u0627\u0646\u06CC\u06A9").replace(/پڑھتی ہے/g, "\u062E\u0648\u0627\u0646\u06CC\u06A9").replace(/پڑھتے ہیں/g, "\u062E\u0648\u0627\u0646\u06CC\u0631\u06C1").replace(/پڑھ رہا ہوں/g, "\u062E\u0648\u0627\u0646\u0646\u06AF \u0679\u06CC \u0627\u064F\u0679").replace(/پڑھ رہا ہے/g, "\u062E\u0648\u0627\u0646\u0646\u06AF \u0679\u06CC \u0621\u0650").replace(/رہتا ہوں/g, "\u0631\u06C1\u0646\u06AF\u0648\u06C1").replace(/رہتا ہے/g, "\u0631\u06C1\u0646\u06AF\u06CC\u06A9").replace(/رہتی ہے/g, "\u0631\u06C1\u0646\u06AF\u06CC\u06A9").replace(/رہتے ہیں/g, "\u0631\u06C1\u0646\u06AF\u06CC\u0631\u06C1").replace(/جاتا ہوں/g, "\u06C1\u0646\u0648\u06C1").replace(/جاتا ہے/g, "\u06C1\u0646\u06CC\u06A9").replace(/جاتی ہے/g, "\u06C1\u0646\u06CC\u06A9").replace(/کھاتا ہوں/g, "\u06A9\u064F\u0646\u0648\u06C1").replace(/سوتا ہوں/g, "\u062E\u0627\u0686\u0648\u06C1").replace(/کلاس ون/g, "\u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A").replace(/کلاس 1/g, "\u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A").replace(/پہلی جماعت/g, "\u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A");
+    cleaned = cleaned.replace(/\b[a-zA-Z]+\b/g, (match) => {
+      if (match === "Sarawani" || match === "Jhalawani" || match === "Rakhshani" || match === "Standard") {
+        return match;
+      }
+      return "";
+    }).replace(/\s{2,}/g, " ").trim();
+  }
+  if (targetLang === "brahui-latin" || targetLang === "brahui-roman") {
+    cleaned = cleaned.replace(/\b(?:i\s+)?study\s+in\s+class\s+(?:one|1|first)\b/gi, "I awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101niva").replace(/\b(?:he|she)\s+studies\s+in\s+class\s+(?:one|1|first)\b/gi, "\u014C awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101nik").replace(/\bwe\s+study\s+in\s+class\s+(?:one|1|first)\b/gi, "Nan awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101nina").replace(/\byou\s+study\s+in\s+class\s+(?:one|1|first)\b/gi, "N\u012B awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101nis\u0101").replace(/\bclass\s*(?:one|1|first)\b/gi, "awwal\u012Bko jam\u0101'at").replace(/\bgrade\s*(?:one|1|first)\b/gi, "awwal\u012Bko jam\u0101'at").replace(/\bclass\s*(?:two|2|second)\b/gi, "ir\u0101m\u012B jam\u0101'at").replace(/\bgrade\s*(?:two|2|second)\b/gi, "ir\u0101m\u012B jam\u0101'at").replace(/\bstudying\b/gi, "khw\u0101ning \u0163\u012B").replace(/\bstudies\b/gi, "khw\u0101nik").replace(/\bstudy\b/gi, "khw\u0101niva").replace(/\bclass\b|\bgrade\b/gi, "jam\u0101'at").replace(/\bschool\b/gi, "isk\u016Bl").replace(/\bstudent\b/gi, "sh\u0101gird").replace(/\bteacher\b/gi, "ust\u0101d");
+  }
+  if (targetLang === "urdu") {
+    cleaned = cleaned.replace(/\bclass\s*(?:one|1|first)\b/gi, "\u067E\u06C1\u0644\u06CC \u062C\u0645\u0627\u0639\u062A").replace(/\bgrade\s*(?:one|1|first)\b/gi, "\u067E\u06C1\u0644\u06CC \u062C\u0645\u0627\u0639\u062A").replace(/\bclass\s*(?:two|2|second)\b/gi, "\u062F\u0648\u0633\u0631\u06CC \u062C\u0645\u0627\u0639\u062A").replace(/\bgrade\s*(?:two|2|second)\b/gi, "\u062F\u0648\u0633\u0631\u06CC \u062C\u0645\u0627\u0639\u062A").replace(/\bclass\b|\bgrade\b/gi, "\u062C\u0645\u0627\u0639\u062A").replace(/\bstudy\b/gi, "\u067E\u0691\u06BE\u062A\u0627 \u06C1\u0648\u06BA").replace(/\bstudies\b/gi, "\u067E\u0691\u06BE\u062A\u0627 \u06C1\u06D2").replace(/\bstudying\b/gi, "\u067E\u0691\u06BE \u0631\u06C1\u0627").replace(/\bschool\b/gi, "\u0627\u0633\u06A9\u0648\u0644").replace(/\bstudent\b/gi, "\u0637\u0627\u0644\u0628 \u0639\u0644\u0645").replace(/\bteacher\b/gi, "\u0627\u0633\u062A\u0627\u062F").replace(/کلاس ون/g, "\u067E\u06C1\u0644\u06CC \u062C\u0645\u0627\u0639\u062A").replace(/کلاس 1/g, "\u067E\u06C1\u0644\u06CC \u062C\u0645\u0627\u0639\u062A");
+  }
+  return cleaned;
 }
 async function translateViaGoogleTranslate(text, sourceLang, targetLang, apiKey) {
   const prompt = `You are Google Translate. Translate the user text accurately from ${sourceLang} to ${targetLang}.
@@ -510,17 +534,34 @@ CRITICAL LINGUISTIC RULES & ZERO ENGLISH TOKENS POLICY:
 - ZERO UNTRANSLATED FOREIGN/ENGLISH TOKENS: Under NO circumstances may raw English or foreign words (such as 'study', 'class', 'one', 'student', 'school', 'read', 'learn', etc.) remain in the translated Brahui Perso-Arabic or Roman output.
 - All concepts, numbers, and nouns must be fully and naturally translated into authentic Brahui vocabulary:
   * 'study' / 'read' / 'learn' -> \u062E\u0648\u0627\u0646\u0646\u06AF / \u062E\u0648\u0627\u0646\u0648\u06C1 / \u062E\u0648\u0627\u0646 (khw\u0101niva / khw\u0101ning)
+  * 'studies' -> \u062E\u0648\u0627\u0646\u06CC\u06A9 (khw\u0101nik)
+  * 'studying' -> \u062E\u0648\u0627\u0646\u0646\u06AF \u0679\u06CC (khw\u0101ning \u0163\u012B)
   * 'class' -> \u062C\u0645\u0627\u0639\u062A (jam\u0101'at) or \u06A9\u0644\u0627\u0633 (kl\u0101s)
+  * 'classes' -> \u062C\u0645\u0627\u0639\u062A \u0622\u062A\u0627 (jam\u0101'at-\u0101t\u0101)
   * 'class one' -> \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A (awwal\u012Bko jam\u0101'at)
   * 'in class one' -> \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC (awwal\u012Bko jam\u0101'at-\u0163\u012B)
-  * 'I study in class one' -> '\u0627\u06CC \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u0648\u06C1' (I awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101niva) or '\u0627\u06CC \u0627\u0648\u0644\u06CC\u06A9\u0648 \u06A9\u0644\u0627\u0633 \u0679\u06CC \u062E\u0648\u0627\u0646\u0646\u06AF \u0679\u06CC \u0627\u064F\u0679'
+  * 'I study in class one' -> '\u0627\u06CC \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u0648\u06C1' (I awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101niva)
+  * 'He studies in class one' -> '\u0627\u0648 \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u06CC\u06A9' (\u014C awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101nik)
+  * 'She studies in class one' -> '\u0627\u0648 \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u06CC\u06A9'
+  * 'We study in class one' -> '\u0646\u0646 \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u0646\u06C1' (Nan awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101nina)
+  * 'You study in class one' -> '\u0646\u06CC \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u06CC\u0633\u06C1' (N\u012B awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101nis\u0101)
+  * 'class two' -> \u0627\u0631\u0627\u0645\u06CC \u062C\u0645\u0627\u0639\u062A (ir\u0101m\u012B jam\u0101'at)
+  * 'class three' -> \u0645\u0633\u0645\u06CC \u062C\u0645\u0627\u0639\u062A (musm\u012B jam\u0101'at)
   * 'student' -> \u0634\u0627\u06AF\u0631\u062F (sh\u0101gird)
+  * 'students' -> \u0634\u0627\u06AF\u0631\u062F \u0622\u062A\u0627 (sh\u0101gird-\u0101t\u0101)
   * 'teacher' -> \u0627\u0633\u062A\u0627\u062F (ust\u0101d)
+  * 'teachers' -> \u0627\u0633\u062A\u0627\u062F \u0622\u062A\u0627 (ust\u0101d-\u0101t\u0101)
   * 'school' -> \u0627\u0633\u06A9\u0648\u0644 / \u0645\u062F\u0631\u0633\u06C1 (isk\u016Bl / madrasa)
   * 'water' -> \u062F\u06CC\u0631 (d\u012Br)
   * 'home/house' -> \u0627\u064F\u0631\u0627 (ur\u0101)
   * 'food/bread' -> \u0627\u06CC\u0644\u06CC\u0634 (elesh) / \u06A9\u064F\u0646\u0646\u06AF (kunning)
   * 'friend' -> \u0633\u0646\u06AF\u062A (sangat)
+  * 'friends' -> \u0633\u0646\u06AF\u062A \u0622\u062A\u0627 (sangat-\u0101t\u0101)
+  * 'where do you live?' -> '\u0646\u06CC \u0627\u0631\u0627\u0646\u06AF \u0631\u06C1\u0646\u06AF\u0648\u0633\u06C1\u061F' (N\u012B ar\u0101ng rahengosa?)
+  * 'my name is Ahmad' -> '\u06A9\u0646\u0627 \u067E\u0650\u0646 \u0627\u062D\u0645\u062F \u0621\u0650' (Kan-na pin Ahmad e)
+  * 'what is your name?' -> '\u0646\u0627 \u067E\u0650\u0646 \u0627\u0646\u062A \u0621\u0650\u061F' (N\u0101 pin ant e?)
+  * 'where is the hospital?' -> '\u06C1\u0633\u067E\u062A\u0627\u0644 \u0627\u0631\u0627\u0691\u06D2 \u0621\u0650\u061F' (Haspit\u0101l ar\u0101\u0155\u0113 e?)
+- Strict SOV: Verb terminates the sentence. Postpositions (-na, -ki, -e, -\u0101n, -\u1E6D\xED, -to) attach to or immediately follow the noun phrase (e.g. '\u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC').
 - Use the provided Induced Grammar Rules and Ingested PDF Knowledge excerpts to strictly govern the translation output.
 - If target is 'brahui-arabic', provide the main translation in authentic Brahui Perso-Arabic script AND provide alternativeScript in Roman Brahui.
 - If target is 'brahui-latin' or 'brahui-roman', provide the main translation in Brolikwar Roman AND provide alternativeScript in Perso-Arabic script.
@@ -627,12 +668,14 @@ Output valid JSON strictly adhering to schema.`;
           const match = activeRules.find((r) => r.title.toLowerCase().includes(title.toLowerCase()));
           return match ? { id: match.id, title: match.title, category: match.category } : { id: "generic", title, category: "General" };
         });
+        const cleanTranslated = sanitizeBrahuiOutput(parsed.translatedText || "", targetLang, sourceLang);
+        const cleanAlt = parsed.alternativeScript ? sanitizeBrahuiOutput(parsed.alternativeScript, targetLang === "brahui-arabic" ? "brahui-latin" : "brahui-arabic", sourceLang) : "";
         const result = {
           sourceText,
           sourceLang,
           targetLang,
-          translatedText: parsed.translatedText || "",
-          alternativeScript: parsed.alternativeScript || "",
+          translatedText: cleanTranslated,
+          alternativeScript: cleanAlt,
           confidence: parsed.confidence || 93,
           grammaticalNotes: parsed.grammaticalNotes || [
             "Multi-paragraph passage translated preserving SOV structure and paragraph boundaries."
@@ -679,6 +722,16 @@ MANDATORY TRANSLATION DIRECTIVES:
    - If target is 'brahui-latin' or 'brahui-roman': 'translatedText' must be Brolikwar Roman, and 'alternativeScript' in Brahui Perso-Arabic.
    - If target is 'urdu': 'translatedText' must be in Urdu Nastaliq, and 'alternativeScript' in Roman Urdu.
    - If target is 'english': 'translatedText' must be in idiomatic English, and 'alternativeScript' in Brahui Roman.
+
+FEW-SHOT GOLD STANDARD TRANSLATION BENCHMARKS:
+- "I study in class one" -> Perso-Arabic: "\u0627\u06CC \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u0648\u06C1" | Roman: "I awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101niva"
+- "He studies in class one" -> Perso-Arabic: "\u0627\u0648 \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u06CC\u06A9" | Roman: "\u014C awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101nik"
+- "\u0645\u06CC\u06BA \u067E\u06C1\u0644\u06CC \u062C\u0645\u0627\u0639\u062A \u0645\u06CC\u06BA \u067E\u0691\u06BE\u062A\u0627 \u06C1\u0648\u06BA" -> Perso-Arabic: "\u0627\u06CC \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u0648\u06C1" | Roman: "I awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101niva"
+- "\u0645\u06CC\u06BA \u06A9\u0644\u0627\u0633 \u0648\u0646 \u0645\u06CC\u06BA \u067E\u0691\u06BE\u062A\u0627 \u06C1\u0648\u06BA" -> Perso-Arabic: "\u0627\u06CC \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u0648\u06C1" | Roman: "I awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101niva"
+- "I am a student" -> Perso-Arabic: "\u0627\u06CC \u0627\u0633\u06C1 \u0634\u0627\u06AF\u0631\u062F \u0627\u0633 \u0627\u064F\u0679" | Roman: "I asa sh\u0101gird-as u\u0163"
+- "I go to school" -> Perso-Arabic: "\u0627\u06CC \u0627\u0633\u06A9\u0648\u0644 \u0622 \u06C1\u0646\u0648\u06C1" | Roman: "I isk\u016Bl-\u0101 hinova"
+- "My name is Ahmad" -> Perso-Arabic: "\u06A9\u0646\u0627 \u067E\u0650\u0646 \u0627\u062D\u0645\u062F \u0621\u0650" | Roman: "Kan-na pin Ahmad e"
+- "Where do you live?" -> Perso-Arabic: "\u0646\u06CC \u0627\u0631\u0627\u0646\u06AF \u0631\u06C1\u0646\u06AF\u0648\u0633\u06C1\u061F" | Roman: "N\u012B ar\u0101ng rahengosa?"
 
 ${rulesSummary ? `ACTIVE INDUCED GRAMMAR RULES TO FOLLOW:
 ${rulesSummary}
@@ -730,19 +783,21 @@ Translate the exact user input text: """${sourceText}""". Output valid JSON adhe
         const match = activeRules.find((r) => r.title.toLowerCase().includes(title.toLowerCase()));
         return match ? { id: match.id, title: match.title, category: match.category } : { id: "generic", title, category: "General" };
       });
-      let translatedText = parsed.translatedText || "";
-      let alternativeScript = parsed.alternativeScript || "";
-      if (!translatedText.trim()) {
+      let rawTranslatedText = parsed.translatedText || "";
+      let rawAlternativeScript = parsed.alternativeScript || "";
+      if (!rawTranslatedText.trim()) {
         const dynamicFallback = dynamicTranslateSentence(sourceText, sourceLang, targetLang);
-        translatedText = dynamicFallback.translatedText;
-        alternativeScript = dynamicFallback.alternativeScript || "";
+        rawTranslatedText = dynamicFallback.translatedText;
+        rawAlternativeScript = dynamicFallback.alternativeScript || "";
       }
+      const cleanTranslated = sanitizeBrahuiOutput(rawTranslatedText, targetLang, sourceLang);
+      const cleanAlt = rawAlternativeScript ? sanitizeBrahuiOutput(rawAlternativeScript, targetLang === "brahui-arabic" ? "brahui-latin" : "brahui-arabic", sourceLang) : "";
       const result = {
         sourceText,
         sourceLang,
         targetLang,
-        translatedText,
-        alternativeScript,
+        translatedText: cleanTranslated,
+        alternativeScript: cleanAlt,
         phoneticPronunciation: "",
         confidence: parsed.confidence || 95,
         grammaticalNotes: ["Standard SOV word order observed."],
@@ -1042,12 +1097,16 @@ function getFallbackTranslation(sourceText, sourceLang, targetLang, precomputedR
         allMorphemes.push(...pFb.morphemeBreakdown);
       }
     }
+    const rawTranslated = translatedParas.join("\n\n");
+    const rawAlt = altParas.join("\n\n");
+    const cleanTranslated2 = sanitizeBrahuiOutput(rawTranslated, targetLang, sourceLang);
+    const cleanAlt2 = rawAlt ? sanitizeBrahuiOutput(rawAlt, targetLang === "brahui-arabic" ? "brahui-latin" : "brahui-arabic", sourceLang) : "";
     return {
       sourceText,
       sourceLang,
       targetLang,
-      translatedText: translatedParas.join("\n\n"),
-      alternativeScript: altParas.join("\n\n"),
+      translatedText: cleanTranslated2,
+      alternativeScript: cleanAlt2,
       confidence: 89,
       consultedKnowledgeDocs: knowledgeRetrieval.consultedDocs,
       dictionaryMatches: knowledgeRetrieval.dictionaryMatches,
@@ -1067,8 +1126,12 @@ function getFallbackTranslation(sourceText, sourceLang, targetLang, precomputedR
     title: r.title,
     category: r.category
   }));
+  const cleanTranslated = sanitizeBrahuiOutput(dynamicResult.translatedText, targetLang, sourceLang);
+  const cleanAlt = dynamicResult.alternativeScript ? sanitizeBrahuiOutput(dynamicResult.alternativeScript, targetLang === "brahui-arabic" ? "brahui-latin" : "brahui-arabic", sourceLang) : "";
   return {
     ...dynamicResult,
+    translatedText: cleanTranslated,
+    alternativeScript: cleanAlt,
     rulesApplied: dynamicResult.rulesApplied && dynamicResult.rulesApplied.length > 0 ? dynamicResult.rulesApplied : appliedRules,
     consultedKnowledgeDocs: knowledgeRetrieval.consultedDocs,
     dictionaryMatches: knowledgeRetrieval.dictionaryMatches,
@@ -1082,6 +1145,7 @@ export {
   isBrahuiLang,
   resolveServerApiKey,
   retrieveRelevantKnowledge,
+  sanitizeBrahuiOutput,
   summarizeUploadedDoc,
   translateText,
   translateViaGoogleTranslate

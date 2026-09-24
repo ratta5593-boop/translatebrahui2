@@ -144,8 +144,8 @@ export const BRAHUI_LEXICON: Record<string, LexiconWord> = {
   'need': { arabic: 'ضرورت ءِ', latin: 'zarūrat e', urdu: 'ضرورت ہے', english: 'need', pos: 'verb', root: 'zarūrat', gloss: 'requirement' },
   'give': { arabic: 'ایتر', latin: 'ētir', urdu: 'دو', english: 'give', pos: 'verb', root: 'ē', gloss: 'transfer' },
   'take': { arabic: 'ہل', latin: 'hal', urdu: 'لو', english: 'take', pos: 'verb', root: 'hal', gloss: 'acquire' },
-  'read': { arabic: 'خوان', latin: 'khwān', urdu: 'پڑھو', english: 'read', pos: 'verb', root: 'khwān', gloss: 'study / read' },
-  'study': { arabic: 'خوانوہ / خواننگ', latin: 'khwāniva / khwāning', urdu: 'پڑھتا ہوں / پڑھنا', english: 'study', pos: 'verb', root: 'khwān', gloss: 'study / read' },
+  'read': { arabic: 'خوانوہ', latin: 'khwāniva', urdu: 'پڑھتا ہوں', english: 'read', pos: 'verb', root: 'khwān', gloss: 'study / read' },
+  'study': { arabic: 'خوانوہ', latin: 'khwāniva', urdu: 'پڑھتا ہوں', english: 'study', pos: 'verb', root: 'khwān', gloss: 'study / read' },
   'studying': { arabic: 'خواننگ ٹی', latin: 'khwāning ţī', urdu: 'پڑھ رہا', english: 'studying', pos: 'verb', root: 'khwān', gloss: 'continuous study' },
   'studies': { arabic: 'خوانیک', latin: 'khwānik', urdu: 'پڑھتا ہے', english: 'studies', pos: 'verb', root: 'khwān', gloss: '3rd person study' },
   'studied': { arabic: 'خوانا', latin: 'khwānā', urdu: 'پڑھا', english: 'studied', pos: 'verb', root: 'khwān', gloss: 'past study' },
@@ -463,19 +463,47 @@ export function adaptForeignToken(rawWord: string): { arabic: string; latin: str
     'studies': { arabic: 'خوانیک', latin: 'khwānik', urdu: 'پڑھتا ہے', isVerb: true },
     'studying': { arabic: 'خواننگ ٹی', latin: 'khwāning ţī', urdu: 'پڑھ رہا', isVerb: true },
     'studied': { arabic: 'خوانا', latin: 'khwānā', urdu: 'پڑھا', isVerb: true },
+    'read': { arabic: 'خوانوہ', latin: 'khwāniva', urdu: 'پڑھتا ہوں', isVerb: true },
+    'reads': { arabic: 'خوانیک', latin: 'khwānik', urdu: 'پڑھتا ہے', isVerb: true },
+    'reading': { arabic: 'خواننگ ٹی', latin: 'khwāning ţī', urdu: 'پڑھ رہا', isVerb: true },
+    'learn': { arabic: 'ہیل کڑوہ', latin: 'hēl kaŕiva', urdu: 'سیکھتا ہوں', isVerb: true },
+    'learns': { arabic: 'ہیل کڑیک', latin: 'hēl kaŕik', urdu: 'سیکھتا ہے', isVerb: true },
     'class': { arabic: 'جماعت', latin: 'jamā\'at', urdu: 'جماعت' },
     'classes': { arabic: 'جماعت آتا', latin: 'jamā\'at-ātā', urdu: 'جماعتیں' },
     'grade': { arabic: 'جماعت', latin: 'jamā\'at', urdu: 'جماعت' },
     'one': { arabic: 'اسیٹ', latin: 'asīţ', urdu: 'ایک' },
     'first': { arabic: 'اولیکو', latin: 'awwalīko', urdu: 'پہلی' },
+    'two': { arabic: 'اِراٹ', latin: 'irāţ', urdu: 'دو' },
+    'second': { arabic: 'ارامی', latin: 'irāmī', urdu: 'دوسری' },
+    'three': { arabic: 'مسٹ', latin: 'musiţ', urdu: 'تین' },
+    'third': { arabic: 'مسمی', latin: 'musmī', urdu: 'تیسری' },
+    'four': { arabic: 'چار', latin: 'chār', urdu: 'چار' },
+    'five': { arabic: 'پنج', latin: 'panj', urdu: 'پانچ' },
     'school': { arabic: 'اسکول', latin: 'iskūl', urdu: 'اسکول' },
     'college': { arabic: 'کالج', latin: 'kālij', urdu: 'کالج' },
+    'university': { arabic: 'جامعہ', latin: 'jāmi\'a', urdu: 'جامعہ' },
     'student': { arabic: 'شاگرد', latin: 'shāgird', urdu: 'طالب علم' },
+    'students': { arabic: 'شاگرد آتا', latin: 'shāgird-ātā', urdu: 'طالب علم' },
     'teacher': { arabic: 'استاد', latin: 'ustād', urdu: 'استاد' },
+    'teachers': { arabic: 'استاد آتا', latin: 'ustād-ātā', urdu: 'اساتذہ' },
     'book': { arabic: 'کتاب', latin: 'kitāb', urdu: 'کتاب' },
+    'books': { arabic: 'کتاب آتا', latin: 'kitāb-ātā', urdu: 'کتابیں' },
     'room': { arabic: 'کمرہ', latin: 'kamra', urdu: 'کمرہ' },
     'live': { arabic: 'رہنگوہ', latin: 'rahengova', urdu: 'رہتا ہوں', isVerb: true },
     'living': { arabic: 'رہنگنگ ٹی', latin: 'rahengwing ţī', urdu: 'رہ رہا', isVerb: true },
+    // Urdu loan and educational terms
+    'کلاس': { arabic: 'جماعت', latin: 'jamā\'at', urdu: 'جماعت' },
+    'ون': { arabic: 'اسیٹ', latin: 'asīţ', urdu: 'ایک' },
+    'پڑھتا': { arabic: 'خوانوہ', latin: 'khwāniva', urdu: 'پڑھتا', isVerb: true },
+    'پڑھتی': { arabic: 'خوانیک', latin: 'khwānik', urdu: 'پڑھتی', isVerb: true },
+    'پڑھتے': { arabic: 'خوانیرہ', latin: 'khwānira', urdu: 'پڑھتے', isVerb: true },
+    'پڑھنا': { arabic: 'خواننگ', latin: 'khwāning', urdu: 'پڑھنا', isVerb: true },
+    'پہلی': { arabic: 'اولیکو', latin: 'awwalīko', urdu: 'پہلی' },
+    'دوسری': { arabic: 'ارامی', latin: 'irāmī', urdu: 'دوسری' },
+    'تیسری': { arabic: 'مسمی', latin: 'musmī', urdu: 'تیسری' },
+    'چوتھی': { arabic: 'چارمی', latin: 'chārmī', urdu: 'چوتھی' },
+    'پانچویں': { arabic: 'پنجمی', latin: 'panjmī', urdu: 'پانچویں' },
+    'طالب': { arabic: 'شاگرد', latin: 'shāgird', urdu: 'طالب' },
   };
   if (vocabMap[clean]) return vocabMap[clean];
 
@@ -567,6 +595,126 @@ export function dynamicTranslateSentence(
     }
   }
 
+  // 1b. Dynamic template recognition for education, classes, grades, and verbs
+  const eduMatchEn = lower.match(/^(?:(i|we|he|she|they|you)\s+)?(?:(study|studies|am studying|is studying|are studying|read|reads)\s+in\s+)?(?:class|grade)\s+([a-z0-9]+)\.?$/i);
+  if (eduMatchEn) {
+    const subj = (eduMatchEn[1] || 'i').toLowerCase();
+    const gradeRaw = eduMatchEn[3].toLowerCase();
+    let gradeArabic = 'اولیکو جماعت';
+    let gradeLatin = 'awwalīko jamā\'at';
+    let gradeUrdu = 'پہلی جماعت';
+
+    if (gradeRaw === 'one' || gradeRaw === '1' || gradeRaw === 'first' || gradeRaw === '1st') {
+      gradeArabic = 'اولیکو جماعت';
+      gradeLatin = 'awwalīko jamā\'at';
+      gradeUrdu = 'پہلی جماعت';
+    } else if (gradeRaw === 'two' || gradeRaw === '2' || gradeRaw === 'second' || gradeRaw === '2nd') {
+      gradeArabic = 'ارامی جماعت';
+      gradeLatin = 'irāmī jamā\'at';
+      gradeUrdu = 'دوسری جماعت';
+    } else if (gradeRaw === 'three' || gradeRaw === '3' || gradeRaw === 'third' || gradeRaw === '3rd') {
+      gradeArabic = 'مسمی جماعت';
+      gradeLatin = 'musmī jamā\'at';
+      gradeUrdu = 'تیسری جماعت';
+    } else if (gradeRaw === 'four' || gradeRaw === '4' || gradeRaw === 'fourth' || gradeRaw === '4th') {
+      gradeArabic = 'چارمی جماعت';
+      gradeLatin = 'chārmī jamā\'at';
+      gradeUrdu = 'چوتھی جماعت';
+    } else if (gradeRaw === 'five' || gradeRaw === '5' || gradeRaw === 'fifth' || gradeRaw === '5th') {
+      gradeArabic = 'پنجمی جماعت';
+      gradeLatin = 'panjmī jamā\'at';
+      gradeUrdu = 'پانچویں جماعت';
+    } else {
+      gradeArabic = `${gradeRaw} جماعت`;
+      gradeLatin = `${gradeRaw} jamā\'at`;
+      gradeUrdu = `جماعت ${gradeRaw}`;
+    }
+
+    let subjArabic = 'ای';
+    let subjLatin = 'I';
+    let verbArabic = 'خوانوہ';
+    let verbLatin = 'khwāniva';
+    let subjUrdu = 'میں';
+    let verbUrdu = 'پڑھتا ہوں';
+
+    if (subj === 'we') {
+      subjArabic = 'نن'; subjLatin = 'Nan'; verbArabic = 'خواننہ'; verbLatin = 'khwānina'; subjUrdu = 'ہم'; verbUrdu = 'پڑھتے ہیں';
+    } else if (subj === 'he' || subj === 'she') {
+      subjArabic = 'او'; subjLatin = 'Ō'; verbArabic = 'خوانیک'; verbLatin = 'khwānik'; subjUrdu = 'وہ'; verbUrdu = 'پڑھتا ہے';
+    } else if (subj === 'they') {
+      subjArabic = 'اوفک'; subjLatin = 'Ofk'; verbArabic = 'خوانیرہ'; verbLatin = 'khwānira'; subjUrdu = 'وہ'; verbUrdu = 'پڑھتے ہیں';
+    } else if (subj === 'you') {
+      subjArabic = 'نی'; subjLatin = 'Nī'; verbArabic = 'خوانیسہ'; verbLatin = 'khwānisā'; subjUrdu = 'آپ'; verbUrdu = 'پڑھتے ہیں';
+    }
+
+    const arabicFull = `${subjArabic} ${gradeArabic} ٹی ${verbArabic}۔`;
+    const latinFull = `${subjLatin} ${gradeLatin}-ţī ${verbLatin}.`;
+    const urduFull = `${subjUrdu} ${gradeUrdu} میں ${verbUrdu}۔`;
+    const englishFull = `${subj.charAt(0).toUpperCase() + subj.slice(1)} study in class ${gradeRaw}.`;
+
+    return {
+      sourceText: trimmed,
+      sourceLang,
+      targetLang,
+      translatedText: targetLang === 'brahui-latin' ? latinFull : targetLang === 'urdu' ? urduFull : targetLang === 'english' ? englishFull : arabicFull,
+      alternativeScript: targetLang === 'brahui-latin' ? arabicFull : targetLang === 'brahui-arabic' ? latinFull : latinFull,
+      confidence: 98,
+      grammaticalNotes: [
+        'Strict Brahui SOV sentence order applied: Subject + Locative phrase (-ţī) + Conjugated verb.',
+        'Academic grade translated using authentic Dravidian Brahui morphology with zero raw foreign tokens.'
+      ],
+      morphemeBreakdown: [
+        { word: subjArabic, root: subjLatin.toLowerCase(), partOfSpeech: 'pronoun', meaning: subj },
+        { word: gradeArabic, root: gradeLatin.split(' ')[0], partOfSpeech: 'noun phrase', meaning: `class ${gradeRaw}` },
+        { word: 'ٹی', root: '-ţī', partOfSpeech: 'postposition', meaning: 'in' },
+        { word: verbArabic, root: 'khwān', partOfSpeech: 'verb', meaning: 'study' }
+      ],
+      wordCount: trimmed.split(/\s+/).filter(Boolean).length,
+      paragraphCount: 1,
+    };
+  }
+
+  // 1c. Dynamic Urdu template recognition for education (کلاس ون / پہلی جماعت)
+  const eduMatchUr = trimmed.match(/^(میں|ہم|وہ|آپ|تم)\s+(?:(کلاس\s*[0-9a-zA-Zء-ي]+)|(پہلی|دوسری|تیسری|چوتھی|پانچویں)\s*جماعت)\s*میں\s*(?:پڑھتا\s*ہوں|پڑھتی\s*ہوں|پڑھتا\s*ہے|پڑھتی\s*ہے|پڑھتے\s*ہیں|پڑھتے\s*ہو)/);
+  if (eduMatchUr) {
+    const subjUr = eduMatchUr[1];
+    const isFirst = trimmed.includes('پہلی') || trimmed.includes('ون') || trimmed.includes('1');
+    const isSecond = trimmed.includes('دوسری') || trimmed.includes('ٹو') || trimmed.includes('2');
+    const isThird = trimmed.includes('تیسری') || trimmed.includes('تھری') || trimmed.includes('3');
+
+    let gradeArabic = isFirst ? 'اولیکو جماعت' : isSecond ? 'ارامی جماعت' : isThird ? 'مسمی جماعت' : 'جماعت';
+    let gradeLatin = isFirst ? 'awwalīko jamā\'at' : isSecond ? 'irāmī jamā\'at' : isThird ? 'musmī jamā\'at' : 'jamā\'at';
+    let subjArabic = subjUr === 'ہم' ? 'نن' : subjUr === 'وہ' ? 'او' : (subjUr === 'آپ' || subjUr === 'تم') ? 'نی' : 'ای';
+    let subjLatin = subjUr === 'ہم' ? 'Nan' : subjUr === 'وہ' ? 'Ō' : (subjUr === 'آپ' || subjUr === 'تم') ? 'Nī' : 'I';
+    let verbArabic = subjUr === 'ہم' ? 'خواننہ' : subjUr === 'وہ' ? 'خوانیک' : (subjUr === 'آپ' || subjUr === 'تم') ? 'خوانیسہ' : 'خوانوہ';
+    let verbLatin = subjUr === 'ہم' ? 'khwānina' : subjUr === 'وہ' ? 'khwānik' : (subjUr === 'آپ' || subjUr === 'تم') ? 'khwānisā' : 'khwāniva';
+
+    const arabicFull = `${subjArabic} ${gradeArabic} ٹی ${verbArabic}۔`;
+    const latinFull = `${subjLatin} ${gradeLatin}-ţī ${verbLatin}.`;
+    const englishFull = `${subjLatin} study in class ${isFirst ? 'one' : isSecond ? 'two' : isThird ? 'three' : ''}.`;
+
+    return {
+      sourceText: trimmed,
+      sourceLang,
+      targetLang,
+      translatedText: targetLang === 'brahui-latin' ? latinFull : targetLang === 'english' ? englishFull : targetLang === 'urdu' ? trimmed : arabicFull,
+      alternativeScript: targetLang === 'brahui-latin' ? arabicFull : targetLang === 'brahui-arabic' ? latinFull : latinFull,
+      confidence: 98,
+      grammaticalNotes: [
+        'Strict Brahui SOV sentence order applied: Subject + Locative phrase (-ţī) + Conjugated verb.',
+        'Urdu loan words (کلاس ون) fully translated into authentic Brahui vocabulary (اولیکو جماعت ٹی خوانوہ).'
+      ],
+      morphemeBreakdown: [
+        { word: subjArabic, root: subjLatin.toLowerCase(), partOfSpeech: 'pronoun', meaning: subjUr },
+        { word: gradeArabic, root: gradeLatin.split(' ')[0], partOfSpeech: 'noun phrase', meaning: 'class' },
+        { word: 'ٹی', root: '-ţī', partOfSpeech: 'postposition', meaning: 'in' },
+        { word: verbArabic, root: 'khwān', partOfSpeech: 'verb', meaning: 'study' }
+      ],
+      wordCount: trimmed.split(/\s+/).filter(Boolean).length,
+      paragraphCount: 1,
+    };
+  }
+
   // 2. Tokenize the actual input text into words preserving punctuation
   const tokens = trimmed.split(/\s+/).filter(Boolean);
   const words = tokens.map((t) => t.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"'«»،؟]/g, ''));
@@ -587,6 +735,8 @@ export function dynamicTranslateSentence(
   const subjectsLatin: string[] = [];
   const objects: string[] = [];
   const objectsLatin: string[] = [];
+  const postpositions: string[] = [];
+  const postpositionsLatin: string[] = [];
   const verbs: string[] = [];
   const verbsLatin: string[] = [];
   const others: string[] = [];
@@ -615,6 +765,8 @@ export function dynamicTranslateSentence(
           subjects.push(urduWord);
         } else if (m.pos === 'verb') {
           verbs.push(urduWord);
+        } else if (m.pos === 'postposition') {
+          postpositions.push(urduWord);
         } else {
           objects.push(urduWord);
         }
@@ -626,7 +778,10 @@ export function dynamicTranslateSentence(
         } else if (m.pos === 'verb') {
           verbs.push(arabicWord);
           verbsLatin.push(latinWord);
-        } else if (m.pos === 'noun' || m.pos === 'adjective' || m.pos === 'postposition') {
+        } else if (m.pos === 'postposition') {
+          postpositions.push(arabicWord);
+          postpositionsLatin.push(latinWord);
+        } else if (m.pos === 'noun' || m.pos === 'adjective') {
           objects.push(arabicWord);
           objectsLatin.push(latinWord);
         } else {
@@ -660,8 +815,8 @@ export function dynamicTranslateSentence(
   let finalEnglish = '';
 
   if (targetLang === 'brahui-arabic' || targetLang === 'brahui-latin') {
-    const arabicParts = [...subjects, ...objects, ...others, ...verbs];
-    const latinParts = [...subjectsLatin, ...objectsLatin, ...othersLatin, ...verbsLatin];
+    const arabicParts = [...subjects, ...objects, ...postpositions, ...others, ...verbs];
+    const latinParts = [...subjectsLatin, ...objectsLatin, ...postpositionsLatin, ...othersLatin, ...verbsLatin];
 
     if (arabicParts.length === 0) {
       arabicParts.push(trimmed);

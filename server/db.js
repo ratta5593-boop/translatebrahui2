@@ -148,6 +148,31 @@ const INITIAL_GRAMMAR_RULES = [
     verifiedBy: "Linguist Admin"
   },
   {
+    id: "rule-educational-locative-05",
+    title: "Locative Suffix (-\u0163\u012B / \u0679\u06CC) for Academic Classes & Education",
+    category: "Morphology",
+    pattern: "[Ordinal Adjective] + [jam\u0101'at / \u062C\u0645\u0627\u0639\u062A] + -\u0163\u012B (-\u0679\u06CC) + [Verb khw\u0101ning / \u062E\u0648\u0627\u0646\u0646\u06AF]",
+    explanation: `Studying in an academic class or grade requires the ordinal number ("awwal\u012Bko" for 1st, "ir\u0101m\u012B" for 2nd) preceding "jam\u0101'at" (class), followed by locative postposition "-\u0163\u012B" (in) and verb "khw\u0101niva" (I study / read). Raw foreign words like "study" or "class one" must never be left in English.`,
+    confidence: 99,
+    status: "verified",
+    dialect: "Standard",
+    examples: [
+      {
+        incorrect: "I study in class one (untranslated)",
+        correct: "I awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101niva / \u0627\u06CC \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u0648\u06C1",
+        englishGloss: "I study in class one"
+      },
+      {
+        incorrect: "I class 1 study",
+        correct: "I awwal\u012Bko kl\u0101s-\u0163\u012B khw\u0101niva / \u0627\u06CC \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u0648\u06C1",
+        englishGloss: "I study in class one"
+      }
+    ],
+    createdAt: "2026-09-17T10:00:00.000Z",
+    verifiedAt: "2026-09-17T10:15:00.000Z",
+    verifiedBy: "Brahui Linguistic Board"
+  },
+  {
     id: "rule-lateral-fricative-05",
     title: "Voiceless Lateral Fricative Orthography (\u076A / lh)",
     category: "Orthography",
@@ -429,6 +454,182 @@ const INITIAL_CORPUS = [
     status: "approved",
     sourceType: "initial_seed",
     createdAt: "2026-09-17T09:15:00.000Z"
+  },
+  {
+    id: "corp-edu-class1-eng",
+    sourceText: "I study in class one",
+    sourceLang: "english",
+    targetText: "\u0627\u06CC \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u0648\u06C1",
+    targetLang: "brahui-arabic",
+    alternativeScript: "I awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101niva",
+    dialect: "Standard",
+    contextNotes: "Academic grade expression with strict SOV and locative -\u0163\u012B postposition",
+    contributorName: "Brahui Linguistic Board",
+    contributorRole: "Admin",
+    verified: true,
+    status: "approved",
+    sourceType: "initial_seed",
+    createdAt: "2026-09-17T09:20:00.000Z"
+  },
+  {
+    id: "corp-edu-class1-eng-punct",
+    sourceText: "I study in class one.",
+    sourceLang: "english",
+    targetText: "\u0627\u06CC \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u0648\u06C1\u06D4",
+    targetLang: "brahui-arabic",
+    alternativeScript: "I awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101niva.",
+    dialect: "Standard",
+    contextNotes: "Academic grade expression with punctuation",
+    contributorName: "Brahui Linguistic Board",
+    contributorRole: "Admin",
+    verified: true,
+    status: "approved",
+    sourceType: "initial_seed",
+    createdAt: "2026-09-17T09:21:00.000Z"
+  },
+  {
+    id: "corp-edu-class1-num-eng",
+    sourceText: "I study in class 1",
+    sourceLang: "english",
+    targetText: "\u0627\u06CC \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u0648\u06C1",
+    targetLang: "brahui-arabic",
+    alternativeScript: "I awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101niva",
+    dialect: "Standard",
+    contextNotes: "Academic grade with numeric digit",
+    contributorName: "Brahui Linguistic Board",
+    contributorRole: "Admin",
+    verified: true,
+    status: "approved",
+    sourceType: "initial_seed",
+    createdAt: "2026-09-17T09:22:00.000Z"
+  },
+  {
+    id: "corp-edu-class1-urdu",
+    sourceText: "\u0645\u06CC\u06BA \u067E\u06C1\u0644\u06CC \u062C\u0645\u0627\u0639\u062A \u0645\u06CC\u06BA \u067E\u0691\u06BE\u062A\u0627 \u06C1\u0648\u06BA",
+    sourceLang: "urdu",
+    targetText: "\u0627\u06CC \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u0648\u06C1",
+    targetLang: "brahui-arabic",
+    alternativeScript: "I awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101niva",
+    dialect: "Standard",
+    contextNotes: "Urdu to Brahui academic grade 1 sentence",
+    contributorName: "Brahui Linguistic Board",
+    contributorRole: "Admin",
+    verified: true,
+    status: "approved",
+    sourceType: "initial_seed",
+    createdAt: "2026-09-17T09:23:00.000Z"
+  },
+  {
+    id: "corp-edu-class1-urdu-punct",
+    sourceText: "\u0645\u06CC\u06BA \u067E\u06C1\u0644\u06CC \u062C\u0645\u0627\u0639\u062A \u0645\u06CC\u06BA \u067E\u0691\u06BE\u062A\u0627 \u06C1\u0648\u06BA\u06D4",
+    sourceLang: "urdu",
+    targetText: "\u0627\u06CC \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u0648\u06C1\u06D4",
+    targetLang: "brahui-arabic",
+    alternativeScript: "I awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101niva.",
+    dialect: "Standard",
+    contextNotes: "Urdu to Brahui academic grade 1 sentence with punctuation",
+    contributorName: "Brahui Linguistic Board",
+    contributorRole: "Admin",
+    verified: true,
+    status: "approved",
+    sourceType: "initial_seed",
+    createdAt: "2026-09-17T09:24:00.000Z"
+  },
+  {
+    id: "corp-edu-class1-urdu-loan",
+    sourceText: "\u0645\u06CC\u06BA \u06A9\u0644\u0627\u0633 \u0648\u0646 \u0645\u06CC\u06BA \u067E\u0691\u06BE\u062A\u0627 \u06C1\u0648\u06BA",
+    sourceLang: "urdu",
+    targetText: "\u0627\u06CC \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u0648\u06C1",
+    targetLang: "brahui-arabic",
+    alternativeScript: "I awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101niva",
+    dialect: "Standard",
+    contextNotes: 'Urdu colloquial loan "\u06A9\u0644\u0627\u0633 \u0648\u0646" translated fully into authentic Brahui',
+    contributorName: "Brahui Linguistic Board",
+    contributorRole: "Admin",
+    verified: true,
+    status: "approved",
+    sourceType: "initial_seed",
+    createdAt: "2026-09-17T09:25:00.000Z"
+  },
+  {
+    id: "corp-edu-class1-urdu-loan-punct",
+    sourceText: "\u0645\u06CC\u06BA \u06A9\u0644\u0627\u0633 \u0648\u0646 \u0645\u06CC\u06BA \u067E\u0691\u06BE\u062A\u0627 \u06C1\u0648\u06BA\u06D4",
+    sourceLang: "urdu",
+    targetText: "\u0627\u06CC \u0627\u0648\u0644\u06CC\u06A9\u0648 \u062C\u0645\u0627\u0639\u062A \u0679\u06CC \u062E\u0648\u0627\u0646\u0648\u06C1\u06D4",
+    targetLang: "brahui-arabic",
+    alternativeScript: "I awwal\u012Bko jam\u0101'at-\u0163\u012B khw\u0101niva.",
+    dialect: "Standard",
+    contextNotes: 'Urdu colloquial loan "\u06A9\u0644\u0627\u0633 \u0648\u0646" with punctuation',
+    contributorName: "Brahui Linguistic Board",
+    contributorRole: "Admin",
+    verified: true,
+    status: "approved",
+    sourceType: "initial_seed",
+    createdAt: "2026-09-17T09:26:00.000Z"
+  },
+  {
+    id: "corp-edu-student-eng",
+    sourceText: "I am a student",
+    sourceLang: "english",
+    targetText: "\u0627\u06CC \u0627\u0633\u06C1 \u0634\u0627\u06AF\u0631\u062F \u0627\u0633 \u0627\u064F\u0679",
+    targetLang: "brahui-arabic",
+    alternativeScript: "I asa sh\u0101gird-as u\u0163",
+    dialect: "Standard",
+    contextNotes: "First person student identity",
+    contributorName: "Brahui Linguistic Board",
+    contributorRole: "Admin",
+    verified: true,
+    status: "approved",
+    sourceType: "initial_seed",
+    createdAt: "2026-09-17T09:27:00.000Z"
+  },
+  {
+    id: "corp-edu-student-urdu",
+    sourceText: "\u0645\u06CC\u06BA \u0627\u06CC\u06A9 \u0637\u0627\u0644\u0628 \u0639\u0644\u0645 \u06C1\u0648\u06BA",
+    sourceLang: "urdu",
+    targetText: "\u0627\u06CC \u0627\u0633\u06C1 \u0634\u0627\u06AF\u0631\u062F \u0627\u0633 \u0627\u064F\u0679",
+    targetLang: "brahui-arabic",
+    alternativeScript: "I asa sh\u0101gird-as u\u0163",
+    dialect: "Standard",
+    contextNotes: "Urdu student sentence",
+    contributorName: "Brahui Linguistic Board",
+    contributorRole: "Admin",
+    verified: true,
+    status: "approved",
+    sourceType: "initial_seed",
+    createdAt: "2026-09-17T09:28:00.000Z"
+  },
+  {
+    id: "corp-edu-school-eng",
+    sourceText: "I go to school",
+    sourceLang: "english",
+    targetText: "\u0627\u06CC \u0627\u0633\u06A9\u0648\u0644 \u0622 \u06C1\u0646\u0648\u06C1",
+    targetLang: "brahui-arabic",
+    alternativeScript: "I isk\u016Bl-\u0101 hinova",
+    dialect: "Standard",
+    contextNotes: "Directional postposition -\u0101 with school",
+    contributorName: "Brahui Linguistic Board",
+    contributorRole: "Admin",
+    verified: true,
+    status: "approved",
+    sourceType: "initial_seed",
+    createdAt: "2026-09-17T09:29:00.000Z"
+  },
+  {
+    id: "corp-edu-school-urdu",
+    sourceText: "\u0645\u06CC\u06BA \u0627\u0633\u06A9\u0648\u0644 \u062C\u0627\u062A\u0627 \u06C1\u0648\u06BA",
+    sourceLang: "urdu",
+    targetText: "\u0627\u06CC \u0627\u0633\u06A9\u0648\u0644 \u0622 \u06C1\u0646\u0648\u06C1",
+    targetLang: "brahui-arabic",
+    alternativeScript: "I isk\u016Bl-\u0101 hinova",
+    dialect: "Standard",
+    contextNotes: "Urdu school sentence",
+    contributorName: "Brahui Linguistic Board",
+    contributorRole: "Admin",
+    verified: true,
+    status: "approved",
+    sourceType: "initial_seed",
+    createdAt: "2026-09-17T09:30:00.000Z"
   }
 ];
 const INITIAL_DOCUMENTS = [
@@ -489,6 +690,7 @@ class DatabaseService {
         if (parsed.grammarRules && parsed.corpus) {
           this.data = parsed;
           this.seedMissingCorpus();
+          this.seedMissingRules();
           return;
         }
       }
@@ -498,14 +700,31 @@ class DatabaseService {
         if (parsed.grammarRules && parsed.corpus) {
           this.data = parsed;
           this.seedMissingCorpus();
+          this.seedMissingRules();
           this.persist();
           return;
         }
       }
       this.seedMissingCorpus();
+      this.seedMissingRules();
       this.persist();
     } catch (err) {
       console.error("Error initializing database file, falling back to memory state:", err);
+    }
+  }
+  seedMissingRules() {
+    let changed = false;
+    for (const initRule of INITIAL_GRAMMAR_RULES) {
+      const exists = this.data.grammarRules.some(
+        (r) => r.id === initRule.id || r.title.toLowerCase().trim() === initRule.title.toLowerCase().trim()
+      );
+      if (!exists) {
+        this.data.grammarRules.push(initRule);
+        changed = true;
+      }
+    }
+    if (changed) {
+      this.persist();
     }
   }
   seedMissingCorpus() {

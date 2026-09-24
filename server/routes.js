@@ -2,7 +2,7 @@ import express from "express";
 import multer from "multer";
 import crypto from "crypto";
 import { dbService, GOOGLE_TRANSLATE_CATALOG } from "./db.js";
-import { translateText, induceGrammarRule, summarizeUploadedDoc } from "./gemini.js";
+import { translateText, induceGrammarRule, summarizeUploadedDoc, sanitizeBrahuiOutput } from "./gemini.js";
 import { dynamicTranslateSentence } from "./dynamicTranslator.js";
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -132,6 +132,14 @@ apiRouter.post("/translate", async (req, res) => {
       apiKey: providedApiKey,
       forceDynamicAI: true
     });
+    result.translatedText = sanitizeBrahuiOutput(result.translatedText, tLang, sLang);
+    if (result.alternativeScript) {
+      result.alternativeScript = sanitizeBrahuiOutput(
+        result.alternativeScript,
+        tLang === "brahui-arabic" ? "brahui-latin" : "brahui-arabic",
+        sLang
+      );
+    }
     if (result.dialectVariants && result.dialectVariants.length > 1) {
       const hasBrackets = result.translatedText.includes("(") && result.translatedText.includes(")");
       if (!hasBrackets) {
@@ -150,6 +158,14 @@ apiRouter.post("/translate", async (req, res) => {
       const sLang = req.body?.sourceLang || "english";
       const tLang = req.body?.targetLang || "brahui-arabic";
       const fallbackResult = dynamicTranslateSentence(req.body?.sourceText || "", sLang, tLang);
+      fallbackResult.translatedText = sanitizeBrahuiOutput(fallbackResult.translatedText, tLang, sLang);
+      if (fallbackResult.alternativeScript) {
+        fallbackResult.alternativeScript = sanitizeBrahuiOutput(
+          fallbackResult.alternativeScript,
+          tLang === "brahui-arabic" ? "brahui-latin" : "brahui-arabic",
+          sLang
+        );
+      }
       return res.json({ ...fallbackResult, isFallback: true });
     } catch {
       res.status(500).json({ error: error.message || "Translation failed" });
@@ -277,8 +293,12 @@ apiRouter.post("/corrections/sync", (req, res) => {
       message: `Data synced successfully. Added ${syncResult.addedRules} rules and ${syncResult.addedCorpus} corpus entries.`,
       addedRules: syncResult.addedRules,
       addedCorpus: syncResult.addedCorpus,
+      synced: syncResult,
       rules: currentRules,
-      corpus: currentCorpus
+      activeRules: currentRules,
+      corpus: currentCorpus,
+      corpusCount: currentCorpus.length,
+      rulesCount: currentRules.length
     });
   } catch (error) {
     console.error("Data sync error:", error);
@@ -406,27 +426,6 @@ apiRouter.get("/rules/active", (_req, res) => {
     res.json({ rules });
   } catch (error) {
     res.status(500).json({ error: error.message });
-  }
-});
-apiRouter.post("/corrections/sync", (req, res) => {
-  try {
-    const { rules = [], corpus = [] } = req.body || {};
-    const result = dbService.syncLearnedData(rules, corpus);
-    if (result.addedRules > 0 || result.addedCorpus > 0) {
-      translationFastCache.clear();
-    }
-    const activeRules = dbService.getActiveRules();
-    const allCorpus = dbService.getCorpus();
-    res.json({
-      success: true,
-      synced: result,
-      activeRules,
-      corpusCount: allCorpus.length,
-      rulesCount: activeRules.length
-    });
-  } catch (error) {
-    console.error("Error syncing corrections:", error);
-    res.status(500).json({ error: error.message || "Failed to sync corrections" });
   }
 });
 apiRouter.get("/admin/rules", requireAdminAuth, (req, res) => {

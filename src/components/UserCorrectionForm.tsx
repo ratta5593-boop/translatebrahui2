@@ -115,6 +115,28 @@ export const UserCorrectionForm: React.FC<UserCorrectionFormProps> = ({
         explanation: data.explanation || data.inducedRule?.explanation,
       });
 
+      // Persist locally for resilient sync between preview and production environments
+      try {
+        if (data.inducedRule) {
+          const storedRules = localStorage.getItem('brahui_cached_rules');
+          const existingRules: any[] = storedRules ? JSON.parse(storedRules) : [];
+          if (!existingRules.some((r) => r.id === data.inducedRule.id)) {
+            existingRules.unshift(data.inducedRule);
+            localStorage.setItem('brahui_cached_rules', JSON.stringify(existingRules.slice(0, 100)));
+          }
+        }
+        if (data.corpusEntry) {
+          const storedCorpus = localStorage.getItem('brahui_cached_corrections');
+          const existingCorpus: any[] = storedCorpus ? JSON.parse(storedCorpus) : [];
+          if (!existingCorpus.some((c) => c.id === data.corpusEntry.id)) {
+            existingCorpus.unshift(data.corpusEntry);
+            localStorage.setItem('brahui_cached_corrections', JSON.stringify(existingCorpus.slice(0, 100)));
+          }
+        }
+      } catch (storageErr) {
+        console.warn('Failed to cache submitted correction locally:', storageErr);
+      }
+
       if (data.inducedRule) {
         onCorrectionSuccess(data.inducedRule);
       }

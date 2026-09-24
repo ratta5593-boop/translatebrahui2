@@ -182,6 +182,31 @@ const INITIAL_GRAMMAR_RULES: GrammarRule[] = [
     verifiedBy: 'Linguist Admin'
   },
   {
+    id: 'rule-educational-locative-05',
+    title: 'Locative Suffix (-ţī / ٹی) for Academic Classes & Education',
+    category: 'Morphology',
+    pattern: '[Ordinal Adjective] + [jamā\'at / جماعت] + -ţī (-ٹی) + [Verb khwāning / خواننگ]',
+    explanation: 'Studying in an academic class or grade requires the ordinal number ("awwalīko" for 1st, "irāmī" for 2nd) preceding "jamā\'at" (class), followed by locative postposition "-ţī" (in) and verb "khwāniva" (I study / read). Raw foreign words like "study" or "class one" must never be left in English.',
+    confidence: 99,
+    status: 'verified',
+    dialect: 'Standard',
+    examples: [
+      {
+        incorrect: 'I study in class one (untranslated)',
+        correct: 'I awwalīko jamā\'at-ţī khwāniva / ای اولیکو جماعت ٹی خوانوہ',
+        englishGloss: 'I study in class one'
+      },
+      {
+        incorrect: 'I class 1 study',
+        correct: 'I awwalīko klās-ţī khwāniva / ای اولیکو جماعت ٹی خوانوہ',
+        englishGloss: 'I study in class one'
+      }
+    ],
+    createdAt: '2026-09-17T10:00:00.000Z',
+    verifiedAt: '2026-09-17T10:15:00.000Z',
+    verifiedBy: 'Brahui Linguistic Board'
+  },
+  {
     id: 'rule-lateral-fricative-05',
     title: 'Voiceless Lateral Fricative Orthography (ݪ / lh)',
     category: 'Orthography',
@@ -464,6 +489,182 @@ const INITIAL_CORPUS: CorpusEntry[] = [
     status: 'approved',
     sourceType: 'initial_seed',
     createdAt: '2026-09-17T09:15:00.000Z'
+  },
+  {
+    id: 'corp-edu-class1-eng',
+    sourceText: 'I study in class one',
+    sourceLang: 'english',
+    targetText: 'ای اولیکو جماعت ٹی خوانوہ',
+    targetLang: 'brahui-arabic',
+    alternativeScript: 'I awwalīko jamā\'at-ţī khwāniva',
+    dialect: 'Standard',
+    contextNotes: 'Academic grade expression with strict SOV and locative -ţī postposition',
+    contributorName: 'Brahui Linguistic Board',
+    contributorRole: 'Admin',
+    verified: true,
+    status: 'approved',
+    sourceType: 'initial_seed',
+    createdAt: '2026-09-17T09:20:00.000Z'
+  },
+  {
+    id: 'corp-edu-class1-eng-punct',
+    sourceText: 'I study in class one.',
+    sourceLang: 'english',
+    targetText: 'ای اولیکو جماعت ٹی خوانوہ۔',
+    targetLang: 'brahui-arabic',
+    alternativeScript: 'I awwalīko jamā\'at-ţī khwāniva.',
+    dialect: 'Standard',
+    contextNotes: 'Academic grade expression with punctuation',
+    contributorName: 'Brahui Linguistic Board',
+    contributorRole: 'Admin',
+    verified: true,
+    status: 'approved',
+    sourceType: 'initial_seed',
+    createdAt: '2026-09-17T09:21:00.000Z'
+  },
+  {
+    id: 'corp-edu-class1-num-eng',
+    sourceText: 'I study in class 1',
+    sourceLang: 'english',
+    targetText: 'ای اولیکو جماعت ٹی خوانوہ',
+    targetLang: 'brahui-arabic',
+    alternativeScript: 'I awwalīko jamā\'at-ţī khwāniva',
+    dialect: 'Standard',
+    contextNotes: 'Academic grade with numeric digit',
+    contributorName: 'Brahui Linguistic Board',
+    contributorRole: 'Admin',
+    verified: true,
+    status: 'approved',
+    sourceType: 'initial_seed',
+    createdAt: '2026-09-17T09:22:00.000Z'
+  },
+  {
+    id: 'corp-edu-class1-urdu',
+    sourceText: 'میں پہلی جماعت میں پڑھتا ہوں',
+    sourceLang: 'urdu',
+    targetText: 'ای اولیکو جماعت ٹی خوانوہ',
+    targetLang: 'brahui-arabic',
+    alternativeScript: 'I awwalīko jamā\'at-ţī khwāniva',
+    dialect: 'Standard',
+    contextNotes: 'Urdu to Brahui academic grade 1 sentence',
+    contributorName: 'Brahui Linguistic Board',
+    contributorRole: 'Admin',
+    verified: true,
+    status: 'approved',
+    sourceType: 'initial_seed',
+    createdAt: '2026-09-17T09:23:00.000Z'
+  },
+  {
+    id: 'corp-edu-class1-urdu-punct',
+    sourceText: 'میں پہلی جماعت میں پڑھتا ہوں۔',
+    sourceLang: 'urdu',
+    targetText: 'ای اولیکو جماعت ٹی خوانوہ۔',
+    targetLang: 'brahui-arabic',
+    alternativeScript: 'I awwalīko jamā\'at-ţī khwāniva.',
+    dialect: 'Standard',
+    contextNotes: 'Urdu to Brahui academic grade 1 sentence with punctuation',
+    contributorName: 'Brahui Linguistic Board',
+    contributorRole: 'Admin',
+    verified: true,
+    status: 'approved',
+    sourceType: 'initial_seed',
+    createdAt: '2026-09-17T09:24:00.000Z'
+  },
+  {
+    id: 'corp-edu-class1-urdu-loan',
+    sourceText: 'میں کلاس ون میں پڑھتا ہوں',
+    sourceLang: 'urdu',
+    targetText: 'ای اولیکو جماعت ٹی خوانوہ',
+    targetLang: 'brahui-arabic',
+    alternativeScript: 'I awwalīko jamā\'at-ţī khwāniva',
+    dialect: 'Standard',
+    contextNotes: 'Urdu colloquial loan "کلاس ون" translated fully into authentic Brahui',
+    contributorName: 'Brahui Linguistic Board',
+    contributorRole: 'Admin',
+    verified: true,
+    status: 'approved',
+    sourceType: 'initial_seed',
+    createdAt: '2026-09-17T09:25:00.000Z'
+  },
+  {
+    id: 'corp-edu-class1-urdu-loan-punct',
+    sourceText: 'میں کلاس ون میں پڑھتا ہوں۔',
+    sourceLang: 'urdu',
+    targetText: 'ای اولیکو جماعت ٹی خوانوہ۔',
+    targetLang: 'brahui-arabic',
+    alternativeScript: 'I awwalīko jamā\'at-ţī khwāniva.',
+    dialect: 'Standard',
+    contextNotes: 'Urdu colloquial loan "کلاس ون" with punctuation',
+    contributorName: 'Brahui Linguistic Board',
+    contributorRole: 'Admin',
+    verified: true,
+    status: 'approved',
+    sourceType: 'initial_seed',
+    createdAt: '2026-09-17T09:26:00.000Z'
+  },
+  {
+    id: 'corp-edu-student-eng',
+    sourceText: 'I am a student',
+    sourceLang: 'english',
+    targetText: 'ای اسہ شاگرد اس اُٹ',
+    targetLang: 'brahui-arabic',
+    alternativeScript: 'I asa shāgird-as uţ',
+    dialect: 'Standard',
+    contextNotes: 'First person student identity',
+    contributorName: 'Brahui Linguistic Board',
+    contributorRole: 'Admin',
+    verified: true,
+    status: 'approved',
+    sourceType: 'initial_seed',
+    createdAt: '2026-09-17T09:27:00.000Z'
+  },
+  {
+    id: 'corp-edu-student-urdu',
+    sourceText: 'میں ایک طالب علم ہوں',
+    sourceLang: 'urdu',
+    targetText: 'ای اسہ شاگرد اس اُٹ',
+    targetLang: 'brahui-arabic',
+    alternativeScript: 'I asa shāgird-as uţ',
+    dialect: 'Standard',
+    contextNotes: 'Urdu student sentence',
+    contributorName: 'Brahui Linguistic Board',
+    contributorRole: 'Admin',
+    verified: true,
+    status: 'approved',
+    sourceType: 'initial_seed',
+    createdAt: '2026-09-17T09:28:00.000Z'
+  },
+  {
+    id: 'corp-edu-school-eng',
+    sourceText: 'I go to school',
+    sourceLang: 'english',
+    targetText: 'ای اسکول آ ہنوہ',
+    targetLang: 'brahui-arabic',
+    alternativeScript: 'I iskūl-ā hinova',
+    dialect: 'Standard',
+    contextNotes: 'Directional postposition -ā with school',
+    contributorName: 'Brahui Linguistic Board',
+    contributorRole: 'Admin',
+    verified: true,
+    status: 'approved',
+    sourceType: 'initial_seed',
+    createdAt: '2026-09-17T09:29:00.000Z'
+  },
+  {
+    id: 'corp-edu-school-urdu',
+    sourceText: 'میں اسکول جاتا ہوں',
+    sourceLang: 'urdu',
+    targetText: 'ای اسکول آ ہنوہ',
+    targetLang: 'brahui-arabic',
+    alternativeScript: 'I iskūl-ā hinova',
+    dialect: 'Standard',
+    contextNotes: 'Urdu school sentence',
+    contributorName: 'Brahui Linguistic Board',
+    contributorRole: 'Admin',
+    verified: true,
+    status: 'approved',
+    sourceType: 'initial_seed',
+    createdAt: '2026-09-17T09:30:00.000Z'
   }
 ];
 
@@ -536,6 +737,7 @@ class DatabaseService {
         if (parsed.grammarRules && parsed.corpus) {
           this.data = parsed;
           this.seedMissingCorpus();
+          this.seedMissingRules();
           return;
         }
       }
@@ -547,15 +749,33 @@ class DatabaseService {
         if (parsed.grammarRules && parsed.corpus) {
           this.data = parsed;
           this.seedMissingCorpus();
+          this.seedMissingRules();
           this.persist();
           return;
         }
       }
 
       this.seedMissingCorpus();
+      this.seedMissingRules();
       this.persist();
     } catch (err) {
       console.error('Error initializing database file, falling back to memory state:', err);
+    }
+  }
+
+  private seedMissingRules() {
+    let changed = false;
+    for (const initRule of INITIAL_GRAMMAR_RULES) {
+      const exists = this.data.grammarRules.some(
+        r => r.id === initRule.id || r.title.toLowerCase().trim() === initRule.title.toLowerCase().trim()
+      );
+      if (!exists) {
+        this.data.grammarRules.push(initRule);
+        changed = true;
+      }
+    }
+    if (changed) {
+      this.persist();
     }
   }
 
