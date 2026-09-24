@@ -15,9 +15,16 @@ if (process.env.VITE_GEMINI_API_KEY && process.env.VITE_GEMINI_API_KEY.startsWit
   delete process.env.VITE_GEMINI_API_KEY;
 }
 
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
   // Middlewares
   app.use(express.json({ limit: '30mb' }));
@@ -41,7 +48,12 @@ async function startServer() {
   if (isProduction) {
     app.use(express.static(distPath));
     app.get('*', (_req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+      const indexPath = path.join(distPath, 'index.html');
+      if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+      } else {
+        res.status(200).send('<!doctype html><html><head><title>Brahui Translate</title></head><body><h1>Brahui Translate</h1></body></html>');
+      }
     });
   } else {
     // In development, integrate Vite dev server in middleware mode

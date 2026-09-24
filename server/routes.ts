@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { dbService, GOOGLE_TRANSLATE_CATALOG } from './db.js';
 import { translateText, induceGrammarRule, summarizeUploadedDoc, sanitizeBrahuiOutput } from './gemini.js';
 import { dynamicTranslateSentence } from './dynamicTranslator.js';
-import { Language } from '../src/types/index.js';
+import type { Language } from '../src/types/index.js';
 
 const upload = multer({
   storage: multer.memoryStorage(),

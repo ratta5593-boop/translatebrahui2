@@ -1,6 +1,6 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { dbService } from './db.js';
-import { Language, TranslationResult, GrammarRule, KnowledgeDocument } from '../src/types/index.js';
+import type { Language, TranslationResult, GrammarRule, KnowledgeDocument } from '../src/types/index.js';
 import { dynamicTranslateSentence } from './dynamicTranslator.js';
 
 // Available Flash models in order of priority (stable & highest capability first)

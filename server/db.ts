@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { GrammarRule, CorpusEntry, KnowledgeDocument, DailyReport, DynamicLanguage, DatasetExportStats } from '../src/types/index.js';
+import type { GrammarRule, CorpusEntry, KnowledgeDocument, DailyReport, DynamicLanguage, DatasetExportStats } from '../src/types/index.js';
 
 export const GOOGLE_TRANSLATE_CATALOG: DynamicLanguage[] = [
   { code: 'ar', label: 'Arabic', native: 'العربية', dir: 'rtl' },

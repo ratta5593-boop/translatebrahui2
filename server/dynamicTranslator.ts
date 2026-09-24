@@ -4,7 +4,7 @@
  * and eliminates hardcoded or repeating translations.
  */
 
-import { Language, TranslationResult } from '../src/types/index.js';
+import type { Language, TranslationResult } from '../src/types/index.js';
 
 export interface LexiconWord {
   arabic: string;
