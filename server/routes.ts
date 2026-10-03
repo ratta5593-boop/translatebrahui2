@@ -1007,7 +1007,7 @@ apiRouter.post('/knowledge/extract-rules/:id', requireAdminAuth, (req: Request, 
   }
 });
 
-// Fetch extracted rules text for a Knowledge Base document (Protected)
+// Fetch extracted rules text and chunks for a Knowledge Base document (Protected)
 apiRouter.get('/knowledge/documents/:id/rules', requireAdminAuth, (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -1016,22 +1016,36 @@ apiRouter.get('/knowledge/documents/:id/rules', requireAdminAuth, (req: Request,
       return res.status(404).json({ error: 'Document not found' });
     }
     const rulesText = dbService.getDocExtractedRulesText(doc);
-    res.json({ success: true, docId: id, rulesText, title: doc.title });
+    res.json({
+      success: true,
+      docId: id,
+      rulesText,
+      title: doc.title,
+      filename: doc.filename,
+      fileSize: doc.fileSize,
+      pageCount: doc.pageCount,
+      chunksCount: doc.chunksCount || doc.chunks?.length || 0,
+      sampleSummary: doc.sampleSummary,
+      chunks: doc.chunks || [],
+      type: doc.type,
+      uploadedAt: doc.uploadedAt,
+    });
   } catch (error: any) {
     console.error('Error fetching document rules:', error);
     res.status(500).json({ error: error.message || 'Failed to fetch rules text' });
   }
 });
 
-// Update Knowledge Base document extracted rules text and sync into rules catalog (Protected)
+// Update Knowledge Base document extracted rules text and semantic chunks, sync into rules catalog & Firebase (Protected)
 apiRouter.put('/knowledge/documents/:id', requireAdminAuth, (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { extractedRulesText, title, sampleSummary } = req.body;
+    const { extractedRulesText, title, sampleSummary, chunks } = req.body;
     const updated = dbService.updateKnowledgeDoc(id, {
       ...(typeof extractedRulesText === 'string' ? { extractedRulesText } : {}),
       ...(title ? { title } : {}),
       ...(sampleSummary ? { sampleSummary } : {}),
+      ...(Array.isArray(chunks) ? { chunks, chunksCount: chunks.length } : {}),
     });
 
     if (!updated) {

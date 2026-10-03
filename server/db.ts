@@ -857,7 +857,7 @@ class DatabaseService {
         for (const docItem of this.data.knowledgeDocuments) {
           if (!cloudIds.has(docItem.id)) {
             cloudDocs.push(docItem);
-            setDoc(doc(this.firestore, 'knowledge_documents', docItem.id), docItem).catch(() => {});
+            setDoc(doc(this.firestore, 'knowledge_documents', docItem.id), this.toLightweightDocForFirestore(docItem)).catch(() => {});
           }
         }
         this.data.knowledgeDocuments = cloudDocs;
@@ -865,7 +865,7 @@ class DatabaseService {
         console.log(`[Firebase DB] Seeding ${this.data.knowledgeDocuments.length} knowledge docs to Firestore...`);
         const batch = writeBatch(this.firestore);
         for (const docItem of this.data.knowledgeDocuments) {
-          batch.set(doc(this.firestore, 'knowledge_documents', docItem.id), docItem);
+          batch.set(doc(this.firestore, 'knowledge_documents', docItem.id), this.toLightweightDocForFirestore(docItem));
         }
         await batch.commit();
         console.log('[Firebase DB] Seeded knowledge documents to Firestore.');
@@ -1212,6 +1212,31 @@ class DatabaseService {
     return this.data.knowledgeDocuments;
   }
 
+  /**
+   * Strictly formats knowledge documents into lightweight text-only data before sending to Firestore.
+   * NEVER stores heavy binary PDF files or buffers, keeping Firestore footprint minimal
+   * and well within free tier limits.
+   */
+  public toLightweightDocForFirestore(docItem: KnowledgeDocument): Record<string, any> {
+    return {
+      id: docItem.id,
+      filename: docItem.filename,
+      title: docItem.title,
+      fileSize: typeof docItem.fileSize === 'number' ? docItem.fileSize : 0,
+      uploadedAt: docItem.uploadedAt,
+      type: docItem.type,
+      pageCount: docItem.pageCount || 1,
+      chunksCount: docItem.chunksCount || docItem.chunks?.length || 0,
+      sampleSummary: (docItem.sampleSummary || '').slice(0, 2000),
+      chunks: Array.isArray(docItem.chunks)
+        ? docItem.chunks.slice(0, 30).map(c => (typeof c === 'string' ? c.slice(0, 1500) : ''))
+        : [],
+      extractedRulesText: typeof docItem.extractedRulesText === 'string'
+        ? docItem.extractedRulesText.slice(0, 50000)
+        : '',
+    };
+  }
+
   public addKnowledgeDoc(docItem: Omit<KnowledgeDocument, 'id' | 'uploadedAt'>): KnowledgeDocument {
     const newDoc: KnowledgeDocument = {
       ...docItem,
@@ -1221,7 +1246,7 @@ class DatabaseService {
     this.data.knowledgeDocuments.unshift(newDoc);
     this.persist();
     if (this.firestore) {
-      setDoc(doc(this.firestore, 'knowledge_documents', newDoc.id), newDoc).catch(e =>
+      setDoc(doc(this.firestore, 'knowledge_documents', newDoc.id), this.toLightweightDocForFirestore(newDoc)).catch(e =>
         console.error('[Firebase DB] Failed to save knowledge doc to Firestore:', e)
       );
     }
@@ -1234,7 +1259,7 @@ class DatabaseService {
     Object.assign(docItem, updates);
     this.persist();
     if (this.firestore) {
-      setDoc(doc(this.firestore, 'knowledge_documents', id), docItem).catch(e =>
+      setDoc(doc(this.firestore, 'knowledge_documents', id), this.toLightweightDocForFirestore(docItem)).catch(e =>
         console.error('[Firebase DB] Failed to update knowledge doc in Firestore:', e)
       );
     }

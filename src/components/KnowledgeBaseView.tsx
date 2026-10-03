@@ -8,12 +8,19 @@ import {
   AlertCircle,
   Search,
   Eye,
+  Pencil,
   X,
   FileSpreadsheet,
   Database,
   BookMarked,
   Sparkles,
-  Cpu
+  Layers,
+  Copy,
+  Check,
+  Save,
+  FileCode,
+  Info,
+  RefreshCw
 } from 'lucide-react';
 import { KnowledgeDocument } from '../types/index.js';
 import { authFetch, authSafeFetchJson } from '../utils/auth.js';
@@ -39,8 +46,26 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({ onDocsChan
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [manualText, setManualText] = useState('');
   const [activeMode, setActiveMode] = useState<'pdf' | 'text'>('pdf');
-  const [previewDoc, setPreviewDoc] = useState<KnowledgeDocument | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Preview Modal State
+  const [previewDoc, setPreviewDoc] = useState<KnowledgeDocument | null>(null);
+  const [previewRulesText, setPreviewRulesText] = useState<string>('');
+  const [previewTab, setPreviewTab] = useState<'rules' | 'chunks'>('rules');
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [copiedRules, setCopiedRules] = useState(false);
+  const [copiedChunkIdx, setCopiedChunkIdx] = useState<number | null>(null);
+
+  // Edit Modal State
+  const [editDoc, setEditDoc] = useState<KnowledgeDocument | null>(null);
+  const [editRulesText, setEditRulesText] = useState<string>('');
+  const [editTitle, setEditTitle] = useState<string>('');
+  const [editSummary, setEditSummary] = useState<string>('');
+  const [editChunksText, setEditChunksText] = useState<string>('');
+  const [editTab, setEditTab] = useState<'rules' | 'chunks' | 'meta'>('rules');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [editSaveSuccess, setEditSaveSuccess] = useState<string | null>(null);
+  const [editSaveError, setEditSaveError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -70,7 +95,7 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({ onDocsChan
 
     const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
     if (!isPdf) {
-      setUploadError(`"${file.name}" is not a PDF file. Please upload a PDF document or switch to the "Paste Lexicon Text Directly" tab.`);
+      setUploadError(`"${file.name}" is not a PDF file. Please upload a PDF document or switch to the "Paste Text" tab.`);
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       return false;
@@ -164,7 +189,7 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({ onDocsChan
       const rulesCount = data.extraction?.extractedRulesCount ?? 0;
       const vocabCount = data.extraction?.extractedVocabCount ?? 0;
       setUploadSuccess(
-        `Successfully ingested "${data.document.title}" into AI translation memory (${data.document.chunksCount} chunks indexed). Actively extracted ${rulesCount} grammar rules and ${vocabCount} vocabulary pairs applied globally!`
+        `Successfully ingested "${data.document.title}" into AI translation memory (${data.document.chunksCount} lightweight text chunks indexed in Firebase Cloud). Extracted ${rulesCount} grammar rules and ${vocabCount} vocabulary pairs.`
       );
       setSelectedFile(null);
       setTitle('');
@@ -202,8 +227,9 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({ onDocsChan
 
       if (res.ok && res.data) {
         setExtractSuccess(
-          `Extracted ${res.data.extractedRulesCount} grammar rules and ${res.data.extractedVocabCount} vocabulary pairs from "${docTitle}". Applied globally across all translations!`
+          `Extracted ${res.data.extractedRulesCount} grammar rules and ${res.data.extractedVocabCount} vocabulary pairs from "${docTitle}". Synchronized to Firebase Cloud and applied globally!`
         );
+        fetchDocuments();
         onDocsChanged();
       } else {
         alert(res.error || 'Failed to extract rules from document.');
@@ -216,7 +242,7 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({ onDocsChan
   };
 
   const handleDeleteDoc = async (id: string, docTitle: string) => {
-    if (!confirm(`Are you sure you want to remove "${docTitle}" from the active knowledge base?`)) return;
+    if (!confirm(`Are you sure you want to remove "${docTitle}" from the active knowledge base and Firebase Cloud?`)) return;
 
     try {
       const res = await authSafeFetchJson(`/api/knowledge/documents/${id}`, {
@@ -231,26 +257,161 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({ onDocsChan
     }
   };
 
+  // Open Preview Modal (Eye trigger)
+  const handleOpenPreview = async (doc: KnowledgeDocument) => {
+    setPreviewDoc(doc);
+    setPreviewTab('rules');
+    setIsLoadingPreview(true);
+    try {
+      const res = await authSafeFetchJson<{
+        success: boolean;
+        rulesText: string;
+        chunks: string[];
+      }>(`/api/knowledge/documents/${doc.id}/rules`);
+
+      if (res.ok && res.data) {
+        setPreviewRulesText(res.data.rulesText || '');
+        if (res.data.chunks && res.data.chunks.length > 0) {
+          doc.chunks = res.data.chunks;
+        }
+      } else {
+        setPreviewRulesText(doc.extractedRulesText || 'No extracted rules found.');
+      }
+    } catch (err) {
+      console.error('Error loading preview rules:', err);
+      setPreviewRulesText(doc.extractedRulesText || 'Error loading extracted rules.');
+    } finally {
+      setIsLoadingPreview(false);
+    }
+  };
+
+  // Open Edit Modal (Pencil trigger)
+  const handleOpenEdit = async (doc: KnowledgeDocument) => {
+    setEditDoc(doc);
+    setEditTitle(doc.title);
+    setEditSummary(doc.sampleSummary || '');
+    setEditTab('rules');
+    setEditSaveSuccess(null);
+    setEditSaveError(null);
+    setEditChunksText((doc.chunks || []).join('\n\n---CHUNK_BREAK---\n\n'));
+
+    try {
+      const res = await authSafeFetchJson<{
+        success: boolean;
+        rulesText: string;
+        chunks: string[];
+      }>(`/api/knowledge/documents/${doc.id}/rules`);
+
+      if (res.ok && res.data) {
+        setEditRulesText(res.data.rulesText || '');
+        if (res.data.chunks && res.data.chunks.length > 0) {
+          setEditChunksText(res.data.chunks.join('\n\n---CHUNK_BREAK---\n\n'));
+        }
+      } else {
+        setEditRulesText(doc.extractedRulesText || '');
+      }
+    } catch {
+      setEditRulesText(doc.extractedRulesText || '');
+    }
+  };
+
+  // Switch from Preview to Edit
+  const handleSwitchFromPreviewToEdit = () => {
+    if (!previewDoc) return;
+    const targetDoc = previewDoc;
+    setPreviewDoc(null);
+    handleOpenEdit(targetDoc);
+  };
+
+  // Save changes from Edit Modal to Backend and Firebase
+  const handleSaveEdit = async () => {
+    if (!editDoc) return;
+    setIsSavingEdit(true);
+    setEditSaveSuccess(null);
+    setEditSaveError(null);
+
+    try {
+      const chunksArray = editChunksText
+        .split(/\n\s*---CHUNK_BREAK---\s*\n/)
+        .map((c) => c.trim())
+        .filter(Boolean);
+
+      const payload = {
+        title: editTitle.trim() || editDoc.title,
+        sampleSummary: editSummary.trim() || editDoc.sampleSummary,
+        extractedRulesText: editRulesText,
+        chunks: chunksArray.length > 0 ? chunksArray : editDoc.chunks,
+      };
+
+      const res = await authSafeFetchJson<{
+        success: boolean;
+        message: string;
+        document: KnowledgeDocument;
+        syncResult?: { added: number; updated: number };
+      }>(`/api/knowledge/documents/${editDoc.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok && res.data) {
+        const added = res.data.syncResult?.added ?? 0;
+        const updated = res.data.syncResult?.updated ?? 0;
+        setEditSaveSuccess(
+          `Extracted text rules and chunks successfully saved and synchronized with Firebase Cloud! (${added} rules added, ${updated} updated).`
+        );
+        fetchDocuments();
+        onDocsChanged();
+      } else {
+        setEditSaveError(res.error || 'Failed to save document updates.');
+      }
+    } catch (err: any) {
+      console.error('Error saving document:', err);
+      setEditSaveError(err.message || 'Error communicating with server.');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  const handleCopyRules = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedRules(true);
+    setTimeout(() => setCopiedRules(false), 2000);
+  };
+
+  const handleCopyChunk = (chunk: string, idx: number) => {
+    navigator.clipboard.writeText(chunk);
+    setCopiedChunkIdx(idx);
+    setTimeout(() => setCopiedChunkIdx(null), 2000);
+  };
+
   const filteredDocs = documents.filter((doc) => {
     return (
       doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       doc.sampleSummary.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.type.toLowerCase().includes(searchQuery.toLowerCase())
+      doc.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.filename.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
 
   return (
     <div className="space-y-6">
-      {/* Overview Banner - Fully Responsive */}
+      {/* Overview Banner - Optimized Cloud Persistence Notice */}
       <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start sm:items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-amber-600 text-white flex items-center justify-center shadow-2xs shrink-0 mt-0.5 sm:mt-0">
+          <div className="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center shadow-xs shrink-0 mt-0.5 sm:mt-0">
             <BookMarked className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-slate-900">PDF Knowledge Base &amp; Lexicon Repository</h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Upload authoritative Brahui dictionaries, vocabulary lists, and grammar textbooks. The system actively extracts rules, vocabulary, and grammar context for global translation accuracy.
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-base font-bold text-slate-900">PDF Knowledge Base &amp; Lexicon Repository</h2>
+              <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                <Database className="w-3 h-3 text-emerald-600" />
+                Firebase Cloud Sync Active
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Authoritative Brahui dictionaries, lexicons, and grammar textbooks. Only lightweight text components (rules, chunks &amp; metadata) are stored in Firebase Cloud, keeping storage ultra-fast and permanently free-tier compliant.
             </p>
           </div>
         </div>
@@ -281,7 +442,7 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({ onDocsChan
           <div>
             <h3 className="text-sm font-bold text-slate-900">Ingest New Linguistic Reference</h3>
             <p className="text-[11px] text-slate-500">
-              Files are automatically parsed into semantic chunks and analyzed for grammar rules and vocabulary.
+              PDF files are parsed in-memory into lightweight semantic text chunks and grammar rules for cloud persistence.
             </p>
           </div>
 
@@ -387,7 +548,7 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({ onDocsChan
                     </button>
                   </div>
                   <span className="text-[11px] text-slate-400 block mt-1">
-                    Ready to ingest and extract rules.
+                    Ready to ingest and extract rules (lightweight text-only cloud storage).
                   </span>
                 </div>
               ) : (
@@ -440,7 +601,7 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({ onDocsChan
           <div>
             <h3 className="text-sm font-bold text-slate-900">Active Reference Documents &amp; Dictionaries</h3>
             <p className="text-[11px] text-slate-500">
-              The AI retrieves relevant chunks from these documents during every translation.
+              Clean metadata, chunk counts, and interactive Preview &amp; Edit triggers for extracted rules and text chunks.
             </p>
           </div>
 
@@ -458,7 +619,10 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({ onDocsChan
 
         <div className="p-4 sm:p-5">
           {isLoading ? (
-            <div className="py-8 text-center text-xs text-slate-400">Loading reference library...</div>
+            <div className="py-8 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+              <RefreshCw className="w-4 h-4 animate-spin text-indigo-500" />
+              <span>Loading reference library...</span>
+            </div>
           ) : filteredDocs.length === 0 ? (
             <div className="py-8 text-center text-slate-400 text-xs">
               No matching knowledge documents found.
@@ -468,17 +632,22 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({ onDocsChan
               {filteredDocs.map((doc) => (
                 <div
                   key={doc.id}
-                  className="p-4 bg-slate-50/50 border border-slate-200 rounded-xl hover:border-indigo-300 transition-colors shadow-2xs flex flex-col justify-between"
+                  className="p-4 bg-slate-50/60 border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-xs transition-all flex flex-col justify-between"
                 >
                   <div>
+                    {/* Header info */}
                     <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="p-2 bg-indigo-100 text-indigo-700 rounded-lg shrink-0">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="p-2.5 bg-indigo-100 text-indigo-700 rounded-xl shrink-0 shadow-2xs">
                           <BookOpen className="w-4 h-4" />
                         </span>
-                        <div>
-                          <h4 className="text-xs font-bold text-slate-900 leading-snug">{doc.title}</h4>
-                          <span className="text-[10px] text-slate-400 font-mono">{doc.filename}</span>
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-bold text-slate-900 leading-snug truncate" title={doc.title}>
+                            {doc.title}
+                          </h4>
+                          <span className="text-[10px] text-slate-400 font-mono truncate block" title={doc.filename}>
+                            {doc.filename}
+                          </span>
                         </div>
                       </div>
 
@@ -487,48 +656,80 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({ onDocsChan
                       </span>
                     </div>
 
-                    <p className="text-xs text-slate-600 line-clamp-3 mb-3 leading-relaxed">
-                      {doc.sampleSummary}
+                    {/* Metadata Badges Strip */}
+                    <div className="flex items-center gap-2 flex-wrap mb-2.5 text-[11px] text-slate-600">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-50 text-indigo-800 border border-indigo-200 font-semibold">
+                        <Layers className="w-3 h-3 text-indigo-600" />
+                        {doc.chunksCount || doc.chunks?.length || 0} Chunks
+                      </span>
+                      {doc.pageCount && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                          <FileText className="w-3 h-3 text-slate-500" />
+                          {doc.pageCount} Pages
+                        </span>
+                      )}
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-medium">
+                        <Database className="w-3 h-3 text-emerald-600" />
+                        Text in Cloud
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-600 line-clamp-2 mb-3 leading-relaxed">
+                      {doc.sampleSummary || 'No summary provided.'}
                     </p>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-500">
-                    <div className="flex items-center gap-2 flex-wrap text-[11px]">
-                      <span><strong>{doc.chunksCount}</strong> chunks</span>
-                      {doc.pageCount && <span>• <strong>{doc.pageCount}</strong> pgs</span>}
+                  {/* Actions & Triggers Strip */}
+                  <div className="pt-3 border-t border-slate-200/80 flex items-center justify-between gap-2 text-xs">
+                    <div className="text-[10px] text-slate-400 truncate">
+                      {new Date(doc.uploadedAt).toLocaleDateString()}
                     </div>
 
                     <div className="flex items-center gap-1.5 flex-wrap">
+                      {/* PREVIEW TRIGGER (Eye icon) */}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenPreview(doc)}
+                        className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded text-[11px] font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs hover:text-indigo-600"
+                        title="Preview extracted rules and text chunks"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>Preview</span>
+                      </button>
+
+                      {/* EDIT TRIGGER (Pencil icon) */}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEdit(doc)}
+                        className="px-2.5 py-1 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-[11px] font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs hover:border-indigo-400"
+                        title="Edit extracted text rules directly"
+                      >
+                        <Pencil className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>Edit</span>
+                      </button>
+
+                      {/* EXTRACT RULES TRIGGER */}
                       <button
                         type="button"
                         onClick={() => handleExtractRules(doc.id, doc.title)}
                         disabled={extractingDocId === doc.id}
-                        className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors disabled:opacity-50"
-                        title="Read and extract grammar rules and vocabulary from this document"
+                        className="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors disabled:opacity-50"
+                        title="Extract grammar rules & vocabulary"
                       >
                         {extractingDocId === doc.id ? (
                           <div className="w-3 h-3 border-2 border-amber-700 border-t-transparent rounded-full animate-spin"></div>
                         ) : (
                           <Sparkles className="w-3 h-3 text-amber-700" />
                         )}
-                        <span>Extract Rules</span>
+                        <span className="hidden sm:inline">Extract</span>
                       </button>
 
-                      <button
-                        type="button"
-                        onClick={() => setPreviewDoc(doc)}
-                        className="px-2 py-1 bg-white hover:bg-slate-100 border border-slate-300 rounded text-slate-700 font-medium text-[11px] flex items-center gap-1 cursor-pointer"
-                        title="Preview indexed chunks"
-                      >
-                        <Eye className="w-3 h-3" />
-                        <span>Chunks</span>
-                      </button>
-
+                      {/* DELETE TRIGGER */}
                       <button
                         type="button"
                         onClick={() => handleDeleteDoc(doc.id, doc.title)}
                         className="p-1 text-slate-400 hover:text-rose-600 rounded transition-colors cursor-pointer"
-                        title="Remove document"
+                        title="Remove document from knowledge base"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -541,43 +742,367 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({ onDocsChan
         </div>
       </div>
 
-      {/* Chunks Inspector Modal */}
+      {/* ======================================================== */}
+      {/* INTERACTIVE PREVIEW MODAL (Eye Trigger)                  */}
+      {/* ======================================================== */}
       {previewDoc && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900">{previewDoc.title}</h3>
-                <span className="text-xs text-slate-500">
-                  {previewDoc.chunksCount} indexed semantic chunks in translation memory
-                </span>
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 z-50 animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150 border border-slate-200">
+            {/* Modal Header */}
+            <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 bg-indigo-100 text-indigo-700 rounded-lg">
+                    <Eye className="w-4 h-4" />
+                  </span>
+                  <h3 className="text-sm font-bold text-slate-900 truncate">
+                    Preview: {previewDoc.title}
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                  <span>{previewDoc.filename}</span>
+                  <span>•</span>
+                  <span>{previewDoc.chunksCount || previewDoc.chunks?.length || 0} chunks</span>
+                  <span>•</span>
+                  <span className="text-emerald-700 font-medium">Text synced to Firebase Cloud</span>
+                </div>
               </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleSwitchFromPreviewToEdit}
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  title="Switch to Edit Mode"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  <span>Edit Rules</span>
+                </button>
+                <button
+                  onClick={() => setPreviewDoc(null)}
+                  className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-200/60 cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Tabs Bar */}
+            <div className="px-5 pt-3 bg-white border-b border-slate-200 flex items-center gap-2">
               <button
+                type="button"
+                onClick={() => setPreviewTab('rules')}
+                className={`pb-2.5 px-3 text-xs font-bold border-b-2 cursor-pointer transition-all flex items-center gap-1.5 ${
+                  previewTab === 'rules'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <FileCode className="w-4 h-4" />
+                <span>Extracted Grammar Rules</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreviewTab('chunks')}
+                className={`pb-2.5 px-3 text-xs font-bold border-b-2 cursor-pointer transition-all flex items-center gap-1.5 ${
+                  previewTab === 'chunks'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Layers className="w-4 h-4" />
+                <span>Indexed Semantic Chunks ({previewDoc.chunks?.length || 0})</span>
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-5 overflow-y-auto flex-1 space-y-4 bg-slate-50/40">
+              {isLoadingPreview ? (
+                <div className="py-12 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+                  <RefreshCw className="w-4 h-4 animate-spin text-indigo-500" />
+                  <span>Loading document rules...</span>
+                </div>
+              ) : previewTab === 'rules' ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-semibold text-slate-700">
+                      Extracted Text Rules &amp; Syntactic Patterns:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyRules(previewRulesText)}
+                      className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 rounded text-[11px] font-medium text-slate-700 flex items-center gap-1 cursor-pointer"
+                    >
+                      {copiedRules ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="text-emerald-600 font-semibold">Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copy Rules</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="p-4 bg-slate-900 text-slate-100 rounded-xl text-xs font-mono whitespace-pre-wrap leading-relaxed border border-slate-800 max-h-[50vh] overflow-y-auto select-text">
+                    {previewRulesText || 'No extracted rules found for this document.'}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <span className="text-xs font-semibold text-slate-700 block">
+                    Indexed Text Chunks (Sent to AI Translation Memory):
+                  </span>
+                  {(previewDoc.chunks || []).map((chunk, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3.5 bg-white border border-slate-200 rounded-xl shadow-2xs space-y-2"
+                    >
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-bold text-indigo-600 flex items-center gap-1">
+                          <Layers className="w-3 h-3" />
+                          CHUNK #{idx + 1}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-400">{chunk.length} chars</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyChunk(chunk, idx)}
+                            className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-slate-800 cursor-pointer"
+                            title="Copy chunk text"
+                          >
+                            {copiedChunkIdx === idx ? (
+                              <Check className="w-3 h-3 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-700 font-mono leading-relaxed break-words bg-slate-50 p-2.5 rounded border border-slate-100">
+                        {chunk}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+              <span className="text-[11px] text-slate-500">
+                Linguistic memory active across AI Studio &amp; Vercel deployments.
+              </span>
+              <button
+                type="button"
                 onClick={() => setPreviewDoc(null)}
-                className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
+                className="px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-semibold cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* INTERACTIVE EDIT MODAL (Pencil Trigger)                  */}
+      {/* ======================================================== */}
+      {editDoc && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 z-50 animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150 border border-slate-200">
+            {/* Modal Header */}
+            <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 bg-indigo-100 text-indigo-700 rounded-lg">
+                    <Pencil className="w-4 h-4" />
+                  </span>
+                  <h3 className="text-sm font-bold text-slate-900 truncate">
+                    Edit Extracted Rules: {editDoc.title}
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  Modify extracted grammar rules or text chunks directly. Saves directly to Firebase Cloud.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setEditDoc(null)}
+                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-200/60 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-4 sm:p-5 overflow-y-auto space-y-3">
-              {previewDoc.chunks.map((chunk, idx) => (
-                <div key={idx} className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs leading-relaxed text-slate-700 font-mono break-words">
-                  <span className="text-[10px] font-bold text-indigo-600 block mb-1">
-                    CHUNK #{idx + 1}
-                  </span>
-                  {chunk}
-                </div>
-              ))}
+            {/* Modal Tabs */}
+            <div className="px-5 pt-3 bg-white border-b border-slate-200 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setEditTab('rules')}
+                className={`pb-2.5 px-3 text-xs font-bold border-b-2 cursor-pointer transition-all flex items-center gap-1.5 ${
+                  editTab === 'rules'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <FileCode className="w-4 h-4" />
+                <span>Edit Extracted Rules (Text Format)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditTab('chunks')}
+                className={`pb-2.5 px-3 text-xs font-bold border-b-2 cursor-pointer transition-all flex items-center gap-1.5 ${
+                  editTab === 'chunks'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Layers className="w-4 h-4" />
+                <span>Edit Semantic Chunks</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditTab('meta')}
+                className={`pb-2.5 px-3 text-xs font-bold border-b-2 cursor-pointer transition-all flex items-center gap-1.5 ${
+                  editTab === 'meta'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Info className="w-4 h-4" />
+                <span>Document Details</span>
+              </button>
             </div>
 
-            <div className="p-3 bg-slate-50 border-t border-slate-200 flex justify-end">
-              <button
-                onClick={() => setPreviewDoc(null)}
-                className="px-4 py-1.5 bg-slate-800 text-white rounded-lg text-xs font-semibold cursor-pointer"
-              >
-                Close
-              </button>
+            {/* Feedback Notifications */}
+            {editSaveSuccess && (
+              <div className="mx-5 mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <span>{editSaveSuccess}</span>
+              </div>
+            )}
+            {editSaveError && (
+              <div className="mx-5 mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{editSaveError}</span>
+              </div>
+            )}
+
+            {/* Modal Body */}
+            <div className="p-5 overflow-y-auto flex-1 space-y-4">
+              {editTab === 'rules' ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-xs text-slate-600">
+                    <span className="font-semibold">Format Guide for Rules:</span>
+                    <span className="text-[11px] text-slate-400">
+                      Parsed blocks: ### Rule &bull; Category &bull; Pattern &bull; Explanation &bull; Example
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-indigo-50/60 border border-indigo-100 rounded-lg text-[11px] text-indigo-900 font-mono space-y-1">
+                    <div>### Rule: Strict SOV Word Order</div>
+                    <div>Category: Syntax</div>
+                    <div>Pattern: Subject + Complement/Object + Finite Verb</div>
+                    <div>Explanation: The inflected finite verb or copula must terminate the sentence.</div>
+                    <div>Example (Correct): ای کتاب ءِ خوانوہ</div>
+                    <div>Example (Incorrect): ای خوانوہ کتاب ءِ</div>
+                    <div>Gloss: I read the book</div>
+                  </div>
+
+                  <textarea
+                    rows={14}
+                    value={editRulesText}
+                    onChange={(e) => setEditRulesText(e.target.value)}
+                    placeholder="Enter or modify extracted grammar rules in standard text format..."
+                    className="w-full p-3.5 text-xs font-mono border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 bg-slate-900 text-slate-100 leading-relaxed resize-y"
+                  />
+                </div>
+              ) : editTab === 'chunks' ? (
+                <div className="space-y-3">
+                  <p className="text-xs text-slate-600">
+                    Separate chunks using <code className="px-1.5 py-0.5 bg-slate-100 border border-slate-300 rounded font-mono font-bold text-indigo-600">---CHUNK_BREAK---</code> on its own line:
+                  </p>
+
+                  <textarea
+                    rows={14}
+                    value={editChunksText}
+                    onChange={(e) => setEditChunksText(e.target.value)}
+                    placeholder="Enter or modify text chunks separated by ---CHUNK_BREAK---..."
+                    className="w-full p-3.5 text-xs font-mono border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 bg-white leading-relaxed resize-y"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Document Title:
+                    </label>
+                    <input
+                      type="text"
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Sample Summary:
+                    </label>
+                    <textarea
+                      rows={5}
+                      value={editSummary}
+                      onChange={(e) => setEditSummary(e.target.value)}
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-500 space-y-1">
+                    <div><strong>Original Filename:</strong> {editDoc.filename}</div>
+                    <div><strong>File Size:</strong> {(editDoc.fileSize / (1024 * 1024)).toFixed(2)} MB</div>
+                    <div><strong>Ingested On:</strong> {new Date(editDoc.uploadedAt).toLocaleString()}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer with Save Trigger */}
+            <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+              <span className="text-[11px] text-slate-500">
+                Changes immediately re-synchronize to Firebase Firestore.
+              </span>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditDoc(null)}
+                  className="px-4 py-2 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveEdit}
+                  disabled={isSavingEdit}
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50"
+                >
+                  {isSavingEdit ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Saving &amp; Syncing to Cloud...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>Save &amp; Sync Rules</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
