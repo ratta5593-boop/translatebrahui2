@@ -1,5 +1,11 @@
 export type Language = 'brahui-arabic' | 'brahui-latin' | 'brahui-roman' | 'urdu' | 'english' | string;
 
+export type BrahuiDialect =
+  | 'Sarawani (ساراوانی)'
+  | 'Jhalawani (جالاوانی)'
+  | 'Rakhshani (رخشانی)'
+  | 'Maloom Af (معلوم اف)';
+
 export interface DynamicLanguage {
   code: string;
   label: string;
@@ -15,6 +21,7 @@ export interface DatasetExportStats {
     sarawani: number;
     jhalawani: number;
     rakhshani: number;
+    maloomAf?: number;
     malookAf?: number;
     standard: number;
   };
@@ -88,6 +95,8 @@ export interface KnowledgeDocument {
   chunksCount: number;
   sampleSummary: string;
   chunks: string[];
+  extractedRulesText?: string;
+  extractedRules?: GrammarRule[];
 }
 
 export interface DialectVariant {

@@ -12,7 +12,7 @@ export type UserCorrectionDialect =
   | 'Sarawani (ساراوانی)'
   | 'Jhalawani (جالاوانی)'
   | 'Rakhshani (رخشانی)'
-  | 'Malook Af (معلوک اف)';
+  | 'Maloom Af (معلوم اف)';
 
 export const UserCorrectionForm: React.FC<UserCorrectionFormProps> = ({
   translationResult,
@@ -114,28 +114,6 @@ export const UserCorrectionForm: React.FC<UserCorrectionFormProps> = ({
         rule: data.inducedRule,
         explanation: data.explanation || data.inducedRule?.explanation,
       });
-
-      // Persist locally for resilient sync between preview and production environments
-      try {
-        if (data.inducedRule) {
-          const storedRules = localStorage.getItem('brahui_cached_rules');
-          const existingRules: any[] = storedRules ? JSON.parse(storedRules) : [];
-          if (!existingRules.some((r) => r.id === data.inducedRule.id)) {
-            existingRules.unshift(data.inducedRule);
-            localStorage.setItem('brahui_cached_rules', JSON.stringify(existingRules.slice(0, 100)));
-          }
-        }
-        if (data.corpusEntry) {
-          const storedCorpus = localStorage.getItem('brahui_cached_corrections');
-          const existingCorpus: any[] = storedCorpus ? JSON.parse(storedCorpus) : [];
-          if (!existingCorpus.some((c) => c.id === data.corpusEntry.id)) {
-            existingCorpus.unshift(data.corpusEntry);
-            localStorage.setItem('brahui_cached_corrections', JSON.stringify(existingCorpus.slice(0, 100)));
-          }
-        }
-      } catch (storageErr) {
-        console.warn('Failed to cache submitted correction locally:', storageErr);
-      }
 
       if (data.inducedRule) {
         onCorrectionSuccess(data.inducedRule);
@@ -313,7 +291,7 @@ export const UserCorrectionForm: React.FC<UserCorrectionFormProps> = ({
                 <option value="Sarawani (ساراوانی)">Sarawani (ساراوانی)</option>
                 <option value="Jhalawani (جالاوانی)">Jhalawani (جالاوانی)</option>
                 <option value="Rakhshani (رخشانی)">Rakhshani (رخشانی)</option>
-                <option value="Malook Af (معلوک اف)">Malook Af (معلوک اف)</option>
+                <option value="Maloom Af (معلوم اف)">Maloom Af (معلوم اف)</option>
               </select>
             </div>
 
@@ -388,12 +366,7 @@ export const UserCorrectionForm: React.FC<UserCorrectionFormProps> = ({
             </div>
 
             {/* Submission button */}
-            <div className="pt-2 flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
-                <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
-                <span>Your correction will be indexed into the permanent corpus for Google integration.</span>
-              </div>
-
+            <div className="pt-2 flex items-center justify-end flex-wrap gap-2">
               <button
                 type="submit"
                 disabled={isSubmitting}

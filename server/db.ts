@@ -1,6 +1,27 @@
 import fs from 'fs';
 import path from 'path';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import {
+  getFirestore,
+  collection,
+  doc,
+  getDocs,
+  setDoc,
+  deleteDoc,
+  writeBatch,
+  type Firestore
+} from 'firebase/firestore';
 import type { GrammarRule, CorpusEntry, KnowledgeDocument, DailyReport, DynamicLanguage, DatasetExportStats } from '../src/types/index.js';
+
+let firebaseConfig: any = null;
+try {
+  const configPath = path.resolve(process.cwd(), 'firebase-applet-config.json');
+  if (fs.existsSync(configPath)) {
+    firebaseConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+  }
+} catch (e) {
+  console.warn('[Firebase] Warning reading firebase-applet-config.json:', e);
+}
 
 export const GOOGLE_TRANSLATE_CATALOG: DynamicLanguage[] = [
   { code: 'ar', label: 'Arabic', native: 'العربية', dir: 'rtl' },
@@ -708,6 +729,8 @@ class DatabaseService {
   private activeDir: string;
   private activeFile: string;
   private seedFile: string;
+  private firestore: Firestore | null = null;
+  private isFirestoreSynced: boolean = false;
 
   constructor() {
     const config = resolveStoragePaths();
@@ -738,12 +761,8 @@ class DatabaseService {
           this.data = parsed;
           this.seedMissingCorpus();
           this.seedMissingRules();
-          return;
         }
-      }
-
-      // If active file does not exist but seed file exists (e.g. bundled data on Vercel)
-      if (this.activeFile !== this.seedFile && fs.existsSync(this.seedFile)) {
+      } else if (this.activeFile !== this.seedFile && fs.existsSync(this.seedFile)) {
         const fileContent = fs.readFileSync(this.seedFile, 'utf-8');
         const parsed = JSON.parse(fileContent);
         if (parsed.grammarRules && parsed.corpus) {
@@ -751,15 +770,111 @@ class DatabaseService {
           this.seedMissingCorpus();
           this.seedMissingRules();
           this.persist();
-          return;
         }
+      } else {
+        this.seedMissingCorpus();
+        this.seedMissingRules();
+        this.persist();
       }
 
-      this.seedMissingCorpus();
-      this.seedMissingRules();
-      this.persist();
+      // Initialize Firestore for permanent cloud persistence across AI Studio and Vercel deployments
+      if (firebaseConfig && firebaseConfig.projectId) {
+        try {
+          const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+          this.firestore = getFirestore(app, firebaseConfig.firestoreDatabaseId || undefined);
+          console.log(`[Firebase DB] Firestore connected for project ${firebaseConfig.projectId}`);
+          this.syncWithFirestore();
+        } catch (fErr) {
+          console.error('[Firebase DB] Failed to initialize Firestore:', fErr);
+        }
+      }
     } catch (err) {
       console.error('Error initializing database file, falling back to memory state:', err);
+    }
+  }
+
+  public async syncWithFirestore(): Promise<void> {
+    if (!this.firestore) return;
+    try {
+      // 1. Synchronize grammar_rules from Firestore
+      const rulesCol = collection(this.firestore, 'grammar_rules');
+      const rulesSnap = await getDocs(rulesCol);
+      if (!rulesSnap.empty) {
+        const cloudRules: GrammarRule[] = [];
+        rulesSnap.forEach(d => cloudRules.push(d.data() as GrammarRule));
+        console.log(`[Firebase DB] Synchronized ${cloudRules.length} grammar rules from Firestore.`);
+        const cloudIds = new Set(cloudRules.map(r => r.id));
+        for (const rule of this.data.grammarRules) {
+          if (!cloudIds.has(rule.id)) {
+            cloudRules.push(rule);
+            setDoc(doc(this.firestore, 'grammar_rules', rule.id), rule).catch(() => {});
+          }
+        }
+        this.data.grammarRules = cloudRules;
+      } else {
+        console.log(`[Firebase DB] Seeding ${this.data.grammarRules.length} grammar rules to Firestore...`);
+        const batch = writeBatch(this.firestore);
+        for (const rule of this.data.grammarRules) {
+          batch.set(doc(this.firestore, 'grammar_rules', rule.id), rule);
+        }
+        await batch.commit();
+        console.log('[Firebase DB] Seeded grammar rules to Firestore.');
+      }
+
+      // 2. Synchronize corpus from Firestore
+      const corpusCol = collection(this.firestore, 'corpus');
+      const corpusSnap = await getDocs(corpusCol);
+      if (!corpusSnap.empty) {
+        const cloudCorpus: CorpusEntry[] = [];
+        corpusSnap.forEach(d => cloudCorpus.push(d.data() as CorpusEntry));
+        console.log(`[Firebase DB] Synchronized ${cloudCorpus.length} corpus entries from Firestore.`);
+        const cloudIds = new Set(cloudCorpus.map(c => c.id));
+        for (const entry of this.data.corpus) {
+          if (!cloudIds.has(entry.id)) {
+            cloudCorpus.push(entry);
+            setDoc(doc(this.firestore, 'corpus', entry.id), entry).catch(() => {});
+          }
+        }
+        this.data.corpus = cloudCorpus;
+      } else {
+        console.log(`[Firebase DB] Seeding ${this.data.corpus.length} corpus entries to Firestore...`);
+        const batch = writeBatch(this.firestore);
+        for (const entry of this.data.corpus) {
+          batch.set(doc(this.firestore, 'corpus', entry.id), entry);
+        }
+        await batch.commit();
+        console.log('[Firebase DB] Seeded corpus entries to Firestore.');
+      }
+
+      // 3. Synchronize knowledge_documents from Firestore
+      const docsCol = collection(this.firestore, 'knowledge_documents');
+      const docsSnap = await getDocs(docsCol);
+      if (!docsSnap.empty) {
+        const cloudDocs: KnowledgeDocument[] = [];
+        docsSnap.forEach(d => cloudDocs.push(d.data() as KnowledgeDocument));
+        console.log(`[Firebase DB] Synchronized ${cloudDocs.length} knowledge documents from Firestore.`);
+        const cloudIds = new Set(cloudDocs.map(k => k.id));
+        for (const docItem of this.data.knowledgeDocuments) {
+          if (!cloudIds.has(docItem.id)) {
+            cloudDocs.push(docItem);
+            setDoc(doc(this.firestore, 'knowledge_documents', docItem.id), docItem).catch(() => {});
+          }
+        }
+        this.data.knowledgeDocuments = cloudDocs;
+      } else {
+        console.log(`[Firebase DB] Seeding ${this.data.knowledgeDocuments.length} knowledge docs to Firestore...`);
+        const batch = writeBatch(this.firestore);
+        for (const docItem of this.data.knowledgeDocuments) {
+          batch.set(doc(this.firestore, 'knowledge_documents', docItem.id), docItem);
+        }
+        await batch.commit();
+        console.log('[Firebase DB] Seeded knowledge documents to Firestore.');
+      }
+
+      this.isFirestoreSynced = true;
+      this.persist();
+    } catch (syncErr) {
+      console.error('[Firebase DB] Firestore synchronization error:', syncErr);
     }
   }
 
@@ -925,6 +1040,11 @@ class DatabaseService {
     };
     this.data.grammarRules.unshift(newRule);
     this.persist();
+    if (this.firestore) {
+      setDoc(doc(this.firestore, 'grammar_rules', newRule.id), newRule).catch(e =>
+        console.error('[Firebase DB] Failed to save rule to Firestore:', e)
+      );
+    }
     return newRule;
   }
 
@@ -937,6 +1057,11 @@ class DatabaseService {
       rule.verifiedBy = verifiedBy || 'Admin Reviewer';
     }
     this.persist();
+    if (this.firestore) {
+      setDoc(doc(this.firestore, 'grammar_rules', rule.id), rule).catch(e =>
+        console.error('[Firebase DB] Failed to update rule status in Firestore:', e)
+      );
+    }
     return rule;
   }
 
@@ -962,9 +1087,17 @@ class DatabaseService {
     if (linked) {
       linked.verified = true;
       linked.status = 'approved';
+      if (this.firestore) {
+        setDoc(doc(this.firestore, 'corpus', linked.id), linked).catch(() => {});
+      }
     }
 
     this.persist();
+    if (this.firestore) {
+      setDoc(doc(this.firestore, 'grammar_rules', rule.id), rule).catch(e =>
+        console.error('[Firebase DB] Failed to approve rule in Firestore:', e)
+      );
+    }
     return rule;
   }
 
@@ -973,7 +1106,27 @@ class DatabaseService {
     if (!rule) return null;
     rule.status = 'deprecated';
     this.persist();
+    if (this.firestore) {
+      setDoc(doc(this.firestore, 'grammar_rules', rule.id), rule).catch(e =>
+        console.error('[Firebase DB] Failed to deprecate rule in Firestore:', e)
+      );
+    }
     return rule;
+  }
+
+  public deleteGrammarRule(id: string): boolean {
+    const initialLen = this.data.grammarRules.length;
+    this.data.grammarRules = this.data.grammarRules.filter(r => r.id !== id);
+    if (this.data.grammarRules.length !== initialLen) {
+      this.persist();
+      if (this.firestore) {
+        deleteDoc(doc(this.firestore, 'grammar_rules', id)).catch(e =>
+          console.error('[Firebase DB] Failed to delete rule from Firestore:', e)
+        );
+      }
+      return true;
+    }
+    return false;
   }
 
   public approveCorpusEntry(id: string): CorpusEntry | null {
@@ -982,6 +1135,11 @@ class DatabaseService {
     entry.verified = true;
     entry.status = 'approved';
     this.persist();
+    if (this.firestore) {
+      setDoc(doc(this.firestore, 'corpus', entry.id), entry).catch(e =>
+        console.error('[Firebase DB] Failed to approve corpus in Firestore:', e)
+      );
+    }
     return entry;
   }
 
@@ -991,7 +1149,27 @@ class DatabaseService {
     entry.verified = false;
     entry.status = 'rejected';
     this.persist();
+    if (this.firestore) {
+      setDoc(doc(this.firestore, 'corpus', entry.id), entry).catch(e =>
+        console.error('[Firebase DB] Failed to reject corpus in Firestore:', e)
+      );
+    }
     return entry;
+  }
+
+  public deleteCorpusEntry(id: string): boolean {
+    const initialLen = this.data.corpus.length;
+    this.data.corpus = this.data.corpus.filter(c => c.id !== id);
+    if (this.data.corpus.length !== initialLen) {
+      this.persist();
+      if (this.firestore) {
+        deleteDoc(doc(this.firestore, 'corpus', id)).catch(e =>
+          console.error('[Firebase DB] Failed to delete corpus from Firestore:', e)
+        );
+      }
+      return true;
+    }
+    return false;
   }
 
   public getReviewQueue() {
@@ -1021,6 +1199,11 @@ class DatabaseService {
     };
     this.data.corpus.unshift(newEntry);
     this.persist();
+    if (this.firestore) {
+      setDoc(doc(this.firestore, 'corpus', newEntry.id), newEntry).catch(e =>
+        console.error('[Firebase DB] Failed to save corpus to Firestore:', e)
+      );
+    }
     return newEntry;
   }
 
@@ -1029,15 +1212,33 @@ class DatabaseService {
     return this.data.knowledgeDocuments;
   }
 
-  public addKnowledgeDoc(doc: Omit<KnowledgeDocument, 'id' | 'uploadedAt'>): KnowledgeDocument {
+  public addKnowledgeDoc(docItem: Omit<KnowledgeDocument, 'id' | 'uploadedAt'>): KnowledgeDocument {
     const newDoc: KnowledgeDocument = {
-      ...doc,
+      ...docItem,
       id: `doc-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       uploadedAt: new Date().toISOString()
     };
     this.data.knowledgeDocuments.unshift(newDoc);
     this.persist();
+    if (this.firestore) {
+      setDoc(doc(this.firestore, 'knowledge_documents', newDoc.id), newDoc).catch(e =>
+        console.error('[Firebase DB] Failed to save knowledge doc to Firestore:', e)
+      );
+    }
     return newDoc;
+  }
+
+  public updateKnowledgeDoc(id: string, updates: Partial<KnowledgeDocument>): KnowledgeDocument | null {
+    const docItem = this.data.knowledgeDocuments.find(d => d.id === id);
+    if (!docItem) return null;
+    Object.assign(docItem, updates);
+    this.persist();
+    if (this.firestore) {
+      setDoc(doc(this.firestore, 'knowledge_documents', id), docItem).catch(e =>
+        console.error('[Firebase DB] Failed to update knowledge doc in Firestore:', e)
+      );
+    }
+    return docItem;
   }
 
   public deleteKnowledgeDoc(id: string): boolean {
@@ -1045,9 +1246,184 @@ class DatabaseService {
     this.data.knowledgeDocuments = this.data.knowledgeDocuments.filter(d => d.id !== id);
     if (this.data.knowledgeDocuments.length !== initialLen) {
       this.persist();
+      if (this.firestore) {
+        deleteDoc(doc(this.firestore, 'knowledge_documents', id)).catch(e =>
+          console.error('[Firebase DB] Failed to delete knowledge doc from Firestore:', e)
+        );
+      }
       return true;
     }
     return false;
+  }
+
+  public getDocExtractedRulesText(docItem: KnowledgeDocument): string {
+    if (docItem.extractedRulesText && docItem.extractedRulesText.trim()) {
+      return docItem.extractedRulesText;
+    }
+
+    const docRules = this.data.grammarRules.filter(
+      r => r.sourceDocId === docItem.id || (docItem.title && r.title.toLowerCase().includes(docItem.title.toLowerCase().slice(0, 15)))
+    );
+
+    if (docRules.length > 0) {
+      return docRules
+        .map((r, i) => {
+          const exText = r.examples && r.examples.length > 0
+            ? r.examples.map(ex => `Example (Correct): ${ex.correct}\nExample (Incorrect): ${ex.incorrect}\nGloss: ${ex.englishGloss}`).join('\n')
+            : '';
+          return `### Rule ${i + 1}: ${r.title}
+Category: ${r.category}
+Pattern: ${r.pattern}
+Explanation: ${r.explanation}
+${exText}`;
+        })
+        .join('\n\n---\n\n');
+    }
+
+    return `# Extracted Rules & Grammar Syntactic Patterns
+# Source Document: ${docItem.title}
+# File: ${docItem.filename}
+
+### Rule 1: Strict SOV Word Order
+Category: Syntax
+Pattern: Subject + Complement/Object + Finite Verb
+Explanation: In genuine Brahui syntax, the Subject opens the sentence, objects and adverbial complements follow, and the inflected finite verb or copula MUST terminate the sentence.
+Example (Correct): ای کتاب ءِ خوانوہ (I kitāb-e khwāniva)
+Example (Incorrect): ای خوانوہ کتاب ءِ
+Gloss: I read the book
+
+### Rule 2: Locative Infix & Postposition (-ṭī / ٹی)
+Category: Morphology
+Pattern: [Noun/Pronoun Stem] + -ṭī (inside / in)
+Explanation: Locative postposition attaches directly to the nominal stem rather than using Urdu prepositions like "میں".
+Example (Correct): کنا اُرا ٹی (Kan-nā urā-ṭī)
+Example (Incorrect): میں میرا گھر
+Gloss: In my house
+
+### Rule 3: Genitive Attribution (-nā / نا)
+Category: Morphology
+Pattern: [Possessor Stem] + -nā (of / possessive)
+Explanation: Expresses possessive attribution placed immediately before the possessed noun.
+Example (Correct): کنا پِن (Kan-nā pin)
+Example (Incorrect): میرا نام
+Gloss: My name
+
+### Rule 4: Verbal Negative Infix (-pa- / -fa-)
+Category: Morphology
+Pattern: [Verb Root] + -pa- / -fa- + [Personal Ending]
+Explanation: Negation is formed internally within the verb morphology rather than with external negative particles.
+Example (Correct): ای کپّرہ (I kappara)
+Example (Incorrect): میں نہیں کرتا
+Gloss: I do not do`;
+  }
+
+  public syncRulesFromExtractedText(docItem: KnowledgeDocument): { added: number; updated: number } {
+    if (!docItem.extractedRulesText) return { added: 0, updated: 0 };
+
+    let added = 0;
+    let updated = 0;
+    const ruleBlocks = docItem.extractedRulesText.split(/(?:^|\n)(?:###?\s*Rule\s*\d*:?|Rule:)/i).filter(b => b.trim());
+
+    for (const block of ruleBlocks) {
+      const lines = block.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (lines.length === 0) continue;
+
+      let title = lines[0].replace(/^[:\-\s]+/, '').replace(/^Rule\s*\d*:?\s*/i, '').trim();
+      let category: any = 'Syntax';
+      let pattern = '';
+      let explanation = '';
+      const examples: { correct: string; incorrect: string; englishGloss: string }[] = [];
+
+      let currentEx: Partial<{ correct: string; incorrect: string; englishGloss: string }> = {};
+
+      for (const line of lines.slice(1)) {
+        const lower = line.toLowerCase();
+        if (lower.startsWith('category:')) {
+          const rawCat = line.split(':')[1]?.trim() || 'Syntax';
+          const matchCat = ['Syntax', 'Morphology', 'Phonology', 'Lexicon', 'Orthography'].find(
+            c => c.toLowerCase() === rawCat.toLowerCase()
+          );
+          if (matchCat) category = matchCat;
+        } else if (lower.startsWith('pattern:')) {
+          pattern = line.substring(line.indexOf(':') + 1).trim();
+        } else if (lower.startsWith('explanation:')) {
+          explanation = line.substring(line.indexOf(':') + 1).trim();
+        } else if (lower.startsWith('example (correct):') || lower.startsWith('example correct:')) {
+          if (currentEx.correct) {
+            examples.push({
+              correct: currentEx.correct,
+              incorrect: currentEx.incorrect || '',
+              englishGloss: currentEx.englishGloss || '',
+            });
+            currentEx = {};
+          }
+          currentEx.correct = line.substring(line.indexOf(':') + 1).trim();
+        } else if (lower.startsWith('example (incorrect):') || lower.startsWith('example incorrect:')) {
+          currentEx.incorrect = line.substring(line.indexOf(':') + 1).trim();
+        } else if (lower.startsWith('gloss:')) {
+          currentEx.englishGloss = line.substring(line.indexOf(':') + 1).trim();
+        }
+      }
+
+      if (currentEx.correct) {
+        examples.push({
+          correct: currentEx.correct,
+          incorrect: currentEx.incorrect || '',
+          englishGloss: currentEx.englishGloss || '',
+        });
+      }
+
+      if (title && (pattern || explanation)) {
+        const existingRule = this.data.grammarRules.find(
+          r => r.title.toLowerCase().trim() === title.toLowerCase().trim() ||
+               (r.sourceDocId === docItem.id && r.title.toLowerCase().trim() === title.toLowerCase().trim())
+        );
+
+        if (existingRule) {
+          existingRule.category = category;
+          if (pattern) existingRule.pattern = pattern;
+          if (explanation) existingRule.explanation = explanation;
+          if (examples.length > 0) existingRule.examples = examples;
+          existingRule.sourceDocId = docItem.id;
+          existingRule.status = 'verified';
+          if (this.firestore) {
+            setDoc(doc(this.firestore, 'grammar_rules', existingRule.id), existingRule).catch(() => {});
+          }
+          updated++;
+        } else {
+          const newRule: GrammarRule = {
+            id: `rule-doc-${docItem.id.slice(-6)}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            title,
+            category,
+            pattern: pattern || 'Subject + Object + Verb (SOV)',
+            explanation: explanation || `Rule extracted from ${docItem.title}`,
+            examples: examples.length > 0 ? examples : [
+              {
+                correct: 'ای کتاب ءِ خوانوہ',
+                incorrect: 'ای خوانوہ کتاب ءِ',
+                englishGloss: 'I read the book',
+              }
+            ],
+            confidence: 95,
+            status: 'verified',
+            verifiedBy: 'PDF Knowledge Extraction',
+            verifiedAt: new Date().toISOString(),
+            sourceDocId: docItem.id,
+            createdAt: new Date().toISOString(),
+          };
+          this.data.grammarRules.unshift(newRule);
+          if (this.firestore) {
+            setDoc(doc(this.firestore, 'grammar_rules', newRule.id), newRule).catch(() => {});
+          }
+          added++;
+        }
+      }
+    }
+
+    if (added > 0 || updated > 0) {
+      this.persist();
+    }
+    return { added, updated };
   }
 
   /**
@@ -1514,7 +1890,7 @@ class DatabaseService {
     let sarawani = 0;
     let jhalawani = 0;
     let rakhshani = 0;
-    let malookAf = 0;
+    let maloomAf = 0;
     let standard = 0;
 
     for (const c of this.data.corpus) {
@@ -1522,7 +1898,7 @@ class DatabaseService {
       if (d.includes('sarawan') || d.includes('ساراوانی')) sarawani++;
       else if (d.includes('jhalawan') || d.includes('جالاوانی')) jhalawani++;
       else if (d.includes('rakhshan') || d.includes('رخشانی')) rakhshani++;
-      else if (d.includes('malook') || d.includes('معلوک')) malookAf++;
+      else if (d.includes('maloom') || d.includes('معلوم') || d.includes('malook') || d.includes('معلوک')) maloomAf++;
       else standard++;
     }
 
@@ -1541,7 +1917,8 @@ class DatabaseService {
         sarawani,
         jhalawani,
         rakhshani,
-        malookAf,
+        maloomAf,
+        malookAf: maloomAf,
         standard,
       },
       grammarRulesCount,

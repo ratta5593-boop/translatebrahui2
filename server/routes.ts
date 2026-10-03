@@ -1007,6 +1007,54 @@ apiRouter.post('/knowledge/extract-rules/:id', requireAdminAuth, (req: Request, 
   }
 });
 
+// Fetch extracted rules text for a Knowledge Base document (Protected)
+apiRouter.get('/knowledge/documents/:id/rules', requireAdminAuth, (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const doc = dbService.getKnowledgeDocs().find((d) => d.id === id);
+    if (!doc) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+    const rulesText = dbService.getDocExtractedRulesText(doc);
+    res.json({ success: true, docId: id, rulesText, title: doc.title });
+  } catch (error: any) {
+    console.error('Error fetching document rules:', error);
+    res.status(500).json({ error: error.message || 'Failed to fetch rules text' });
+  }
+});
+
+// Update Knowledge Base document extracted rules text and sync into rules catalog (Protected)
+apiRouter.put('/knowledge/documents/:id', requireAdminAuth, (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { extractedRulesText, title, sampleSummary } = req.body;
+    const updated = dbService.updateKnowledgeDoc(id, {
+      ...(typeof extractedRulesText === 'string' ? { extractedRulesText } : {}),
+      ...(title ? { title } : {}),
+      ...(sampleSummary ? { sampleSummary } : {}),
+    });
+
+    if (!updated) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+
+    let syncResult = { added: 0, updated: 0 };
+    if (typeof extractedRulesText === 'string') {
+      syncResult = dbService.syncRulesFromExtractedText(updated);
+    }
+
+    res.json({
+      success: true,
+      document: updated,
+      message: `Extracted rules updated and synced (${syncResult.added} new rules, ${syncResult.updated} updated).`,
+      syncResult,
+    });
+  } catch (error: any) {
+    console.error('Error updating knowledge document rules:', error);
+    res.status(500).json({ error: error.message || 'Failed to update document rules' });
+  }
+});
+
 // Centralized API error handling middleware (always returns JSON, never HTML 500)
 const errorHandler = (err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error('[API Error Handler]:', err);

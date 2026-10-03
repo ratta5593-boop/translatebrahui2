@@ -1,0 +1,34 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Grammar rules collection: readable by all clients, writeable by app services
+    match /grammar_rules/{ruleId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Corpus collection: readable by all clients, writeable by app services
+    match /corpus/{entryId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Knowledge documents collection: readable by all clients, writeable by app services
+    match /knowledge_documents/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Dynamic languages and settings
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Default catch-all
+    match /{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}

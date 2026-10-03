@@ -25,7 +25,7 @@ export type BrahuiDialectOption =
   | 'Sarawani (ساراوانی)'
   | 'Jhalawani (جالاوانی)'
   | 'Rakhshani (رخشانی)'
-  | 'Malook Af (معلوک اف)';
+  | 'Maloom Af (معلوم اف)';
 
 export const getNativeInputAttrs = (lang: Language, dynamicLangs?: DynamicLanguage[]) => {
   switch (lang) {
@@ -153,43 +153,21 @@ export const TranslationView: React.FC<TranslationViewProps> = ({
     }
   };
 
-  // Sync user-submitted corrections and active learned rules across environments
+  // Sync user-submitted corrections and active learned rules across environments via Firebase Cloud DB
   const syncCorrectionsAndRules = async () => {
     try {
-      let localRules: GrammarRule[] = [];
-      let localCorpus: any[] = [];
-      try {
-        const storedRules = localStorage.getItem('brahui_cached_rules');
-        if (storedRules) localRules = JSON.parse(storedRules);
-        const storedCorpus = localStorage.getItem('brahui_cached_corrections');
-        if (storedCorpus) localCorpus = JSON.parse(storedCorpus);
-      } catch (e) {
-        console.warn('Failed to parse local storage rules:', e);
-      }
-
-      const res = await safeFetchJson<{
+      await safeFetchJson<{
         success: boolean;
-        addedRules: number;
-        addedCorpus: number;
         rules: GrammarRule[];
         corpus: any[];
       }>('/api/corrections/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          rules: localRules,
-          corpus: localCorpus,
+          rules: [],
+          corpus: [],
         }),
       });
-
-      if (res.ok && res.data) {
-        if (Array.isArray(res.data.rules)) {
-          localStorage.setItem('brahui_cached_rules', JSON.stringify(res.data.rules.slice(0, 100)));
-        }
-        if (Array.isArray(res.data.corpus)) {
-          localStorage.setItem('brahui_cached_corrections', JSON.stringify(res.data.corpus.slice(0, 100)));
-        }
-      }
     } catch (err) {
       console.warn('Failed to sync corrections and rules:', err);
     }
@@ -503,23 +481,6 @@ export const TranslationView: React.FC<TranslationViewProps> = ({
 
       if (data.inducedRule) {
         onRuleInduced(data.inducedRule);
-        try {
-          const storedRules = JSON.parse(localStorage.getItem('brahui_cached_rules') || '[]');
-          storedRules.unshift(data.inducedRule);
-          localStorage.setItem('brahui_cached_rules', JSON.stringify(storedRules.slice(0, 100)));
-        } catch (e) {
-          console.warn('Failed to cache rule in localStorage:', e);
-        }
-      }
-
-      if (data.corpusEntry) {
-        try {
-          const storedCorpus = JSON.parse(localStorage.getItem('brahui_cached_corrections') || '[]');
-          storedCorpus.unshift(data.corpusEntry);
-          localStorage.setItem('brahui_cached_corrections', JSON.stringify(storedCorpus.slice(0, 100)));
-        } catch (e) {
-          console.warn('Failed to cache corpus in localStorage:', e);
-        }
       }
 
       // Background sync to ensure persistence across Vercel and preview restarts
@@ -1127,7 +1088,7 @@ export const TranslationView: React.FC<TranslationViewProps> = ({
                       <option value="Sarawani (ساراوانی)">Sarawani (ساراوانی)</option>
                       <option value="Jhalawani (جالاوانی)">Jhalawani (جالاوانی)</option>
                       <option value="Rakhshani (رخشانی)">Rakhshani (رخشانی)</option>
-                      <option value="Malook Af (معلوک اف)">Malook Af (معلوک اف)</option>
+                      <option value="Maloom Af (معلوم اف)">Maloom Af (معلوم اف)</option>
                     </select>
                   </div>
 

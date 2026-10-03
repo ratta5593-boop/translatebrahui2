@@ -1,0 +1,81 @@
+{
+  "entities": {
+    "GrammarRule": {
+      "title": "GrammarRule",
+      "description": "Learned and induced Brahui grammar rules and syntactic patterns",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "verified", "pending", "rejected"] },
+        "sovPattern": { "type": "string" },
+        "morphemeRule": { "type": "string" },
+        "dialect": { "type": "string" },
+        "examples": { "type": "array" },
+        "sourceType": { "type": "string" },
+        "verifiedBy": { "type": "string" },
+        "verifiedAt": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "title", "category", "description", "status"]
+    },
+    "CorpusEntry": {
+      "title": "CorpusEntry",
+      "description": "Verified community and seed translation pairs",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sourceText": { "type": "string" },
+        "sourceLang": { "type": "string" },
+        "targetText": { "type": "string" },
+        "targetLang": { "type": "string" },
+        "alternativeScript": { "type": "string" },
+        "dialect": { "type": "string" },
+        "contextNotes": { "type": "string" },
+        "contributorName": { "type": "string" },
+        "contributorRole": { "type": "string" },
+        "verified": { "type": "boolean" },
+        "status": { "type": "string" },
+        "sourceType": { "type": "string" },
+        "inducedRuleId": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "sourceText", "sourceLang", "targetText", "targetLang", "status"]
+    },
+    "KnowledgeDocument": {
+      "title": "KnowledgeDocument",
+      "description": "PDF books, grammars, and lexicons ingested into knowledge base",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "filename": { "type": "string" },
+        "title": { "type": "string" },
+        "fileSize": { "type": "number" },
+        "uploadedAt": { "type": "string" },
+        "type": { "type": "string" },
+        "pageCount": { "type": "number" },
+        "chunksCount": { "type": "number" },
+        "sampleSummary": { "type": "string" },
+        "chunks": { "type": "array" }
+      },
+      "required": ["id", "filename", "title", "type"]
+    }
+  },
+  "firestore": {
+    "/grammar_rules/{ruleId}": {
+      "schema": "GrammarRule",
+      "description": "Induced and verified Brahui grammar rules shared across all environments"
+    },
+    "/corpus/{entryId}": {
+      "schema": "CorpusEntry",
+      "description": "Parallel translation corpus and user submitted corrections"
+    },
+    "/knowledge_documents/{docId}": {
+      "schema": "KnowledgeDocument",
+      "description": "Ingested PDF knowledge documents, treatises, and lexicons"
+    }
+  }
+}
