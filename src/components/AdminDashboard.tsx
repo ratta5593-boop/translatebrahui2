@@ -26,9 +26,10 @@ import {
   Globe,
   Plus,
   Trash2,
-  Sliders
+  Sliders,
+  BookMarked
 } from 'lucide-react';
-import { DailyReport, GrammarRule, CorpusEntry, DynamicLanguage } from '../types/index.js';
+import { DailyReport, GrammarRule, CorpusEntry, DynamicLanguage, DictionaryEntry } from '../types/index.js';
 import { authFetch, authSafeFetchJson, setAdminSession, getAdminToken } from '../utils/auth.js';
 import { safeFetchJson } from '../utils/api.js';
 
@@ -57,7 +58,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<'review' | 'rules' | 'corpus' | 'security' | 'languages'>('review');
+  const [activeTab, setActiveTab] = useState<'review' | 'rules' | 'dictionary' | 'corpus' | 'security' | 'languages'>('review');
+
+  // Dynamic Dictionary State (Requirements 3 & 4)
+  const [dictionaryEntries, setDictionaryEntries] = useState<DictionaryEntry[]>([]);
+  const [isDictLoading, setIsDictLoading] = useState(false);
+  const [dictSearchQuery, setDictSearchQuery] = useState('');
+  const [dictPosFilter, setDictPosFilter] = useState('all');
+  const [dictDialectFilter, setDictDialectFilter] = useState('all');
+  const [isExportingDictExcel, setIsExportingDictExcel] = useState(false);
+  const [isExportingDictCsv, setIsExportingDictCsv] = useState(false);
+  const [dictStats, setDictStats] = useState<any>(null);
+  const [dictFeedback, setDictFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Dynamic Language & Settings State
   const [allowDynamicLanguages, setAllowDynamicLanguages] = useState<boolean>(true);
@@ -244,10 +256,76 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
+  const fetchDictionary = async () => {
+    setIsDictLoading(true);
+    try {
+      const res = await authSafeFetchJson<{
+        success: boolean;
+        total: number;
+        entries: DictionaryEntry[];
+        stats: any;
+      }>('/api/dictionary');
+      if (res.ok && res.data) {
+        setDictionaryEntries(res.data.entries || []);
+        setDictStats(res.data.stats || null);
+      }
+    } catch (err) {
+      console.error('Error fetching dictionary:', err);
+    } finally {
+      setIsDictLoading(false);
+    }
+  };
+
+  const handleExportDictionary = async (format: 'xlsx' | 'csv' = 'xlsx') => {
+    if (format === 'xlsx') setIsExportingDictExcel(true);
+    else setIsExportingDictCsv(true);
+    setDictFeedback(null);
+    try {
+      const res = await authFetch(`/api/dictionary/export?format=${format}`);
+      if (!res.ok) throw new Error('Failed to export dictionary');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Brahui_Dictionary_Synchronized_${new Date().toISOString().split('T')[0]}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      setDictFeedback({
+        type: 'success',
+        message: `Dictionary successfully exported to ${format.toUpperCase()}! Download started.`,
+      });
+    } catch (err: any) {
+      console.error('Export error:', err);
+      setDictFeedback({
+        type: 'error',
+        message: err.message || 'Error downloading dictionary export.',
+      });
+    } finally {
+      setIsExportingDictExcel(false);
+      setIsExportingDictCsv(false);
+    }
+  };
+
+  const handleDeleteDictionaryEntry = async (id: string, term: string) => {
+    if (!confirm(`Are you sure you want to remove "${term}" from the dynamic dictionary?`)) return;
+    try {
+      const res = await authSafeFetchJson(`/api/dictionary/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setDictionaryEntries(prev => prev.filter(e => e.id !== id));
+        setDictFeedback({ type: 'success', message: `Term "${term}" removed from dictionary.` });
+      }
+    } catch (err) {
+      console.error('Failed to delete dictionary entry:', err);
+    }
+  };
+
   useEffect(() => {
     fetchDailyReport(selectedDate);
     fetchReviewQueue();
     fetchLanguageSettings();
+    fetchDictionary();
   }, [selectedDate]);
 
   const handleApproveRule = async (ruleId: string) => {
@@ -473,6 +551,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     );
   });
 
+  const filteredDictionary = dictionaryEntries.filter((entry) => {
+    const q = dictSearchQuery.toLowerCase();
+    const matchesQ =
+      !q ||
+      entry.term.toLowerCase().includes(q) ||
+      (entry.latinTerm && entry.latinTerm.toLowerCase().includes(q)) ||
+      entry.meaning.toLowerCase().includes(q) ||
+      (entry.englishMeaning && entry.englishMeaning.toLowerCase().includes(q)) ||
+      (entry.urduMeaning && entry.urduMeaning.toLowerCase().includes(q));
+
+    const matchesPos = dictPosFilter === 'all' || (entry.partOfSpeech || '').toLowerCase() === dictPosFilter.toLowerCase();
+    const matchesDialect = dictDialectFilter === 'all' || (entry.dialect || '').toLowerCase().includes(dictDialectFilter.toLowerCase());
+
+    return matchesQ && matchesPos && matchesDialect;
+  });
+
   return (
     <div className="space-y-6">
       {/* Top Banner & Governance Controls - Fully Responsive on Mobile & Desktop */}
@@ -496,6 +590,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         {/* Primary Action Buttons */}
         <div className="flex items-center gap-2 flex-wrap w-full md:w-auto">
+          {/* EXCEL EXPORT FEATURE FOR DICTIONARY (Requirement 4) */}
+          <button
+            type="button"
+            id="admin-export-dictionary-excel-btn"
+            onClick={() => handleExportDictionary('xlsx')}
+            disabled={isExportingDictExcel}
+            className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer flex-1 sm:flex-initial"
+            title="Export complete synchronized Brahui vocabulary database directly to Microsoft Excel (.xlsx)"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span>{isExportingDictExcel ? 'Exporting...' : 'Export Dictionary to Excel'}</span>
+          </button>
+
           <button
             type="button"
             id="admin-languages-top-btn"
@@ -671,6 +778,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               }`}
             >
               Learned Grammar Rules ({filteredRules.length})
+            </button>
+
+            <button
+              id="admin-dictionary-tab-btn"
+              onClick={() => setActiveTab('dictionary')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                activeTab === 'dictionary'
+                  ? 'bg-blue-600 text-white shadow-2xs'
+                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+              }`}
+            >
+              <BookMarked className="w-3.5 h-3.5 text-blue-500" />
+              <span>Dynamic Dictionary ({dictionaryEntries.length})</span>
             </button>
 
             <button
@@ -1113,6 +1233,214 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     )}
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB: Dynamic Dictionary & Vocabulary (Requirements 3 & 4) */}
+        {activeTab === 'dictionary' && (
+          <div className="p-4 sm:p-5 space-y-4">
+            {/* Header & Controls Strip */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50/80 border border-slate-200 rounded-xl">
+              <div>
+                <div className="flex items-center gap-2">
+                  <BookMarked className="w-4 h-4 text-blue-600" />
+                  <h3 className="text-sm font-bold text-slate-900">Synchronized Dynamic Vocabulary Database</h3>
+                  <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-blue-100 text-blue-800 border border-blue-300">
+                    {dictionaryEntries.length} Terms
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  Vocabulary terms extracted strictly from PDF lexicons and automatically synchronized in real-time from user translation corrections.
+                </p>
+              </div>
+
+              {/* Excel & CSV Export Feature for Dictionary (Requirement 4) */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  id="tab-export-dictionary-excel-btn"
+                  onClick={() => handleExportDictionary('xlsx')}
+                  disabled={isExportingDictExcel}
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                  title="Export complete synchronized Brahui vocabulary database directly to Microsoft Excel (.xlsx)"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  <span>{isExportingDictExcel ? 'Exporting...' : 'Export Dictionary to Excel (.xlsx)'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleExportDictionary('csv')}
+                  disabled={isExportingDictCsv}
+                  className="px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg shadow-2xs flex items-center gap-1.5 transition-all cursor-pointer"
+                  title="Export complete vocabulary database as CSV"
+                >
+                  <Download className="w-3.5 h-3.5 text-slate-500" />
+                  <span>CSV</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={fetchDictionary}
+                  disabled={isDictLoading}
+                  className="p-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-600 rounded-lg cursor-pointer"
+                  title="Refresh Dictionary"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isDictLoading ? 'animate-spin text-blue-600' : ''}`} />
+                </button>
+              </div>
+            </div>
+
+            {dictFeedback && (
+              <div className={`p-3 rounded-lg text-xs flex items-center justify-between ${
+                dictFeedback.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'
+              }`}>
+                <span>{dictFeedback.message}</span>
+                <button onClick={() => setDictFeedback(null)} className="cursor-pointer font-bold text-slate-500 hover:text-slate-900">&times;</button>
+              </div>
+            )}
+
+            {/* Quick KPI stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="p-3 bg-blue-50/60 border border-blue-200 rounded-lg">
+                <span className="text-[11px] font-semibold text-blue-700 block">Total Synced Terms</span>
+                <span className="text-xl font-bold text-blue-950 mt-0.5 block">{dictionaryEntries.length}</span>
+              </div>
+              <div className="p-3 bg-emerald-50/60 border border-emerald-200 rounded-lg">
+                <span className="text-[11px] font-semibold text-emerald-700 block">Verified Terms</span>
+                <span className="text-xl font-bold text-emerald-950 mt-0.5 block">
+                  {dictionaryEntries.filter(e => e.verified).length}
+                </span>
+              </div>
+              <div className="p-3 bg-indigo-50/60 border border-indigo-200 rounded-lg">
+                <span className="text-[11px] font-semibold text-indigo-700 block">From PDF Lexicons</span>
+                <span className="text-xl font-bold text-indigo-950 mt-0.5 block">
+                  {dictionaryEntries.filter(e => e.sourceType === 'pdf_extraction').length}
+                </span>
+              </div>
+              <div className="p-3 bg-purple-50/60 border border-purple-200 rounded-lg">
+                <span className="text-[11px] font-semibold text-purple-700 block">From Corrections</span>
+                <span className="text-xl font-bold text-purple-950 mt-0.5 block">
+                  {dictionaryEntries.filter(e => e.sourceType === 'user_correction').length}
+                </span>
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
+              <div className="relative flex-1">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                <input
+                  type="text"
+                  value={dictSearchQuery}
+                  onChange={(e) => setDictSearchQuery(e.target.value)}
+                  placeholder="Search Brahui term, Latin transliteration, English, or Urdu meaning..."
+                  className="pl-8 pr-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white w-full focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <select
+                  value={dictPosFilter}
+                  onChange={(e) => setDictPosFilter(e.target.value)}
+                  className="px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white cursor-pointer"
+                >
+                  <option value="all">All Parts of Speech</option>
+                  <option value="noun">Noun</option>
+                  <option value="verb">Verb</option>
+                  <option value="adjective">Adjective</option>
+                  <option value="postposition">Postposition</option>
+                  <option value="adverb">Adverb</option>
+                  <option value="idiom">Idiom</option>
+                </select>
+
+                <select
+                  value={dictDialectFilter}
+                  onChange={(e) => setDictDialectFilter(e.target.value)}
+                  className="px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white cursor-pointer"
+                >
+                  <option value="all">All Dialects</option>
+                  <option value="standard">Standard</option>
+                  <option value="sarawan">Sarawani</option>
+                  <option value="jhalawan">Jhalawani</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Terms Table */}
+            {isDictLoading ? (
+              <div className="py-12 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+                <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
+                <span>Loading synchronized dictionary...</span>
+              </div>
+            ) : filteredDictionary.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 text-xs border border-dashed border-slate-200 rounded-xl">
+                No matching vocabulary terms found in dictionary.
+              </div>
+            ) : (
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <table className="w-full text-left text-xs border border-slate-200 rounded-lg min-w-[700px]">
+                  <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                    <tr>
+                      <th className="p-3">Brahui Term</th>
+                      <th className="p-3">Meaning / English</th>
+                      <th className="p-3">Urdu Definition (اردو)</th>
+                      <th className="p-3">Part of Speech</th>
+                      <th className="p-3">Dialect</th>
+                      <th className="p-3">Source Origin</th>
+                      <th className="p-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredDictionary.map((entry) => (
+                      <tr key={entry.id} className="hover:bg-slate-50/70">
+                        <td className="p-3">
+                          <div className="font-bold text-slate-900 text-sm font-amiri">
+                            {entry.term}
+                          </div>
+                          {entry.latinTerm && (
+                            <div className="text-[11px] text-slate-500 font-mono">
+                              {entry.latinTerm}
+                            </div>
+                          )}
+                        </td>
+                        <td className="p-3">
+                          <span className="font-medium text-slate-800">{entry.meaning || entry.englishMeaning}</span>
+                        </td>
+                        <td className="p-3 font-amiri text-slate-700 text-xs">
+                          {entry.urduMeaning || '-'}
+                        </td>
+                        <td className="p-3">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                            {entry.partOfSpeech || 'Noun'}
+                          </span>
+                        </td>
+                        <td className="p-3 text-slate-600">
+                          <span className="px-2 py-0.5 bg-slate-100 rounded text-[11px]">
+                            {entry.dialect || 'Standard'}
+                          </span>
+                        </td>
+                        <td className="p-3 text-[11px] text-slate-500">
+                          <div className="truncate max-w-[180px]" title={entry.sourceDocTitle || entry.sourceType}>
+                            {entry.sourceDocTitle || (entry.sourceType === 'user_correction' ? 'Translation Correction' : 'Lexicon PDF')}
+                          </div>
+                        </td>
+                        <td className="p-3 text-right">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteDictionaryEntry(entry.id, entry.term)}
+                            className="p-1 text-slate-400 hover:text-rose-600 rounded cursor-pointer"
+                            title="Remove term"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>

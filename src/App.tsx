@@ -20,7 +20,8 @@ import {
   GoogleUserProfile
 } from './utils/auth.js';
 import { safeFetchJson } from './utils/api.js';
-import { Sparkles } from 'lucide-react';
+import { useRealtimeStats, useRealtimeNewRule } from './services/realtimeSync.js';
+import { Sparkles, Radio } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('translator');
@@ -70,6 +71,18 @@ export default function App() {
   useEffect(() => {
     refreshStats();
 
+    // Subscribe to real-time cross-device Firebase Firestore synchronizer
+    const unsubStats = useRealtimeStats((stats) => {
+      setRulesCount(stats.rulesCount);
+      setCorpusCount(stats.corpusCount);
+      if (stats.docsCount > 0) setDocsCount(stats.docsCount);
+    });
+
+    const unsubNewRule = useRealtimeNewRule((newRule) => {
+      setRecentlyLearnedNotification(newRule);
+      setTimeout(() => setRecentlyLearnedNotification(null), 7000);
+    });
+
     // Check for existing Google User session
     const existingGoogleUser = getGoogleUser();
     if (existingGoogleUser) {
@@ -109,7 +122,11 @@ export default function App() {
     };
 
     window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      unsubStats();
+      unsubNewRule();
+    };
   }, [checkUrlHash]);
 
   const handleAdminLoginSuccess = (username: string) => {
@@ -200,20 +217,26 @@ export default function App() {
 
       {/* Floating Global Learning Toast Notification */}
       {recentlyLearnedNotification && (
-        <div className="fixed bottom-5 right-5 max-w-md bg-emerald-900 text-white p-4 rounded-xl shadow-xl z-50 animate-in slide-in-from-bottom-5 duration-300 border border-emerald-700">
+        <div className="fixed bottom-5 right-5 max-w-md bg-emerald-950 text-white p-4 rounded-xl shadow-2xl z-50 animate-in slide-in-from-bottom-5 duration-300 border border-emerald-500/50 backdrop-blur-md">
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center shrink-0 shadow-xs mt-0.5">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1 text-xs">
-              <span className="font-bold block text-emerald-200 uppercase tracking-wider text-[10px]">
-                Active Learning Induction
-              </span>
-              <p className="font-semibold text-white mt-0.5">
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="font-bold text-emerald-300 uppercase tracking-wider text-[10px]">
+                  Real-Time Cloud Sync (attalibrary-1761f)
+                </span>
+              </div>
+              <p className="font-bold text-white text-sm">
                 &ldquo;{recentlyLearnedNotification.title}&rdquo;
               </p>
-              <p className="text-emerald-300 text-[11px] mt-1 font-mono">
+              <p className="text-emerald-200 text-[11px] mt-1 font-mono bg-emerald-900/60 p-1.5 rounded border border-emerald-700/50">
                 Pattern: {recentlyLearnedNotification.pattern}
+              </p>
+              <p className="text-[10px] text-emerald-400 mt-1">
+                Synced in real-time across all connected devices and active in translation memory.
               </p>
             </div>
           </div>

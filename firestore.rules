@@ -13,6 +13,12 @@ service cloud.firestore {
       allow write: if true;
     }
 
+    // Dynamic dictionary / vocabulary collection: readable by all clients, writeable by app services
+    match /dictionary/{entryId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
     // Knowledge documents collection: readable by all clients, writeable by app services
     match /knowledge_documents/{docId} {
       allow read: if true;

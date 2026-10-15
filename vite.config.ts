@@ -8,18 +8,6 @@ export default defineConfig(() => {
     plugins: [
       react(),
       tailwindcss(),
-      {
-        name: 'api-server',
-        async configureServer(server) {
-          const { apiApp } = await import('./server/routes.js');
-          server.middlewares.use((req, res, next) => {
-            if (req.url?.startsWith('/api')) {
-              return apiApp(req as any, res as any, next);
-            }
-            next();
-          });
-        },
-      },
     ],
     resolve: {
       alias: {

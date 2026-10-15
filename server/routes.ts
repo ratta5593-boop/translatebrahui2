@@ -1,8 +1,16 @@
 import express, { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import crypto from 'crypto';
+import * as XLSX from 'xlsx';
 import { dbService, GOOGLE_TRANSLATE_CATALOG } from './db.js';
-import { translateText, induceGrammarRule, summarizeUploadedDoc, sanitizeBrahuiOutput } from './gemini.js';
+import {
+  translateText,
+  induceGrammarRule,
+  extractVocabularyTermsFromCorrection,
+  summarizeUploadedDoc,
+  generateCandidateRulesFromText,
+  sanitizeBrahuiOutput,
+} from './gemini.js';
 import { dynamicTranslateSentence } from './dynamicTranslator.js';
 import type { Language } from '../src/types/index.js';
 
@@ -12,12 +20,95 @@ const upload = multer({
 });
 
 export const apiRouter = express.Router();
+apiRouter.use((req: Request, res: Response, next: NextFunction) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-gemini-api-key, x-api-key');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
 apiRouter.use(express.json({ limit: '30mb' }));
 apiRouter.use(express.urlencoded({ extended: true, limit: '30mb' }));
 
-// Admin session store: token -> { username, createdAt, expiresAt }
+// Admin session store: fast local cache token -> { username, createdAt, expiresAt }
 const adminSessions = new Map<string, { username: string; createdAt: number; expiresAt: number }>();
 const SESSION_LIFETIME_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+// Persistent Secret for Stateless Admin Tokens across Vercel serverless lambdas
+const ADMIN_TOKEN_SECRET =
+  process.env.ADMIN_JWT_SECRET ||
+  process.env.SESSION_SECRET ||
+  'brahui-admin-secure-auth-secret-key-2026-attalibrary-1761f';
+
+export function createAdminToken(username: string): string {
+  const now = Date.now();
+  const payload = {
+    username,
+    role: 'Administrator',
+    iat: now,
+    exp: now + SESSION_LIFETIME_MS,
+  };
+  const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const signature = crypto
+    .createHmac('sha256', ADMIN_TOKEN_SECRET)
+    .update(encodedPayload)
+    .digest('base64url');
+  const token = `${encodedPayload}.${signature}`;
+
+  adminSessions.set(token, {
+    username,
+    createdAt: now,
+    expiresAt: payload.exp,
+  });
+
+  return token;
+}
+
+export function verifyAdminToken(token: string): { username: string; createdAt: number; expiresAt: number } | null {
+  if (!token || typeof token !== 'string') return null;
+
+  // 1. Fast in-memory cache check
+  const mem = adminSessions.get(token);
+  if (mem && Date.now() <= mem.expiresAt) {
+    return mem;
+  }
+
+  // 2. Stateless HMAC verification (survives any Vercel serverless cold start / new lambda instance)
+  try {
+    const parts = token.split('.');
+    if (parts.length === 2) {
+      const [encodedPayload, signature] = parts;
+      const expectedSig = crypto
+        .createHmac('sha256', ADMIN_TOKEN_SECRET)
+        .update(encodedPayload)
+        .digest('base64url');
+
+      const sigBuf = Buffer.from(signature);
+      const expBuf = Buffer.from(expectedSig);
+
+      if (sigBuf.length === expBuf.length && crypto.timingSafeEqual(sigBuf, expBuf)) {
+        const payloadStr = Buffer.from(encodedPayload, 'base64url').toString('utf8');
+        const payload = JSON.parse(payloadStr);
+
+        if (payload && payload.exp && Date.now() <= payload.exp && payload.username) {
+          const session = {
+            username: payload.username,
+            createdAt: payload.iat || Date.now(),
+            expiresAt: payload.exp,
+          };
+          adminSessions.set(token, session);
+          return session;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[Admin Auth] Error decoding stateless token:', err);
+  }
+
+  return null;
+}
 
 const getAdminCredentials = () => dbService.getAdminCredentials();
 
@@ -25,9 +116,7 @@ export function getAdminSession(req: Request) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
   const token = authHeader.substring(7).trim();
-  const session = adminSessions.get(token);
-  if (!session || Date.now() > session.expiresAt) return null;
-  return session;
+  return verifyAdminToken(token);
 }
 
 // Middleware to protect sensitive administrative endpoints
@@ -82,16 +171,8 @@ apiRouter.post('/translate', async (req: Request, res: Response) => {
       return res.json(cached.result);
     }
 
-    // Priority 2: Check persistent database corpus for exact verified corrections
-    const corpus = dbService.getCorpus();
-    const matchingEntries = corpus.filter(
-      (c) =>
-        c.verified &&
-        c.status !== 'rejected' &&
-        c.sourceText.trim().toLowerCase() === cleanText.toLowerCase() &&
-        c.sourceLang === sLang &&
-        c.targetLang === tLang
-    );
+    // Priority 2: Instant O(1) lookup in synchronized cloud corpus for exact verified corrections
+    const matchingEntries = dbService.findMatchingCorpus(cleanText, sLang, tLang);
 
     if (matchingEntries.length > 0) {
       if (matchingEntries.length > 1) {
@@ -168,6 +249,70 @@ apiRouter.post('/translate', async (req: Request, res: Response) => {
       };
       translationFastCache.set(cacheKey, { result: correctionResult, timestamp: Date.now() });
       return res.json(correctionResult);
+    }
+
+    // Priority 2.5: Fast O(1) synchronized cloud dictionary match for terms & short phrases
+    if (cleanText.split(/\s+/).length <= 4) {
+      const dictMatches = dbService.findMatchingDictionary(cleanText);
+      const verifiedMatch = dictMatches.find(d => d.verified);
+      if (verifiedMatch) {
+        const isTargetArabic = tLang === 'brahui-arabic';
+        const isTargetLatin = tLang === 'brahui-latin' || tLang === 'brahui-roman';
+        const isTargetUrdu = tLang === 'urdu';
+        const isTargetEnglish = tLang === 'english';
+
+        let targetText = '';
+        let altScript = '';
+
+        if (isTargetArabic) {
+          targetText = verifiedMatch.term;
+          altScript = verifiedMatch.latinTerm || '';
+        } else if (isTargetLatin) {
+          targetText = verifiedMatch.latinTerm || verifiedMatch.term;
+          altScript = verifiedMatch.term;
+        } else if (isTargetUrdu && verifiedMatch.urduMeaning) {
+          targetText = verifiedMatch.urduMeaning;
+          altScript = verifiedMatch.meaning;
+        } else if (isTargetEnglish) {
+          targetText = verifiedMatch.englishMeaning || verifiedMatch.meaning;
+          altScript = verifiedMatch.latinTerm || '';
+        }
+
+        if (targetText) {
+          const dictResult = {
+            sourceText: cleanText,
+            sourceLang: sLang,
+            targetLang: tLang,
+            translatedText: targetText,
+            alternativeScript: altScript,
+            confidence: 99,
+            dialectVariants: [
+              {
+                dialect: formatDialectLabel(verifiedMatch.dialect),
+                text: targetText,
+                alternativeScript: altScript
+              }
+            ],
+            rulesApplied: [],
+            consultedKnowledgeDocs: verifiedMatch.sourceDocTitle ? [verifiedMatch.sourceDocTitle] : [],
+            dictionaryMatches: [
+              {
+                term: verifiedMatch.term,
+                meaning: verifiedMatch.meaning,
+                sourceDoc: verifiedMatch.sourceDocTitle || 'Synchronized Cloud Dictionary'
+              }
+            ],
+            paragraphCount: 1,
+            wordCount: cleanText.split(/\s+/).length,
+            grammaticalNotes: [
+              `Instant cloud-synchronized dictionary match: "${verifiedMatch.term}" (${verifiedMatch.partOfSpeech || 'Lexicon'}).`,
+              `Source: ${verifiedMatch.sourceDocTitle || 'Verified Cloud Lexicon'}.`
+            ]
+          };
+          translationFastCache.set(cacheKey, { result: dictResult, timestamp: Date.now() });
+          return res.json(dictResult);
+        }
+      }
     }
 
     const rawApiKey =
@@ -256,19 +401,28 @@ apiRouter.post('/corrections/submit', async (req: Request, res: Response) => {
     const session = getAdminSession(req);
     const isAdmin = !!session;
 
-    // Step 1: Run AI Grammar & Rule Induction
-    const inductionResult = await induceGrammarRule({
-      sourceText,
-      sourceLang: sourceLang || 'english',
-      targetLang: targetLang || 'brahui-arabic',
-      initialTranslation: initialTranslation || '',
-      correctedTranslation: correctedTranslation.trim(),
-      userNotes,
-      dialect: dialect || 'Standard'
-    });
+    // Step 1: Run AI Grammar Rule Induction and Dynamic Dictionary Extraction CONCURRENTLY (Requirement 3)
+    const [inductionResult, extractedTerms] = await Promise.all([
+      induceGrammarRule({
+        sourceText,
+        sourceLang: sourceLang || 'english',
+        targetLang: targetLang || 'brahui-arabic',
+        initialTranslation: initialTranslation || '',
+        correctedTranslation: correctedTranslation.trim(),
+        userNotes,
+        dialect: dialect || 'Standard'
+      }),
+      extractVocabularyTermsFromCorrection({
+        sourceText: sourceText.trim(),
+        sourceLang: sourceLang || 'english',
+        targetLang: targetLang || 'brahui-arabic',
+        correctedTranslation: correctedTranslation.trim(),
+        alternativeScript: alternativeScript || '',
+        dialect: dialect || 'Standard'
+      })
+    ]);
 
     // Step 2: Save Induced Rule into Database
-    // User-submitted corrections immediately become active Learned Rules (Requirement 1)
     const savedRule = dbService.addGrammarRule({
       ...inductionResult.rule,
       status: 'verified',
@@ -277,6 +431,26 @@ apiRouter.post('/corrections/submit', async (req: Request, res: Response) => {
       verifiedBy: isAdmin ? session.username : (contributorName || 'Community Contributor (Auto-learned)'),
       verifiedAt: new Date().toISOString(),
     });
+
+    // Step 3: Save Extracted Terms into Dynamic Dictionary Database (Requirement 3)
+    const savedDictEntries: any[] = [];
+    if (Array.isArray(extractedTerms) && extractedTerms.length > 0) {
+      for (const termItem of extractedTerms) {
+        const dictEntry = dbService.addDictionaryEntry({
+          term: termItem.term,
+          latinTerm: termItem.latinTerm,
+          meaning: termItem.meaning,
+          englishMeaning: termItem.englishMeaning,
+          urduMeaning: termItem.urduMeaning,
+          partOfSpeech: termItem.partOfSpeech || 'Lexicon Item',
+          dialect: dialect || 'Standard',
+          sourceType: 'user_correction',
+          sourceDocTitle: `User Translation Correction: "${sourceText.slice(0, 30)}"`,
+          verified: true,
+        });
+        savedDictEntries.push(dictEntry);
+      }
+    }
 
     // Step 3: Add to Corpus dataset as approved
     const corpusEntry = dbService.addCorpusEntry({
@@ -329,6 +503,8 @@ apiRouter.post('/corrections/submit', async (req: Request, res: Response) => {
       message: 'تصحیح موصول ہو گئی۔ ماڈل نے نیا اصول سیکھ لیا اور فوراً فعال ہو گیا۔ (Correction learned and immediately active globally)',
       inducedRule: savedRule,
       corpusEntry,
+      syncedDictionaryTerms: savedDictEntries,
+      syncedTermsCount: savedDictEntries.length,
       explanation: inductionResult.explanationText
     });
   } catch (error: any) {
@@ -401,14 +577,8 @@ apiRouter.post('/admin/login', (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Invalid admin username or password' });
     }
 
-    // Generate secure session token
-    const token = crypto.randomBytes(32).toString('hex');
-    const now = Date.now();
-    adminSessions.set(token, {
-      username: creds.username,
-      createdAt: now,
-      expiresAt: now + SESSION_LIFETIME_MS,
-    });
+    // Generate stateless cryptographically signed session token (persists across Vercel serverless lambdas)
+    const token = createAdminToken(creds.username);
 
     res.json({
       success: true,
@@ -424,16 +594,9 @@ apiRouter.post('/admin/login', (req: Request, res: Response) => {
 });
 
 apiRouter.get('/admin/verify', (req: Request, res: Response) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ authenticated: false, error: 'No token provided' });
-  }
+  const session = getAdminSession(req);
 
-  const token = authHeader.substring(7).trim();
-  const session = adminSessions.get(token);
-
-  if (!session || Date.now() > session.expiresAt) {
-    if (session) adminSessions.delete(token);
+  if (!session) {
     return res.status(401).json({ authenticated: false, error: 'Session expired or invalid' });
   }
 
@@ -501,8 +664,9 @@ apiRouter.put('/admin/credentials', requireAdminAuth, (req: Request, res: Respon
 });
 
 // Public metrics endpoint for open badges (does not require login)
-apiRouter.get('/public/stats', (_req: Request, res: Response) => {
+apiRouter.get('/public/stats', async (_req: Request, res: Response) => {
   try {
+    await dbService.ensureFirestoreSynced();
     const rules = dbService.getGrammarRules();
     const corpus = dbService.getCorpus();
     const docs = dbService.getKnowledgeDocs();
@@ -517,8 +681,9 @@ apiRouter.get('/public/stats', (_req: Request, res: Response) => {
 });
 
 // 4. Admin Daily Report Endpoint (Protected)
-apiRouter.get('/admin/report', requireAdminAuth, (req: Request, res: Response) => {
+apiRouter.get('/admin/report', requireAdminAuth, async (req: Request, res: Response) => {
   try {
+    await dbService.ensureFirestoreSynced();
     const dateQuery = req.query.date as string | undefined;
     const report = dbService.getDailyReport(dateQuery);
     res.json(report);
@@ -530,8 +695,9 @@ apiRouter.get('/admin/report', requireAdminAuth, (req: Request, res: Response) =
 
 // 5. Grammar Rules Management
 // Public endpoint for active learned rules
-apiRouter.get('/rules/active', (_req: Request, res: Response) => {
+apiRouter.get('/rules/active', async (_req: Request, res: Response) => {
   try {
+    await dbService.ensureFirestoreSynced();
     const rules = dbService.getActiveRules();
     res.json({ rules });
   } catch (error: any) {
@@ -539,8 +705,9 @@ apiRouter.get('/rules/active', (_req: Request, res: Response) => {
   }
 });
 
-apiRouter.get('/admin/rules', requireAdminAuth, (req: Request, res: Response) => {
+apiRouter.get('/admin/rules', requireAdminAuth, async (req: Request, res: Response) => {
   try {
+    await dbService.ensureFirestoreSynced();
     const rules = dbService.getGrammarRules();
     res.json({ rules });
   } catch (error: any) {
@@ -652,8 +819,9 @@ apiRouter.put('/admin/rules/:id', requireAdminAuth, (req: Request, res: Response
 });
 
 // 6. Corpus Management (Protected)
-apiRouter.get('/admin/corpus', requireAdminAuth, (req: Request, res: Response) => {
+apiRouter.get('/admin/corpus', requireAdminAuth, async (req: Request, res: Response) => {
   try {
+    await dbService.ensureFirestoreSynced();
     const corpus = dbService.getCorpus();
     res.json({ corpus });
   } catch (error: any) {
@@ -832,8 +1000,9 @@ apiRouter.get('/admin/export/rules-tsv', requireAdminAuth, (req: Request, res: R
 });
 
 // 9. PDF Knowledge Base & Dictionary Documents (Protected)
-apiRouter.get('/knowledge/documents', requireAdminAuth, (req: Request, res: Response) => {
+apiRouter.get('/knowledge/documents', requireAdminAuth, async (req: Request, res: Response) => {
   try {
+    await dbService.ensureFirestoreSynced();
     const docs = dbService.getKnowledgeDocs();
     res.json({ documents: docs });
   } catch (error: any) {
@@ -841,14 +1010,28 @@ apiRouter.get('/knowledge/documents', requireAdminAuth, (req: Request, res: Resp
   }
 });
 
-apiRouter.delete('/knowledge/documents/:id', requireAdminAuth, (req: Request, res: Response) => {
+apiRouter.delete('/knowledge/documents/:id', requireAdminAuth, async (req: Request, res: Response) => {
   try {
+    await dbService.ensureFirestoreSynced();
     const { id } = req.params;
-    const deleted = dbService.deleteKnowledgeDoc(id);
+    const doc = dbService.getKnowledgeDocs().find(d => d.id === id);
+    const docTitle = doc?.title || id;
+
+    const deleted = await dbService.deleteKnowledgeDoc(id);
     if (!deleted) {
-      return res.status(404).json({ error: 'Document not found' });
+      return res.status(404).json({ error: 'Document not found in knowledge base' });
     }
-    res.json({ success: true, message: 'Document removed from knowledge base' });
+
+    const activeRulesCount = dbService.getGrammarRules().length;
+    const activeDictCount = dbService.getDictionary().length;
+
+    res.json({
+      success: true,
+      message: `Reference document "${docTitle}" removed from Knowledge Base. All learned rules (${activeRulesCount}) and dictionary terms (${activeDictCount}) remain intact and active in the system.`,
+      docId: id,
+      activeRulesCount,
+      activeDictCount,
+    });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -923,6 +1106,7 @@ apiRouter.post('/knowledge/upload-pdf', requireAdminAuth, (req: Request, res: Re
   });
 }, async (req: Request, res: Response) => {
   try {
+    await dbService.ensureFirestoreSynced();
     const file = req.file;
     const { title, type, manualText } = req.body;
 
@@ -977,6 +1161,9 @@ apiRouter.post('/knowledge/upload-pdf', requireAdminAuth, (req: Request, res: Re
       message: `PDF knowledge document successfully ingested! Extracted ${extraction.extractedRulesCount} grammar rules and ${extraction.extractedVocabCount} vocabulary entries into global translation memory.`,
       document: newDoc,
       extraction,
+      plainText: cleanText,
+      pageCount,
+      chunksCount: chunks.length,
     });
   } catch (error: any) {
     console.error('PDF upload error:', error);
@@ -984,9 +1171,158 @@ apiRouter.post('/knowledge/upload-pdf', requireAdminAuth, (req: Request, res: Re
   }
 });
 
-// Trigger extraction of grammar rules & vocabulary from an existing Knowledge Base document (Protected)
-apiRouter.post('/knowledge/extract-rules/:id', requireAdminAuth, (req: Request, res: Response) => {
+// Generate structured candidate rules from converted plain text (Protected)
+apiRouter.post('/knowledge/generate-candidate-rules', requireAdminAuth, async (req: Request, res: Response) => {
   try {
+    const { text, title, docId, docType } = req.body;
+    if (!text || typeof text !== 'string' || !text.trim()) {
+      return res.status(400).json({ error: 'Plain text is required to generate candidate rules' });
+    }
+
+    let targetType = docType;
+    if (!targetType && docId) {
+      const existingDoc = dbService.getKnowledgeDocs().find(d => d.id === docId);
+      if (existingDoc) targetType = existingDoc.type;
+    }
+
+    // Requirement 2: Strict Dictionary & Vocabulary Extraction Rules
+    const isDictionary =
+      targetType === 'dictionary' ||
+      targetType === 'lexicon' ||
+      /dictionary|lexicon|قاموس|لغت|vocabulary/i.test(title || '');
+
+    if (isDictionary) {
+      return res.json({
+        success: true,
+        candidateRules: [],
+        totalCandidates: 0,
+        isDictionaryMode: true,
+        message: 'Strict Dictionary / Lexicon Rule: Only vocabulary terms and definitions are extracted from this document. General grammatical syntax rules are strictly excluded.',
+      });
+    }
+
+    const candidateRules = await generateCandidateRulesFromText(
+      title || 'Brahui Linguistic Reference',
+      text.trim(),
+      docId,
+      targetType
+    );
+
+    res.json({
+      success: true,
+      candidateRules,
+      totalCandidates: candidateRules.length,
+      isDictionaryMode: false,
+    });
+  } catch (error: any) {
+    console.error('Error generating candidate rules:', error);
+    res.status(500).json({ error: error.message || 'Failed to generate candidate rules' });
+  }
+});
+
+// Approve candidate rules into official Learned Rules in Firebase Cloud (Protected)
+apiRouter.post('/knowledge/approve-rules', requireAdminAuth, async (req: Request, res: Response) => {
+  try {
+    await dbService.ensureFirestoreSynced();
+    const { rules, docId, docTitle } = req.body;
+
+    if (!Array.isArray(rules) || rules.length === 0) {
+      return res.status(400).json({ error: 'No candidate rules provided for approval' });
+    }
+
+    const approvedRules: any[] = [];
+    for (const r of rules) {
+      const savedRule = dbService.addGrammarRule({
+        id: r.id && !r.id.startsWith('cand-') ? r.id : `rule-appr-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        title: r.title,
+        category: r.category || 'Syntax',
+        pattern: r.pattern || 'Subject + Object + Finite Verb (SOV)',
+        explanation: r.explanation || `Approved grammar rule from ${docTitle || 'PDF reference'}`,
+        confidence: 98,
+        status: 'verified',
+        verifiedBy: 'Admin Approval',
+        verifiedAt: new Date().toISOString(),
+        sourceType: 'pdf_extraction',
+        sourceDocId: docId || r.sourceDocId,
+        sourceDocTitle: docTitle || r.sourceDocTitle,
+        dialect: r.dialect || 'Standard',
+        examples: Array.isArray(r.examples) && r.examples.length > 0 ? r.examples : [
+          {
+            correct: 'او کتاب ءِ خوانیک',
+            incorrect: 'او خوانیک کتاب ءِ',
+            englishGloss: 'He reads the book (SOV structure)',
+          }
+        ],
+      });
+      approvedRules.push(savedRule);
+    }
+
+    // If linked to a Knowledge Base document, format and update document's extractedRulesText
+    if (docId) {
+      const doc = dbService.getKnowledgeDocs().find(d => d.id === docId);
+      if (doc) {
+        const formattedNew = approvedRules.map((ar, idx) => {
+          const exStr = ar.examples && ar.examples.length > 0
+            ? ar.examples.map((ex: any) => `Example (Correct): ${ex.correct}\nExample (Incorrect): ${ex.incorrect}\nGloss: ${ex.englishGloss}`).join('\n')
+            : '';
+          return `### Rule ${idx + 1}: ${ar.title}\nCategory: ${ar.category}\nPattern: ${ar.pattern}\nExplanation: ${ar.explanation}\n${exStr}`;
+        }).join('\n\n---\n\n');
+
+        const existingText = doc.extractedRulesText || '';
+        const combined = existingText.includes('### Rule')
+          ? `${existingText}\n\n---\n\n${formattedNew}`
+          : formattedNew;
+
+        dbService.updateKnowledgeDoc(docId, { extractedRulesText: combined });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Successfully approved and added ${approvedRules.length} rule(s) to official Firebase Learned Rules!`,
+      approvedCount: approvedRules.length,
+      rules: approvedRules,
+    });
+  } catch (error: any) {
+    console.error('Error approving rules:', error);
+    res.status(500).json({ error: error.message || 'Failed to approve rules' });
+  }
+});
+
+// Fetch plain text and full metadata for a Knowledge Base document (Protected)
+apiRouter.get('/knowledge/documents/:id/plain-text', requireAdminAuth, async (req: Request, res: Response) => {
+  try {
+    await dbService.ensureFirestoreSynced();
+    const { id } = req.params;
+    const doc = dbService.getKnowledgeDocs().find(d => d.id === id);
+    if (!doc) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+
+    const plainText = doc.chunks && doc.chunks.length > 0
+      ? doc.chunks.join('\n\n')
+      : (doc.sampleSummary || 'No text extracted for this document.');
+
+    res.json({
+      success: true,
+      docId: doc.id,
+      title: doc.title,
+      filename: doc.filename,
+      pageCount: doc.pageCount || 1,
+      chunksCount: doc.chunksCount || doc.chunks?.length || 0,
+      plainText,
+      extractedRulesText: doc.extractedRulesText || '',
+    });
+  } catch (error: any) {
+    console.error('Error fetching document plain text:', error);
+    res.status(500).json({ error: error.message || 'Failed to fetch plain text' });
+  }
+});
+
+// Trigger extraction of grammar rules & vocabulary from an existing Knowledge Base document (Protected)
+apiRouter.post('/knowledge/extract-rules/:id', requireAdminAuth, async (req: Request, res: Response) => {
+  try {
+    await dbService.ensureFirestoreSynced();
     const { id } = req.params;
     const docs = dbService.getKnowledgeDocs();
     const doc = docs.find((d) => d.id === id);
@@ -1008,8 +1344,9 @@ apiRouter.post('/knowledge/extract-rules/:id', requireAdminAuth, (req: Request, 
 });
 
 // Fetch extracted rules text and chunks for a Knowledge Base document (Protected)
-apiRouter.get('/knowledge/documents/:id/rules', requireAdminAuth, (req: Request, res: Response) => {
+apiRouter.get('/knowledge/documents/:id/rules', requireAdminAuth, async (req: Request, res: Response) => {
   try {
+    await dbService.ensureFirestoreSynced();
     const { id } = req.params;
     const doc = dbService.getKnowledgeDocs().find((d) => d.id === id);
     if (!doc) {
@@ -1037,8 +1374,9 @@ apiRouter.get('/knowledge/documents/:id/rules', requireAdminAuth, (req: Request,
 });
 
 // Update Knowledge Base document extracted rules text and semantic chunks, sync into rules catalog & Firebase (Protected)
-apiRouter.put('/knowledge/documents/:id', requireAdminAuth, (req: Request, res: Response) => {
+apiRouter.put('/knowledge/documents/:id', requireAdminAuth, async (req: Request, res: Response) => {
   try {
+    await dbService.ensureFirestoreSynced();
     const { id } = req.params;
     const { extractedRulesText, title, sampleSummary, chunks } = req.body;
     const updated = dbService.updateKnowledgeDoc(id, {
@@ -1066,6 +1404,213 @@ apiRouter.put('/knowledge/documents/:id', requireAdminAuth, (req: Request, res: 
   } catch (error: any) {
     console.error('Error updating knowledge document rules:', error);
     res.status(500).json({ error: error.message || 'Failed to update document rules' });
+  }
+});
+
+// ========================================================
+// DICTIONARY & VOCABULARY ENDPOINTS (Requirements 3 & 4)
+// ========================================================
+
+// 1. Get complete dynamic dictionary with filtering and stats
+apiRouter.get('/dictionary', async (req: Request, res: Response) => {
+  try {
+    await dbService.ensureFirestoreSynced();
+    let entries = dbService.getDictionary();
+    const q = ((req.query.q as string) || '').trim().toLowerCase();
+    const pos = ((req.query.pos as string) || '').trim().toLowerCase();
+    const dialect = ((req.query.dialect as string) || '').trim().toLowerCase();
+
+    if (q) {
+      entries = entries.filter(e =>
+        e.term.toLowerCase().includes(q) ||
+        (e.latinTerm && e.latinTerm.toLowerCase().includes(q)) ||
+        e.meaning.toLowerCase().includes(q) ||
+        (e.englishMeaning && e.englishMeaning.toLowerCase().includes(q)) ||
+        (e.urduMeaning && e.urduMeaning.toLowerCase().includes(q))
+      );
+    }
+
+    if (pos && pos !== 'all') {
+      entries = entries.filter(e => (e.partOfSpeech || '').toLowerCase() === pos);
+    }
+
+    if (dialect && dialect !== 'all') {
+      entries = entries.filter(e => (e.dialect || '').toLowerCase().includes(dialect));
+    }
+
+    const all = dbService.getDictionary();
+    const stats = {
+      totalTerms: all.length,
+      verifiedCount: all.filter(e => e.verified).length,
+      pdfExtractedCount: all.filter(e => e.sourceType === 'pdf_extraction').length,
+      userCorrectionCount: all.filter(e => e.sourceType === 'user_correction').length,
+      dialectsCovered: Array.from(new Set(all.map(e => e.dialect || 'Standard'))),
+    };
+
+    res.json({
+      success: true,
+      total: entries.length,
+      entries,
+      stats,
+    });
+  } catch (error: any) {
+    console.error('Error fetching dictionary:', error);
+    res.status(500).json({ error: error.message || 'Failed to fetch dictionary' });
+  }
+});
+
+// 2. Export complete synchronized dictionary to Excel (.xlsx or .csv) (Requirement 4)
+apiRouter.get('/dictionary/export', async (req: Request, res: Response) => {
+  try {
+    await dbService.ensureFirestoreSynced();
+    const format = ((req.query.format as string) || 'xlsx').toLowerCase();
+    const entries = dbService.getDictionary();
+    const dateStr = new Date().toISOString().split('T')[0];
+
+    const exportRows = entries.map((entry, index) => ({
+      'Record #': index + 1,
+      'Term ID': entry.id,
+      'Brahui Term (Perso-Arabic)': entry.term,
+      'Roman / Latin Script': entry.latinTerm || '',
+      'Primary Meaning': entry.meaning,
+      'English Meaning': entry.englishMeaning || entry.meaning,
+      'Urdu Meaning (اردو معنی)': entry.urduMeaning || '',
+      'Part of Speech': entry.partOfSpeech || 'Noun',
+      'Dialect': entry.dialect || 'Standard',
+      'Source Reference / Document': entry.sourceDocTitle || 'Brahui Linguistic System',
+      'Source Type': entry.sourceType || 'initial_seed',
+      'Verification Status': entry.verified ? 'Verified' : 'Pending',
+      'Date Added': entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : dateStr,
+    }));
+
+    if (format === 'csv') {
+      // Excel-compatible CSV with UTF-8 BOM
+      const headers = Object.keys(exportRows[0] || {
+        'Record #': 1,
+        'Term ID': '',
+        'Brahui Term (Perso-Arabic)': '',
+        'Roman / Latin Script': '',
+        'Primary Meaning': '',
+        'English Meaning': '',
+        'Urdu Meaning (اردو معنی)': '',
+        'Part of Speech': '',
+        'Dialect': '',
+        'Source Reference / Document': '',
+        'Source Type': '',
+        'Verification Status': '',
+        'Date Added': '',
+      });
+
+      const csvLines = [
+        headers.join(','),
+        ...exportRows.map(row =>
+          headers.map(h => {
+            const val = String((row as any)[h] || '').replace(/"/g, '""');
+            return `"${val}"`;
+          }).join(',')
+        )
+      ];
+
+      const csvContent = '\uFEFF' + csvLines.join('\r\n');
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="Brahui_Dictionary_Synchronized_${dateStr}.csv"`);
+      return res.send(csvContent);
+    }
+
+    // Default: native Microsoft Excel .xlsx export
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+    worksheet['!cols'] = [
+      { wch: 10 }, // Record #
+      { wch: 18 }, // Term ID
+      { wch: 22 }, // Brahui Term
+      { wch: 22 }, // Roman Latin
+      { wch: 32 }, // Primary Meaning
+      { wch: 28 }, // English Meaning
+      { wch: 26 }, // Urdu Meaning
+      { wch: 16 }, // POS
+      { wch: 14 }, // Dialect
+      { wch: 36 }, // Source Reference
+      { wch: 18 }, // Source Type
+      { wch: 14 }, // Status
+      { wch: 15 }, // Date
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Brahui Vocabulary');
+
+    // Add Metadata sheet
+    const metaRows = [
+      { 'Property': 'Dataset Name', 'Value': 'Brahui Synchronized Dynamic Vocabulary Database' },
+      { 'Property': 'Export Date', 'Value': new Date().toISOString() },
+      { 'Property': 'Total Vocabulary Entries', 'Value': entries.length },
+      { 'Property': 'Verified Terms', 'Value': entries.filter(e => e.verified).length },
+      { 'Property': 'Standard Encoding', 'Value': 'UTF-8 Unicode (Perso-Arabic Nastaliq / Latin Brolikwar)' },
+      { 'Property': 'System', 'Value': 'Brahui AI Translation & Active Self-Learning System' },
+    ];
+    const metaSheet = XLSX.utils.json_to_sheet(metaRows);
+    metaSheet['!cols'] = [{ wch: 28 }, { wch: 50 }];
+    XLSX.utils.book_append_sheet(workbook, metaSheet, 'Dataset Metadata');
+
+    const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="Brahui_Dictionary_Synchronized_${dateStr}.xlsx"`);
+    return res.send(excelBuffer);
+  } catch (error: any) {
+    console.error('Error exporting dictionary:', error);
+    res.status(500).json({ error: error.message || 'Failed to export dictionary' });
+  }
+});
+
+// 3. Admin create or update dictionary entry (Protected)
+apiRouter.post('/dictionary', requireAdminAuth, async (req: Request, res: Response) => {
+  try {
+    await dbService.ensureFirestoreSynced();
+    const { term, latinTerm, meaning, englishMeaning, urduMeaning, partOfSpeech, dialect } = req.body;
+    if (!term || !meaning) {
+      return res.status(400).json({ error: 'term and meaning are required' });
+    }
+
+    const session = getAdminSession(req);
+    const saved = dbService.addDictionaryEntry({
+      term: term.trim(),
+      latinTerm: latinTerm?.trim(),
+      meaning: meaning.trim(),
+      englishMeaning: englishMeaning?.trim(),
+      urduMeaning: urduMeaning?.trim(),
+      partOfSpeech: partOfSpeech?.trim() || 'Noun',
+      dialect: dialect?.trim() || 'Standard',
+      sourceType: 'admin_direct',
+      sourceDocTitle: `Admin Entry (${session?.username || 'Admin'})`,
+      verified: true,
+    });
+
+    res.json({
+      success: true,
+      message: 'Dictionary entry successfully saved and synchronized!',
+      entry: saved,
+    });
+  } catch (error: any) {
+    console.error('Error creating dictionary entry:', error);
+    res.status(500).json({ error: error.message || 'Failed to create dictionary entry' });
+  }
+});
+
+// 4. Admin delete dictionary entry (Protected)
+apiRouter.delete('/dictionary/:id', requireAdminAuth, async (req: Request, res: Response) => {
+  try {
+    await dbService.ensureFirestoreSynced();
+    const { id } = req.params;
+    const deleted = dbService.deleteDictionaryEntry(id);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Dictionary entry not found' });
+    }
+    res.json({
+      success: true,
+      message: 'Dictionary entry deleted successfully from database and Firestore.',
+    });
+  } catch (error: any) {
+    console.error('Error deleting dictionary entry:', error);
+    res.status(500).json({ error: error.message || 'Failed to delete dictionary entry' });
   }
 });
 

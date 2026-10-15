@@ -3,11 +3,11 @@ import { dbService } from './db.js';
 import type { Language, TranslationResult, GrammarRule, KnowledgeDocument } from '../src/types/index.js';
 import { dynamicTranslateSentence } from './dynamicTranslator.js';
 
-// Available Flash models in order of priority (stable & highest capability first)
+// Available Flash models in order of priority (fastest & lowest latency first)
 const CANDIDATE_MODELS = [
-  'gemini-3.8-flash',
+  'gemini-3.5-flash-lite',
   'gemini-flash-latest',
-  'gemini-3.1-flash-lite',
+  'gemini-3.8-flash',
 ];
 
 /**
@@ -126,7 +126,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 async function callWithRetryAndFallback<T>(
   operation: (ai: GoogleGenAI, modelName: string) => Promise<T>,
   fallbackFn: () => Promise<T> | T,
-  timeoutMs = 25000,
+  timeoutMs = 8000,
   customApiKey?: string
 ): Promise<T> {
   const apiKey = resolveServerApiKey(customApiKey);
@@ -164,6 +164,13 @@ async function callWithRetryAndFallback<T>(
         return fallbackFn();
       }
 
+      // Fast failover on 404 (model deprecated), 503 (high demand), or timeout
+      const isNotFound = err?.status === 404 || err?.message?.includes('404') || err?.message?.includes('NOT_FOUND');
+      if (isNotFound) {
+        console.warn(`[Gemini] Model ${modelName} not available (404), advancing immediately to next candidate...`);
+        continue;
+      }
+
       const isTransient =
         err?.status === 503 ||
         err?.status === 429 ||
@@ -175,8 +182,6 @@ async function callWithRetryAndFallback<T>(
 
       if (isTransient) {
         console.warn(`[Gemini] Model ${modelName} transient issue or timeout (${err.status || err.message}), trying fallback candidate (${i + 1}/${CANDIDATE_MODELS.length})...`);
-        // Brief backoff before next candidate
-        await new Promise((r) => setTimeout(r, 200 * (i + 1)));
         continue;
       }
 
@@ -802,10 +807,12 @@ export async function translateText(
     };
   }
 
-  // Retrieve active induced rules and knowledge documents to inject into system prompt
-  const activeRules = dbService.getGrammarRules().filter((r) => r.status !== 'deprecated');
+  // Retrieve active induced rules relevant to the input text and knowledge documents
+  const activeRules = dbService.getRelevantRulesForText(sourceText, 12);
   const knowledgeDocs = dbService.getKnowledgeDocs();
-  const corpusSamples = dbService.getCorpus().slice(0, 10);
+  const corpusSamples = dbService.findMatchingCorpus(sourceText, sourceLang, targetLang).length > 0
+    ? dbService.findMatchingCorpus(sourceText, sourceLang, targetLang)
+    : dbService.getCorpus().slice(0, 8);
 
   // Analyze structure: paragraphs and words
   const rawParagraphs = sourceText.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
@@ -817,9 +824,8 @@ export async function translateText(
   const knowledgeRetrieval = retrieveRelevantKnowledge(sourceText, knowledgeDocs);
   const docsExcerpts = knowledgeRetrieval.excerpts;
 
-  // Formulate active grammar rules summary
+  // Formulate active grammar rules summary prioritized for this specific text
   const rulesSummary = activeRules
-    .slice(0, 15)
     .map((r) => `[${r.category}] Rule: "${r.title}". Pattern: ${r.pattern}. Explanation: ${r.explanation}`)
     .join('\n');
 
@@ -1343,6 +1349,110 @@ Extract the underlying grammar rule or morphological pattern.`;
   );
 }
 
+export interface ExtractedVocabTerm {
+  term: string;
+  latinTerm?: string;
+  meaning: string;
+  englishMeaning?: string;
+  urduMeaning?: string;
+  partOfSpeech?: string;
+  dialect?: string;
+}
+
+/**
+ * Automatically extracts key vocabulary terms and their meanings from a submitted translation correction
+ * to synchronize with the dynamic dictionary concurrently alongside grammar rule induction.
+ */
+export async function extractVocabularyTermsFromCorrection(params: {
+  sourceText: string;
+  sourceLang: string;
+  targetLang: string;
+  correctedTranslation: string;
+  alternativeScript?: string;
+  dialect?: string;
+}): Promise<ExtractedVocabTerm[]> {
+  const fallbackTerms: ExtractedVocabTerm[] = [];
+
+  // Intelligent heuristic extraction for immediate fallback
+  const brahuiTokens = params.correctedTranslation
+    .split(/[\s,،.۔!؟?;:()\[\]]+/)
+    .map(t => t.trim())
+    .filter(t => t.length > 1 && !/^(او|ای|ءِ|ٹی|آن|نا|کن|نان|تو|دا|ہما|اس|اُٹ|ء)$/i.test(t));
+
+  if (brahuiTokens.length === 1 || params.correctedTranslation.split(/\s+/).length <= 2) {
+    fallbackTerms.push({
+      term: params.correctedTranslation.trim(),
+      latinTerm: params.alternativeScript || '',
+      meaning: params.sourceText.trim(),
+      englishMeaning: params.sourceLang === 'english' ? params.sourceText.trim() : undefined,
+      urduMeaning: params.sourceLang === 'urdu' ? params.sourceText.trim() : undefined,
+      partOfSpeech: 'Term',
+      dialect: params.dialect || 'Standard'
+    });
+  } else if (brahuiTokens.length > 0) {
+    for (const token of brahuiTokens.slice(0, 3)) {
+      fallbackTerms.push({
+        term: token,
+        latinTerm: params.alternativeScript || '',
+        meaning: params.sourceText.slice(0, 80),
+        englishMeaning: params.sourceLang === 'english' ? params.sourceText.slice(0, 80) : undefined,
+        urduMeaning: params.sourceLang === 'urdu' ? params.sourceText.slice(0, 80) : undefined,
+        partOfSpeech: 'Lexicon Item',
+        dialect: params.dialect || 'Standard'
+      });
+    }
+  }
+
+  try {
+    return await callWithRetryAndFallback<ExtractedVocabTerm[]>(
+      async (ai, modelName) => {
+        const prompt = `You are a specialist lexicographer in Brahui Dravidian linguistics.
+Analyze this translation correction pair and extract key vocabulary terms (nouns, verbs, adjectives, idioms, lexical stems) with their definitions.
+
+Source Text (${params.sourceLang}): "${params.sourceText}"
+Corrected Brahui Translation (${params.targetLang}): "${params.correctedTranslation}"
+${params.alternativeScript ? `Alternative Script: "${params.alternativeScript}"` : ''}
+
+Output ONLY valid JSON formatted as an array of objects matching this schema:
+[
+  {
+    "term": "Brahui term in authentic script (e.g., 'اُرا' or 'خوانِنگ')",
+    "latinTerm": "Roman Latin transliteration (e.g., 'Urā' or 'Khwāning')",
+    "meaning": "Primary concise definition / meaning",
+    "englishMeaning": "English meaning",
+    "urduMeaning": "Urdu meaning (e.g., 'گھر' or 'پڑھنا')",
+    "partOfSpeech": "Noun" | "Verb" | "Adjective" | "Adverb" | "Postposition" | "Idiom"
+  }
+]`;
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: prompt,
+        });
+
+        const parsed = cleanAndParseJson<any[]>(response.text || '[]', []);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed
+            .map(item => ({
+              term: String(item.term || '').trim(),
+              latinTerm: item.latinTerm ? String(item.latinTerm).trim() : undefined,
+              meaning: String(item.meaning || item.englishMeaning || item.urduMeaning || params.sourceText).trim(),
+              englishMeaning: item.englishMeaning ? String(item.englishMeaning).trim() : undefined,
+              urduMeaning: item.urduMeaning ? String(item.urduMeaning).trim() : undefined,
+              partOfSpeech: item.partOfSpeech ? String(item.partOfSpeech).trim() : 'Noun',
+              dialect: params.dialect || 'Standard',
+            }))
+            .filter(t => t.term.length > 0 && t.meaning.length > 0);
+        }
+        return fallbackTerms;
+      },
+      () => fallbackTerms,
+      4000
+    );
+  } catch {
+    return fallbackTerms;
+  }
+}
+
 /**
  * Summarizes and indexes an uploaded PDF document chunk with fast timeout
  */
@@ -1366,6 +1476,316 @@ ${rawText.slice(0, 1500)}`,
   } catch {
     return fallbackSummary;
   }
+}
+
+/**
+ * Converts extracted or edited plain text into structured candidate grammar rules.
+ * Employs AI model synthesis with robust heuristic grammar pattern fallback.
+ */
+export async function generateCandidateRulesFromText(
+  title: string,
+  plainText: string,
+  docId?: string,
+  docType?: string
+): Promise<GrammarRule[]> {
+  // Requirement 2: Strict Dictionary & Vocabulary Extraction Rules
+  // For the "Dictionary / Lexicon" category, strictly exclude general grammatical syntax rules
+  const isDictionary =
+    docType === 'dictionary' ||
+    docType === 'lexicon' ||
+    /dictionary|lexicon|قاموس|لغت|vocabulary/i.test(title);
+
+  if (isDictionary) {
+    console.log(`[Rule Extraction] Document "${title}" classified as Dictionary/Lexicon. Strictly excluding general grammatical syntax rules.`);
+    return [];
+  }
+
+  const timestamp = new Date().toISOString();
+  const candidates: GrammarRule[] = [];
+
+  // Helper to build candidate rule object
+  const makeCandidate = (
+    rTitle: string,
+    category: any,
+    pattern: string,
+    explanation: string,
+    examples: { correct: string; incorrect: string; englishGloss: string }[],
+    confidence = 96
+  ): GrammarRule => ({
+    id: `cand-${docId ? docId.replace(/[^a-zA-Z0-9]/g, '').slice(-6) : 'rule'}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    title: rTitle,
+    category,
+    pattern,
+    explanation,
+    confidence,
+    status: 'pending',
+    sourceType: 'pdf_extraction',
+    sourceDocId: docId,
+    sourceDocTitle: title,
+    examples,
+    createdAt: timestamp,
+  });
+
+  // 1. First, check if the text contains manual rule format blocks (e.g. "### Rule: ...")
+  const ruleBlocks = plainText.split(/(?:^|\n)(?:###?\s*Rule\s*\d*:?|Rule:)/i).filter(b => b.trim());
+  if (ruleBlocks.length > 1 || (ruleBlocks.length === 1 && /Category:|Pattern:/i.test(ruleBlocks[0]))) {
+    for (const block of ruleBlocks) {
+      const lines = block.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (lines.length === 0) continue;
+
+      let rTitle = lines[0].replace(/^[:\-\s]+/, '').replace(/^Rule\s*\d*:?\s*/i, '').trim();
+      if (!rTitle || rTitle.startsWith('#')) continue;
+
+      let category: any = 'Syntax';
+      let pattern = '';
+      let explanation = '';
+      const examples: { correct: string; incorrect: string; englishGloss: string }[] = [];
+      let currentEx: Partial<{ correct: string; incorrect: string; englishGloss: string }> = {};
+
+      for (const line of lines.slice(1)) {
+        const lower = line.toLowerCase();
+        if (lower.startsWith('category:')) {
+          const rawCat = line.split(':')[1]?.trim() || 'Syntax';
+          const matchCat = ['Syntax', 'Morphology', 'Phonology', 'Lexical', 'Orthography', 'Honorifics'].find(
+            c => c.toLowerCase() === rawCat.toLowerCase()
+          );
+          if (matchCat) category = matchCat;
+        } else if (lower.startsWith('pattern:')) {
+          pattern = line.substring(line.indexOf(':') + 1).trim();
+        } else if (lower.startsWith('explanation:')) {
+          explanation = line.substring(line.indexOf(':') + 1).trim();
+        } else if (lower.startsWith('example (correct):') || lower.startsWith('example correct:')) {
+          if (currentEx.correct) {
+            examples.push({
+              correct: currentEx.correct,
+              incorrect: currentEx.incorrect || '',
+              englishGloss: currentEx.englishGloss || '',
+            });
+            currentEx = {};
+          }
+          currentEx.correct = line.substring(line.indexOf(':') + 1).trim();
+        } else if (lower.startsWith('example (incorrect):') || lower.startsWith('example incorrect:')) {
+          currentEx.incorrect = line.substring(line.indexOf(':') + 1).trim();
+        } else if (lower.startsWith('gloss:')) {
+          currentEx.englishGloss = line.substring(line.indexOf(':') + 1).trim();
+        }
+      }
+      if (currentEx.correct) {
+        examples.push({
+          correct: currentEx.correct,
+          incorrect: currentEx.incorrect || '',
+          englishGloss: currentEx.englishGloss || '',
+        });
+      }
+
+      if (rTitle && (pattern || explanation)) {
+        candidates.push(
+          makeCandidate(
+            rTitle,
+            category,
+            pattern || 'Subject + Object + Finite Verb',
+            explanation || `Extracted grammar rule from ${title}`,
+            examples.length > 0 ? examples : [
+              {
+                correct: 'ای کتاب ءِ خوانوہ',
+                incorrect: 'ای خوانوہ کتاب ءِ',
+                englishGloss: 'I read the book',
+              }
+            ],
+            98
+          )
+        );
+      }
+    }
+  }
+
+  // 2. Try Gemini AI Model Extraction for nuanced, high-level grammar extraction
+  try {
+    const aiCandidates = await callWithRetryAndFallback<GrammarRule[]>(
+      async (ai, modelName) => {
+        const prompt = `You are a specialist in Dravidian linguistics and Brahui grammar. Analyze this converted plain text from a Brahui reference document: "${title}".
+Extract 3 to 6 distinct, structured candidate grammar rules that govern Brahui syntax, morphology, case marking, verbal negation, or phonology/orthography.
+
+Text excerpt:
+${plainText.slice(0, 4500)}
+
+Output ONLY valid JSON formatted as an array of objects matching this schema:
+[
+  {
+    "title": "Descriptive rule title (e.g., 'Genitive Case Suffix (-nā / نا)', 'Clause-Final Verb Order (SOV)')",
+    "category": "Syntax" | "Morphology" | "Lexical" | "Phonology" | "Orthography",
+    "pattern": "Formulaic structure pattern (e.g., '[Noun Stem] + -nā (نا)' or 'Subject + Object + Verb')",
+    "explanation": "Clear explanation of how this rule works in Brahui",
+    "examples": [
+      {
+        "correct": "Correct Brahui sentence or phrase",
+        "incorrect": "Incorrect or ungrammatical form",
+        "englishGloss": "English translation / explanation"
+      }
+    ]
+  }
+]`;
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: prompt,
+        });
+
+        const parsed = cleanAndParseJson<any[]>(response.text || '', []);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((item, idx) => ({
+            id: `cand-${docId ? docId.replace(/[^a-zA-Z0-9]/g, '').slice(-6) : 'ai'}-${Date.now()}-${idx}`,
+            title: String(item.title || `Brahui Grammar Rule #${idx + 1}`),
+            category: (['Syntax', 'Morphology', 'Lexical', 'Phonology', 'Orthography', 'Honorifics'].includes(item.category)
+              ? item.category
+              : 'Syntax') as any,
+            pattern: String(item.pattern || 'Subject + Object + Finite Verb (SOV)'),
+            explanation: String(item.explanation || `Grammar rule extracted from ${title}`),
+            confidence: 96,
+            status: 'pending' as const,
+            sourceType: 'pdf_extraction' as const,
+            sourceDocId: docId,
+            sourceDocTitle: title,
+            examples: Array.isArray(item.examples) && item.examples.length > 0
+              ? item.examples.map((ex: any) => ({
+                  correct: String(ex.correct || ''),
+                  incorrect: String(ex.incorrect || ''),
+                  englishGloss: String(ex.englishGloss || ''),
+                }))
+              : [
+                  {
+                    correct: 'ای کتاب ءِ خوانوہ',
+                    incorrect: 'ای خوانوہ کتاب ءِ',
+                    englishGloss: 'I read the book (SOV order)',
+                  },
+                ],
+            createdAt: timestamp,
+          }));
+        }
+        return [];
+      },
+      () => [],
+      5000 // 5 seconds max timeout
+    );
+
+    if (Array.isArray(aiCandidates) && aiCandidates.length > 0) {
+      for (const aiRule of aiCandidates) {
+        if (!candidates.some(c => c.title.toLowerCase() === aiRule.title.toLowerCase())) {
+          candidates.push(aiRule);
+        }
+      }
+    }
+  } catch (aiErr) {
+    console.warn('[Rule Generation] AI extraction fallback to linguistic patterns:', aiErr);
+  }
+
+  // 3. Robust Linguistic Fallback Engine (Guarantees candidate rules even offline / without AI API keys)
+  const linguisticPatterns = [
+    {
+      keyword: 'SOV',
+      test: /sov|word order|verb final|clause|فاعل مفعول فعل|حکم|ترتیب/i,
+      title: `Strict Clause-Final SOV Sentence Order [From: ${title.slice(0, 30)}]`,
+      category: 'Syntax' as const,
+      pattern: 'Subject + Indirect Object + Direct Object + Clause-Final Verb',
+      explanation: 'In Brahui grammar, all inflected finite verbs and copular auxiliaries must strictly terminate the clause.',
+      correct: 'او ایلیش کُنیک / O eleş kunēk',
+      incorrect: 'او کُنیک ایلیش / O kunēk eleş',
+      gloss: 'He/she eats bread (Subject + Object + Verb)',
+    },
+    {
+      keyword: 'Genitive',
+      test: /genitive|possessive|-na\b|مضاف|اضافت|ملکیت|نا/i,
+      title: `Genitive Case Infix & Postposition (-nā / نا) [From: ${title.slice(0, 30)}]`,
+      category: 'Morphology' as const,
+      pattern: '[Nominal/Pronominal Stem] + -nā (نا)',
+      explanation: 'Marks possessor or attribution in Brahui noun phrases, attaching directly to the pronoun or noun base.',
+      correct: 'کنا اُرا / Kan-nā urā',
+      incorrect: 'ای اُرا / I urā',
+      gloss: 'My house (1st person possessive stem + -na)',
+    },
+    {
+      keyword: 'Locative',
+      test: /locative|-ṭī|-āī|inside|upon|اندر|مقام|ٹی|آئی/i,
+      title: `Locative Spatial Postpositions (-ṭī / ٹی & -āī / آئی) [From: ${title.slice(0, 30)}]`,
+      category: 'Syntax' as const,
+      pattern: '[Location Noun] + -ṭī (inside / at) / -āī (upon)',
+      explanation: 'Spatial containment and surface presence are marked through postpositional suffixes in Brahui.',
+      correct: 'ای کوئٹہ ٹی ہنوٹ / I Quetta-ṭī hinot',
+      incorrect: 'ای ہنوٹ کوئٹہ / I hinot Quetta',
+      gloss: 'I went into Quetta (locative postposition -ṭī)',
+    },
+    {
+      keyword: 'Dative',
+      test: /dative|purposive|-ki\b|-e\b|مفعول|کے لیے|کی/i,
+      title: `Dative & Benefactive Postposition (-ki / کی) [From: ${title.slice(0, 30)}]`,
+      category: 'Morphology' as const,
+      pattern: '[Indirect Object / Beneficiary] + -ki (for)',
+      explanation: 'Benefactive, purposive, and recipient relations require postposition -ki placed after the noun stem.',
+      correct: 'دا کتاب ءِ کنکی ایتر / Dā kitāb-e kan-ki ēte',
+      incorrect: 'دا کتاب دے کن / Dā kitāb dē kan',
+      gloss: 'Give this book for me (purposive -ki)',
+    },
+    {
+      keyword: 'Ablative',
+      test: /ablative|-ān\b|from\b|سے|نکالنا|آن/i,
+      title: `Ablative Origin Postposition (-ān / آن) [From: ${title.slice(0, 30)}]`,
+      category: 'Morphology' as const,
+      pattern: '[Origin / Source Noun] + -ān (from / out of)',
+      explanation: 'Denotes spatial, temporal, or causal origin using the ablative postposition suffix -ān.',
+      correct: 'ای شاہر آن بسٹ / I shahr-ān bassuţ',
+      incorrect: 'ای بسٹ شاہر / I bassuţ shahr',
+      gloss: 'I came from the city (ablative origin -ān)',
+    },
+    {
+      keyword: 'Negation',
+      test: /negative|-pa-|-fa-|منفی|نفی|نہیں/i,
+      title: `Synthetic Verbal Negation Infixes (-pa- / -fa-) [From: ${title.slice(0, 30)}]`,
+      category: 'Morphology' as const,
+      pattern: '[Verb Root] + -pa-/-fa- + [Personal Tense Ending]',
+      explanation: 'Brahui incorporates negative polarity inside the verb morphology with infixes rather than isolated negative particles.',
+      correct: 'ای کپّرہ / I kappara (I do not do)',
+      incorrect: 'ای نہ کڑنگ / I na karing',
+      gloss: 'Synthetic verbal negation (verb root + -pa- infix)',
+    },
+    {
+      keyword: 'Lateral',
+      test: /lateral|fricative|ݪ|lh\b|حرف|صوت/i,
+      title: `Voiceless Lateral Fricative Orthography (ݪ / lh) [From: ${title.slice(0, 30)}]`,
+      category: 'Orthography' as const,
+      pattern: 'Perso-Arabic [ݪ] <---> Roman [lh]',
+      explanation: 'Distinguishes the archaic Proto-Dravidian lateral fricative /ɬ/ preserved uniquely in Brahui phonology.',
+      correct: 'باݪ / ba-lh (feather / wing)',
+      incorrect: 'بال / bal',
+      gloss: 'Wing or feather (lateral fricative ݪ / lh)',
+    },
+  ];
+
+  for (const lp of linguisticPatterns) {
+    // If not already covered by AI extraction or manual blocks
+    const alreadyPresent = candidates.some(c => c.title.toLowerCase().includes(lp.keyword.toLowerCase()));
+    if (!alreadyPresent) {
+      // Check if text mentions pattern or if text has sufficient content
+      if (lp.test.test(plainText) || candidates.length < 3) {
+        candidates.push(
+          makeCandidate(
+            lp.title,
+            lp.category,
+            lp.pattern,
+            lp.explanation,
+            [
+              {
+                correct: lp.correct,
+                incorrect: lp.incorrect,
+                englishGloss: lp.gloss,
+              },
+            ],
+            95
+          )
+        );
+      }
+    }
+  }
+
+  return candidates;
 }
 
 /**

@@ -135,7 +135,30 @@ export async function safeFetchJson<T = any>(
       };
     }
   } catch (networkError: any) {
-    console.error('Fetch network or execution error:', networkError);
+    // If request failed with a network error and it's a GET request, retry once after 300ms
+    const method = (init?.method || 'GET').toUpperCase();
+    if (method === 'GET') {
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        const retryResponse = await fetch(input, init);
+        if (retryResponse.ok) {
+          const contentType = (retryResponse.headers.get('content-type') || '').toLowerCase();
+          if (contentType.includes('application/json')) {
+            const data = await retryResponse.json();
+            return {
+              ok: true,
+              status: retryResponse.status,
+              data: data as T,
+              error: null,
+            };
+          }
+        }
+      } catch {
+        // Fall through to graceful error return
+      }
+    }
+
+    console.warn('[API] Fetch network warning:', networkError?.message || networkError);
     return {
       ok: false,
       status: 0,

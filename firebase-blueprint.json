@@ -62,6 +62,27 @@
         "chunks": { "type": "array" }
       },
       "required": ["id", "filename", "title", "type"]
+    },
+    "DictionaryEntry": {
+      "title": "DictionaryEntry",
+      "description": "Dynamic vocabulary and lexical terms database",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "term": { "type": "string" },
+        "latinTerm": { "type": "string" },
+        "meaning": { "type": "string" },
+        "englishMeaning": { "type": "string" },
+        "urduMeaning": { "type": "string" },
+        "partOfSpeech": { "type": "string" },
+        "sourceDocId": { "type": "string" },
+        "sourceDocTitle": { "type": "string" },
+        "sourceType": { "type": "string" },
+        "dialect": { "type": "string" },
+        "verified": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "term", "meaning"]
     }
   },
   "firestore": {
@@ -72,6 +93,10 @@
     "/corpus/{entryId}": {
       "schema": "CorpusEntry",
       "description": "Parallel translation corpus and user submitted corrections"
+    },
+    "/dictionary/{entryId}": {
+      "schema": "DictionaryEntry",
+      "description": "Dynamic Brahui dictionary and lexicon terms synchronized from corrections and PDF lexicons"
     },
     "/knowledge_documents/{docId}": {
       "schema": "KnowledgeDocument",

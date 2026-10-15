@@ -84,13 +84,36 @@ export interface CorpusEntry {
   inducedRuleId?: string;
 }
 
+export interface DictionaryEntry {
+  id: string;
+  term: string; // Brahui term (Perso-Arabic or Roman)
+  latinTerm?: string; // Roman/Latin Brahui script or transliteration
+  meaning: string; // Primary definition / meaning
+  englishMeaning?: string;
+  urduMeaning?: string;
+  partOfSpeech?: string; // Noun, Verb, Adjective, Postposition, Adverb, Idiom
+  sourceDocId?: string;
+  sourceDocTitle?: string;
+  sourceType?: 'pdf_extraction' | 'user_correction' | 'admin_direct' | 'initial_seed';
+  dialect?: string;
+  examples?: string;
+  verified: boolean;
+  createdAt: string;
+}
+
+export type ReferenceCategory =
+  | 'Dictionary / Lexicon'
+  | 'Grammar & Syntax Handbook'
+  | 'Parallel Texts / Literature'
+  | 'Folklore & Proverbs';
+
 export interface KnowledgeDocument {
   id: string;
   filename: string;
   title: string;
   fileSize: number;
   uploadedAt: string;
-  type: 'dictionary' | 'grammar' | 'literature' | 'corpus';
+  type: 'dictionary' | 'grammar' | 'literature' | 'corpus' | 'folklore';
   pageCount?: number;
   chunksCount: number;
   sampleSummary: string;

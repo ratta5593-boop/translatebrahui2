@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, Search, CheckCircle2, BookOpen, Filter, Check, X, ShieldAlert, Cpu } from 'lucide-react';
 import { GrammarRule } from '../types/index.js';
 import { authFetch, authSafeFetchJson } from '../utils/auth.js';
+import { useRealtimeRules } from '../services/realtimeSync.js';
 
 interface RulesCatalogViewProps {
   onRefreshData?: () => void;
@@ -32,6 +33,13 @@ export const RulesCatalogView: React.FC<RulesCatalogViewProps> = ({ onRefreshDat
 
   useEffect(() => {
     fetchRules();
+    // Real-time synchronization: update automatically when rules are modified on any device
+    const unsub = useRealtimeRules((cloudRules) => {
+      if (cloudRules.length > 0) {
+        setRules(cloudRules);
+      }
+    });
+    return () => unsub();
   }, []);
 
   const handleUpdateStatus = async (id: string, status: GrammarRule['status']) => {

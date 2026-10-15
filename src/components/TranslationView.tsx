@@ -20,6 +20,7 @@ import {
 import { Language, TranslationResult, GrammarRule, DynamicLanguage } from '../types/index.js';
 import { safeFetchJson } from '../utils/api.js';
 import { dynamicTranslateSentence } from '../utils/dynamicTranslator.js';
+import { realtimeSync } from '../services/realtimeSync.js';
 
 export type BrahuiDialectOption =
   | 'Sarawani (ساراوانی)'
@@ -481,10 +482,11 @@ export const TranslationView: React.FC<TranslationViewProps> = ({
 
       if (data.inducedRule) {
         onRuleInduced(data.inducedRule);
+        realtimeSync.saveLearnedRule(data.inducedRule).catch(() => {});
       }
-
-      // Background sync to ensure persistence across Vercel and preview restarts
-      syncCorrectionsAndRules();
+      if (data.corpusEntry) {
+        realtimeSync.saveCorpusCorrection(data.corpusEntry).catch(() => {});
+      }
 
       if (data.requiresApproval) {
         setCorrectionSuccessMsg(
