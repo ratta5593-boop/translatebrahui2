@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
+  initializeFirestore,
   getFirestore,
   collection,
   doc,
@@ -963,6 +964,88 @@ export function sanitizeForFirestore<T = any>(obj: T): T {
   return obj;
 }
 
+// Automated Part of Speech (POS) Extraction Rule (Requirement 3)
+export function determinePartOfSpeech(params: {
+  term?: string;
+  latinTerm?: string;
+  meaning?: string;
+  englishMeaning?: string;
+  urduMeaning?: string;
+}): string {
+  const term = (params.term || '').trim();
+  const latin = (params.latinTerm || '').trim().toLowerCase();
+  const meaning = (params.meaning || '').trim().toLowerCase();
+  const eng = (params.englishMeaning || '').trim().toLowerCase();
+  const urdu = (params.urduMeaning || '').trim();
+
+  const combinedEnglish = `${meaning} ${eng}`.toLowerCase();
+
+  // 1. Verbs:
+  // - Brahui verbs end in -ing, -inġ, -ning, -kanning, -kaning, or Perso-Arabic نگ, نِنگ
+  // - English starting with "to <verb>" or common verbal actions
+  // - Urdu ending with کرنا, ہونا, جانا, لینا, دینا, چھوڑنا, or verbal infinitive نا
+  const isBrahuiVerbSuffix =
+    /(?:kanning|kaning|tūling|tuling|narrifing|hining|baning|basing|tinning|tining|turing|xaling|xal-ing)$/i.test(latin) ||
+    /(?:ing|inġ|ning)$/i.test(latin) ||
+    /(?:نِنگ|نگ|کَنِنگ|کَننگ|ہِنِنگ|ہننگ|بَنِنگ|بننگ|تِنِنگ|تننگ|تُولِنگ|تولنگ|نَرِفِنگ|ترفنگ|خوانِنگ|ہَلِنگ|ترِنگ)$/.test(term);
+
+  const isEnglishVerb =
+    /^to\s+[a-z]+/i.test(meaning) ||
+    /^to\s+[a-z]+/i.test(eng) ||
+    /\b(?:abandon|abduct|abide|abolish|accept|accompany|achieve|acquire|act|adapt|add|address|adjust|admit|adopt|advise|affect|afford|agree|allow|alter|announce|answer|appear|apply|appoint|approach|approve|argue|arise|arrive|ask|attack|attempt|attend|attract|avoid|await|awake|bake|beat|become|beg|begin|behave|believe|belong|bend|bet|bid|bind|bite|bleed|blow|boil|borrow|break|breathe|bring|build|burn|burst|buy|calculate|call|cancel|capture|care|carry|catch|cause|cease|change|chase|chat|check|choose|claim|clean|clear|climb|cling|close|collect|come|command|commit|compare|compete|complain|complete|compose|concern|conclude|conduct|confirm|connect|consider|consist|contain|continue|control|convert|cook|copy|correct|cost|count|cover|crack|crash|create|cross|cry|cure|cut|damage|dance|deal|decide|declare|decline|decrease|delay|deliver|demand|deny|depend|describe|deserve|destroy|determine|develop|die|differ|dig|diminish|direct|disappear|discover|discuss|dislike|dismiss|display|distribute|divide|do|doubt|drag|draw|dream|dress|drink|drive|drop|earn|eat|eliminate|emerge|emphasize|enable|encourage|end|engage|enhance|enjoy|ensure|enter|escape|establish|estimate|examine|exchange|exclude|excuse|execute|exercise|exhibit|exist|expand|expect|experience|explain|explore|extend|face|fail|fall|fear|feed|feel|fight|figure|fill|film|find|finish|fire|fit|fix|flee|float|flow|fly|focus|fold|follow|force|forget|forgive|form|found|freeze|gain|gather|generate|get|give|glance|go|govern|grab|grant|grasp|greet|grow|guarantee|guard|guess|guide|handle|hang|happen|hate|have|hear|help|hide|hit|hold|hope|hurt|identify|ignore|illustrate|imagine|imply|impose|improve|include|incorporate|increase|indicate|inform|insist|install|intend|introduce|invest|investigate|invite|involve|issue|join|judge|jump|justify|keep|kick|kill|kiss|knock|know|lack|last|laugh|launch|lay|lead|lean|learn|leave|lend|let|lie|lift|light|like|limit|link|list|listen|live|load|locate|lock|look|lose|love|maintain|make|manage|manufacture|mark|marry|match|matter|mean|measure|meet|mention|mind|miss|mix|modify|move|multiply|murder|name|need|negotiate|nod|notice|observe|obtain|occupy|occur|offer|open|operate|order|organize|originate|overcome|owe|own|pack|paint|participate|pass|pause|pay|perceive|perform|permit|persuade|phone|pick|place|plan|play|point|possess|pour|practice|praise|pray|prefer|prepare|prescribe|present|preserve|press|pretend|prevent|proceed|produce|promise|promote|propose|protect|protest|prove|provide|publish|pull|punish|purchase|pursue|push|put|qualify|question|quit|quote|race|rain|raise|reach|react|read|realize|recall|receive|recognize|recommend|record|recover|reduce|refer|reflect|refuse|regard|regret|reject|relate|relax|release|rely|remain|remember|remind|remove|repeat|replace|reply|report|represent|request|require|rescue|research|reserve|resist|resolve|resort|respect|respond|rest|restore|restrict|result|retain|retire|return|reveal|review|rid|ride|ring|rise|risk|roll|rule|run|rush|sail|satisfy|save|say|scan|scare|scatter|schedule|score|scream|search|seat|secure|see|seek|seem|seize|select|sell|send|sense|separate|serve|settle|shake|shape|share|shift|shine|shoot|shop|shout|show|shrink|shut|sigh|sight|sign|signal|sing|sink|sit|sleep|slide|slip|slow|smell|smile|smoke|snap|snow|solve|sound|spare|speak|specify|spend|spill|spin|split|spoil|spot|spread|spring|stand|stare|start|state|stay|steal|steam|steer|step|stick|stimulate|stop|store|strengthen|stress|stretch|strike|strip|stroke|struggle|study|stuff|submit|succeed|suffer|suggest|suit|supply|support|suppose|suppress|surprise|surround|survive|suspect|suspend|swear|sweep|swim|swing|switch|tackle|take|talk|taste|teach|tear|tell|tend|test|thank|think|threaten|throw|tie|touch|tour|trace|track|trade|train|transfer|transform|translate|transport|treat|trip|trust|try|turn|twist|undergo|understand|undertake|undo|unfold|unite|unlock|unpack|update|upset|urge|use|utilize|vanish|vary|venture|view|visit|voice|vote|wait|wake|walk|wander|want|warm|warn|wash|waste|watch|wave|wear|weigh|welcome|win|wind|wipe|wish|withdraw|withhold|withstand|witness|wonder|work|worry|wrap|wreck|wrestle|write|yield)\b/i.test(combinedEnglish);
+
+  const isUrduVerb =
+    /(?:کرنا|ہونا|جانا|لینا|دینا|چھوڑنا|پڑھنا|لکھنا|کھانا|پینا|سونا|جاگنا|آنا|چلنا|بھاگنا|دیکھنا|سننا|بولنا|کہنا)$/.test(urdu);
+
+  if (isBrahuiVerbSuffix || isEnglishVerb || isUrduVerb) {
+    return 'Verb';
+  }
+
+  // 2. Pronouns:
+  const isPronoun =
+    /\b(?:i|me|my|mine|you|your|yours|he|him|his|she|her|hers|it|its|we|us|our|ours|they|them|their|theirs|who|whom|whose|this|that|these|those)\b/i.test(combinedEnglish) ||
+    /^(?:ای|نی|او|دا|ہما|نان|نما|اوفت|کون|کیا)$/.test(term) ||
+    /^(?:i|nī|ne|ō|dā|humā|nān|num|ofk|ofte)$/i.test(latin);
+  if (isPronoun) return 'Pronoun';
+
+  // 3. Postpositions:
+  const isPostposition =
+    /^(?:in|on|at|by|from|with|to|for|of|under|over|into|through|about|between|among|behind|before|after|near|off|upon|within|without)$/i.test(meaning) ||
+    /^(?:in|on|at|by|from|with|to|for|of|under|over|into|through|about|between|among|behind|before|after|near|off|upon|within|without)$/i.test(eng) ||
+    /^(?:ٹی|آن|نا|کی|کن|تو|تون|پہ|رہ|باہُنڈ)$/.test(term) ||
+    /^(?:-ṭī|-ān|-nā|-ki|-kin|-to|ṭī|ān|nā|ki|kin|to)$/i.test(latin);
+  if (isPostposition) return 'Postposition';
+
+  // 4. Conjunctions:
+  const isConjunction =
+    /^(?:and|or|but|if|because|although|yet|so|nor|either|neither|though|unless|while)$/i.test(meaning) ||
+    /^(?:and|or|but|if|because|although|yet|so|nor|either|neither|though|unless|while)$/i.test(eng) ||
+    /^(?:ہلو|یا|ولے|مگر|ہم|اگر)$/.test(term);
+  if (isConjunction) return 'Conjunction';
+
+  // 5. Adverbs:
+  const isAdverb =
+    /\b(?:quickly|slowly|easily|greatly|badly|happily|completely|extremely|very|quite|always|never|often|sometimes|today|tomorrow|yesterday|here|there|now|then|soon|already|together|apart|well)\b/i.test(combinedEnglish) ||
+    /^(?:داسہ|ہنداڑے|ہوڑاڑے|اینو|پگاہ|درستہ)$/.test(term) ||
+    /^(?:dāsa|handāṛe|hoṛāṛe|eino|pagāh|darusta)$/i.test(latin);
+  if (isAdverb) return 'Adverb';
+
+  // 6. Adjectives:
+  const isAdjective =
+    /(?:able|ible|ful|less|ous|ive|ish|ic|al|ary|ent|ant)$/i.test(eng) ||
+    /(?:able|ible|ful|less|ous|ive|ish|ic|al|ary|ent|ant)$/i.test(meaning) ||
+    /\b(?:abandoned|abject|able|afraid|alike|alive|alone|angry|bad|beautiful|big|bitter|black|blind|blue|bold|brave|bright|broad|busy|calm|cheap|clean|clear|clever|cold|cool|crazy|cruel|dark|dead|dear|deep|dirty|dry|early|easy|empty|equal|evil|false|famous|fast|fat|fine|flat|free|fresh|full|glad|good|great|green|happy|hard|heavy|high|hot|huge|kind|large|late|lazy|light|little|long|loud|low|mad|narrow|near|neat|new|nice|noble|old|pale|poor|proud|pure|quick|quiet|rare|raw|ready|real|red|rich|ripe|rough|round|sad|safe|sharp|short|shy|sick|simple|slim|slow|small|smart|soft|solid|sour|strange|strong|sweet|swift|tall|thick|thin|tight|tiny|true|ugly|warm|weak|wet|white|wide|wild|wise|wrong|yellow|young)\b/i.test(combinedEnglish);
+  if (isAdjective) return 'Adjective';
+
+  // 7. Interjections:
+  const isInterjection =
+    /^(?:oh|ah|alas|hurrah|hello|wow|hey|oops|bravo|yes|no)$/i.test(meaning) ||
+    /^(?:واہ|افسوس|ہائے|جی|نہ|ہاؤ)$/.test(term);
+  if (isInterjection) return 'Interjection';
+
+  return 'Noun';
+}
+
 class DatabaseService {
   private data: DatabaseSchema;
 
@@ -992,6 +1075,8 @@ class DatabaseService {
       translationLogs: []
     };
     this.init();
+    this.cleanCorruptedDictionarySentences();
+    this.cleanAndRepairMalformedDictionaryEntries();
     this.rebuildIndexes();
   }
 
@@ -1000,7 +1085,13 @@ class DatabaseService {
     if (firebaseConfig && firebaseConfig.projectId) {
       try {
         const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-        this.firestore = getFirestore(app, firebaseConfig.firestoreDatabaseId || undefined);
+        try {
+          this.firestore = initializeFirestore(app, {
+            experimentalAutoDetectLongPolling: true,
+          }, firebaseConfig.firestoreDatabaseId || undefined);
+        } catch {
+          this.firestore = getFirestore(app, firebaseConfig.firestoreDatabaseId || undefined);
+        }
         console.log(`[Firebase DB] Firestore connected for project ${firebaseConfig.projectId}`);
         this.startRealtimeListeners();
       } catch (fErr) {
@@ -1014,10 +1105,20 @@ class DatabaseService {
     const newCorpusMap = new Map<string, CorpusEntry[]>();
     for (const entry of (this.data.corpus || [])) {
       if (!entry.verified || entry.status === 'rejected') continue;
-      const key = `${entry.sourceLang}:${entry.targetLang}:${(entry.sourceText || '').trim().toLowerCase()}`;
+      const cleanSrc = (entry.sourceText || '').trim().toLowerCase();
+      const normSrc = cleanSrc.replace(/[.?!۔؟;:،,]+$/, '').trim();
+
+      const key = `${entry.sourceLang}:${entry.targetLang}:${cleanSrc}`;
       const list = newCorpusMap.get(key) || [];
       list.push(entry);
       newCorpusMap.set(key, list);
+
+      if (normSrc && normSrc !== cleanSrc) {
+        const normKey = `${entry.sourceLang}:${entry.targetLang}:${normSrc}`;
+        const normList = newCorpusMap.get(normKey) || [];
+        normList.push(entry);
+        newCorpusMap.set(normKey, normList);
+      }
     }
     this.corpusIndexMap = newCorpusMap;
 
@@ -1029,6 +1130,12 @@ class DatabaseService {
         const list = newDictMap.get(termKey) || [];
         list.push(dictEntry);
         newDictMap.set(termKey, list);
+        const normTerm = termKey.replace(/[.?!۔؟;:،,]+$/, '').trim();
+        if (normTerm && normTerm !== termKey) {
+          const nList = newDictMap.get(normTerm) || [];
+          nList.push(dictEntry);
+          newDictMap.set(normTerm, nList);
+        }
       }
       const latinKey = (dictEntry.latinTerm || '').trim().toLowerCase();
       if (latinKey) {
@@ -1041,6 +1148,12 @@ class DatabaseService {
         const list = newDictMap.get(meaningKey) || [];
         list.push(dictEntry);
         newDictMap.set(meaningKey, list);
+        const normMeaning = meaningKey.replace(/[.?!۔؟;:،,]+$/, '').trim();
+        if (normMeaning && normMeaning !== meaningKey) {
+          const nList = newDictMap.get(normMeaning) || [];
+          nList.push(dictEntry);
+          newDictMap.set(normMeaning, nList);
+        }
       }
     }
     this.dictionaryIndexMap = newDictMap;
@@ -1050,13 +1163,23 @@ class DatabaseService {
   }
 
   public findMatchingCorpus(text: string, sourceLang: string, targetLang: string): CorpusEntry[] {
-    const key = `${sourceLang}:${targetLang}:${text.trim().toLowerCase()}`;
-    return this.corpusIndexMap.get(key) || [];
+    const rawClean = text.trim().toLowerCase();
+    const rawKey = `${sourceLang}:${targetLang}:${rawClean}`;
+    const directHit = this.corpusIndexMap.get(rawKey);
+    if (directHit && directHit.length > 0) return directHit;
+
+    const normClean = rawClean.replace(/[.?!۔؟;:،,]+$/, '').trim();
+    const normKey = `${sourceLang}:${targetLang}:${normClean}`;
+    return this.corpusIndexMap.get(normKey) || [];
   }
 
   public findMatchingDictionary(text: string): DictionaryEntry[] {
-    const key = text.trim().toLowerCase();
-    return this.dictionaryIndexMap.get(key) || [];
+    const rawClean = text.trim().toLowerCase();
+    const directHit = this.dictionaryIndexMap.get(rawClean);
+    if (directHit && directHit.length > 0) return directHit;
+
+    const normClean = rawClean.replace(/[.?!۔؟;:،,]+$/, '').trim();
+    return this.dictionaryIndexMap.get(normClean) || [];
   }
 
   public getRelevantRulesForText(sourceText: string, max = 15): GrammarRule[] {
@@ -1797,17 +1920,63 @@ class DatabaseService {
   public addDictionaryEntry(entry: Omit<DictionaryEntry, 'id' | 'createdAt'> & { id?: string }): DictionaryEntry {
     if (!this.data.dictionary) this.data.dictionary = [];
 
-    const cleanTerm = entry.term.trim();
+    let rawTerm = (entry.term || '').trim();
+    let rawLatin = (entry.latinTerm || '').trim();
+    let rawMeaning = (entry.meaning || '').trim();
+    let rawEnglish = (entry.englishMeaning || entry.meaning || '').trim();
+    let rawUrdu = (entry.urduMeaning || '').trim();
+
+    // If term or meaning contains raw '=' delimiter (e.g. "Tark=ترک=Abandonment"):
+    if (rawTerm.includes('=') || rawMeaning.includes('=')) {
+      const parts = `${rawTerm}=${rawMeaning}`.split('=').map(p => p.trim()).filter(Boolean);
+      const ar = parts.filter(p => /[\u0600-\u06FF]/.test(p));
+      const nonAr = parts.filter(p => !/[\u0600-\u06FF]/.test(p));
+
+      if (ar.length >= 1) rawTerm = ar[0];
+      if (ar.length >= 2 && !rawUrdu) rawUrdu = ar[1];
+
+      if (nonAr.length === 1) {
+        if (!rawEnglish || rawEnglish.includes('=')) rawEnglish = nonAr[0];
+        rawMeaning = rawEnglish;
+      } else if (nonAr.length >= 2) {
+        const sorted = [...nonAr].sort((a, b) => a.length - b.length);
+        if (!rawLatin || rawLatin.includes('=')) rawLatin = sorted[0];
+        if (!rawEnglish || rawEnglish.includes('=')) rawEnglish = sorted.slice(1).join(' / ');
+        rawMeaning = rawEnglish;
+      }
+    }
+
+    const cleanTerm = rawTerm.replace(/^[^\w\u0600-\u06FF]+|[^\w\u0600-\u06FF]+$/g, '').replace(/[.?!۔؟;:،,]+$/, '');
+    const cleanMeaning = rawMeaning.replace(/[.?!۔؟;:،,]+$/, '');
+    // Strict Single-Word Lexicon Guard (Requirement 2):
+    // Full sentences or clauses must NEVER be saved as single dictionary entries.
+    const termWordCount = cleanTerm.split(/\s+/).filter(Boolean).length;
+    const meaningWordCount = cleanMeaning.split(/\s+/).filter(Boolean).length;
+    if (termWordCount > 2 || meaningWordCount > 4 || /[.?!۔؟]/.test(cleanTerm)) {
+      console.warn(`[Dictionary DB] Guard: Rejected whole-sentence entry "${cleanTerm}": Only single words and compound stems allowed in Dictionary.`);
+      return null as any;
+    }
+
+    // Automated POS Extraction Rule (Requirement 3)
+    const detectedPos = determinePartOfSpeech({
+      term: cleanTerm,
+      latinTerm: rawLatin || undefined,
+      meaning: cleanMeaning,
+      englishMeaning: rawEnglish || cleanMeaning,
+      urduMeaning: rawUrdu || undefined,
+    });
+    const finalPos = entry.partOfSpeech && entry.partOfSpeech !== 'Noun' ? entry.partOfSpeech : detectedPos;
+
     const existing = this.data.dictionary.find(
       d => d.term.trim().toLowerCase() === cleanTerm.toLowerCase() ||
-           (d.latinTerm && entry.latinTerm && d.latinTerm.trim().toLowerCase() === entry.latinTerm.trim().toLowerCase())
+           (d.latinTerm && rawLatin && d.latinTerm.trim().toLowerCase() === rawLatin.toLowerCase())
     );
 
     if (existing) {
       if (entry.meaning) existing.meaning = entry.meaning;
       if (entry.englishMeaning) existing.englishMeaning = entry.englishMeaning;
       if (entry.urduMeaning) existing.urduMeaning = entry.urduMeaning;
-      if (entry.partOfSpeech) existing.partOfSpeech = entry.partOfSpeech;
+      existing.partOfSpeech = entry.partOfSpeech && entry.partOfSpeech !== 'Noun' ? entry.partOfSpeech : finalPos;
       if (entry.dialect) existing.dialect = entry.dialect;
       if (entry.sourceDocTitle) existing.sourceDocTitle = entry.sourceDocTitle;
       if (entry.sourceDocId) existing.sourceDocId = entry.sourceDocId;
@@ -1824,6 +1993,7 @@ class DatabaseService {
     const newEntry: DictionaryEntry = {
       ...entry,
       term: cleanTerm,
+      partOfSpeech: finalPos,
       id: entry.id || `dict-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       createdAt: new Date().toISOString()
     };
@@ -1839,11 +2009,232 @@ class DatabaseService {
     return newEntry;
   }
 
+  /**
+   * Bulk adds word pairs from raw text (Word = Meaning or tab-separated / pipe-separated)
+   */
+  public bulkAddDictionaryEntries(
+    rawText: string,
+    dialect = 'Standard',
+    sourceDocTitle = 'Admin Bulk Import'
+  ): { addedCount: number; skippedCount: number; errors: string[]; entries: DictionaryEntry[] } {
+    if (!rawText || typeof rawText !== 'string') {
+      return { addedCount: 0, skippedCount: 0, errors: ['No text provided'], entries: [] };
+    }
+
+    const lines = rawText.split(/[\r\n]+/);
+    let addedCount = 0;
+    let skippedCount = 0;
+    const errors: string[] = [];
+    const addedEntries: DictionaryEntry[] = [];
+
+    for (let lineNum = 0; lineNum < lines.length; lineNum++) {
+      const line = lines[lineNum].trim();
+      if (!line || line.startsWith('#') || line.startsWith('//')) continue;
+
+      let term = '';
+      let meaning = '';
+      let latinTerm = '';
+      let englishMeaning = '';
+      let urduMeaning = '';
+
+      if (line.includes('\t') || line.includes('|') || line.includes('=') || line.includes('::')) {
+        const parts = line.split(/[=\t|]|::/).map(p => p.trim()).filter(Boolean);
+        const arabic = parts.filter(p => /[\u0600-\u06FF]/.test(p));
+        const nonArabic = parts.filter(p => !/[\u0600-\u06FF]/.test(p));
+
+        if (parts.length >= 3 && arabic.length === 1 && nonArabic.length >= 2) {
+          // e.g. "Tark = ترک = Abandonment"
+          term = arabic[0];
+          const sorted = [...nonArabic].sort((a, b) => a.length - b.length);
+          latinTerm = sorted[0];
+          englishMeaning = sorted.slice(1).join(' / ');
+          meaning = englishMeaning;
+        } else if (parts.length >= 3 && arabic.length >= 2 && nonArabic.length >= 1) {
+          // e.g. "ترک = چھوڑنا = Abandonment"
+          term = arabic[0];
+          urduMeaning = arabic[1];
+          englishMeaning = nonArabic.join(' / ');
+          meaning = englishMeaning;
+        } else if (parts.length >= 4) {
+          // e.g. "Tark \t ترک \t Abandonment \t چھوڑنا"
+          if (arabic.length >= 1) term = arabic[0];
+          if (arabic.length >= 2) urduMeaning = arabic[1];
+          if (nonArabic.length >= 1) latinTerm = nonArabic[0];
+          if (nonArabic.length >= 2) {
+            englishMeaning = nonArabic.slice(1).join(' / ');
+            meaning = englishMeaning;
+          }
+        } else if (parts.length === 2) {
+          const p1 = parts[0];
+          const p2 = parts[1];
+          const p1Ar = /[\u0600-\u06FF]/.test(p1);
+          const p2Ar = /[\u0600-\u06FF]/.test(p2);
+          if (p1Ar && !p2Ar) {
+            term = p1;
+            englishMeaning = p2;
+            meaning = p2;
+          } else if (!p1Ar && p2Ar) {
+            term = p2;
+            latinTerm = p1;
+            englishMeaning = p1;
+            meaning = p1;
+          } else if (p1Ar && p2Ar) {
+            term = p1;
+            urduMeaning = p2;
+            meaning = p2;
+          } else {
+            term = p1;
+            latinTerm = p1;
+            englishMeaning = p2;
+            meaning = p2;
+          }
+        } else {
+          term = parts[0] || '';
+          meaning = parts.slice(1).join(' ') || '';
+          englishMeaning = meaning;
+        }
+      } else if (line.includes('-') && !line.startsWith('-')) {
+        const parts = line.split('-').map(p => p.trim());
+        term = parts[0] || '';
+        meaning = parts[1] || '';
+        englishMeaning = meaning;
+      } else {
+        const spaceParts = line.split(/\s+/);
+        if (spaceParts.length === 2) {
+          term = spaceParts[0];
+          meaning = spaceParts[1];
+          englishMeaning = meaning;
+        } else {
+          skippedCount++;
+          continue;
+        }
+      }
+
+      if (!term || !meaning) {
+        skippedCount++;
+        continue;
+      }
+
+      const isTermPersoArabic = /[\u0600-\u06FF]/.test(term);
+      const isMeaningPersoArabic = /[\u0600-\u06FF]/.test(meaning);
+
+      let finalTerm = term;
+      let finalMeaning = meaning;
+      let finalEnglish = englishMeaning || meaning;
+      let finalUrdu = urduMeaning;
+
+      if (!isTermPersoArabic && isMeaningPersoArabic) {
+        finalTerm = meaning;
+        finalMeaning = term;
+        finalEnglish = term;
+      } else if (isTermPersoArabic && !isMeaningPersoArabic) {
+        finalTerm = term;
+        finalMeaning = meaning;
+        finalEnglish = meaning;
+      }
+
+      if (finalTerm.split(/\s+/).length > 3 || finalMeaning.split(/\s+/).length > 6) {
+        skippedCount++;
+        errors.push(`Line ${lineNum + 1}: Rejected "${finalTerm}" - whole sentences cannot be added to dictionary.`);
+        continue;
+      }
+
+      // Automated POS Determination (Requirement 3)
+      const autoPos = determinePartOfSpeech({
+        term: finalTerm,
+        latinTerm,
+        meaning: finalMeaning,
+        englishMeaning: finalEnglish,
+        urduMeaning: finalUrdu,
+      });
+
+      const entry = this.addDictionaryEntry({
+        term: finalTerm,
+        latinTerm: latinTerm || undefined,
+        meaning: finalMeaning,
+        englishMeaning: finalEnglish,
+        urduMeaning: finalUrdu || undefined,
+        partOfSpeech: autoPos,
+        dialect,
+        sourceType: 'admin_direct',
+        sourceDocTitle,
+        verified: true,
+      });
+
+      if (entry) {
+        addedEntries.push(entry);
+        addedCount++;
+      } else {
+        skippedCount++;
+      }
+    }
+
+    return { addedCount, skippedCount, errors, entries: addedEntries };
+  }
+
+  /**
+   * Sanitizes existing dictionary by deleting any whole sentence entries and cleaning un-parsed delimiters
+   */
+  public cleanCorruptedDictionarySentences(): number {
+    if (!this.data.dictionary) return 0;
+    let modified = false;
+    const removed: string[] = [];
+
+    this.data.dictionary = this.data.dictionary.filter(entry => {
+      const tWords = (entry.term || '').trim().split(/\s+/).filter(Boolean).length;
+      const mWords = (entry.meaning || '').trim().split(/\s+/).filter(Boolean).length;
+      const hasSentencePunct = /[.?!۔؟]/.test(entry.term || '');
+      const isSentence = tWords > 2 || mWords > 5 || hasSentencePunct || /The birds sing at dawn|I study in class one/i.test(entry.meaning || '') || /The birds sing at dawn|I study in class one/i.test(entry.term || '');
+      if (isSentence) {
+        removed.push(entry.id);
+        if (this.firestore) {
+          deleteDoc(doc(this.firestore, 'dictionary', entry.id)).catch(() => {});
+        }
+        return false;
+      }
+
+      // Also clean up any un-parsed '=' inside existing entries:
+      if (entry.term?.includes('=') || entry.meaning?.includes('=')) {
+        const parts = `${entry.term || ''}=${entry.meaning || ''}`.split('=').map(p => p.trim()).filter(Boolean);
+        const ar = parts.filter(p => /[\u0600-\u06FF]/.test(p));
+        const nonAr = parts.filter(p => !/[\u0600-\u06FF]/.test(p));
+        if (ar.length >= 1) entry.term = ar[0];
+        if (ar.length >= 2) entry.urduMeaning = ar[1];
+        if (nonAr.length === 1) {
+          entry.englishMeaning = nonAr[0];
+          entry.meaning = nonAr[0];
+        } else if (nonAr.length >= 2) {
+          const sorted = [...nonAr].sort((a, b) => a.length - b.length);
+          entry.latinTerm = sorted[0];
+          entry.englishMeaning = sorted.slice(1).join(' / ');
+          entry.meaning = entry.englishMeaning;
+        }
+        entry.partOfSpeech = determinePartOfSpeech({
+          term: entry.term,
+          latinTerm: entry.latinTerm,
+          meaning: entry.meaning,
+          englishMeaning: entry.englishMeaning,
+          urduMeaning: entry.urduMeaning,
+        });
+        modified = true;
+      }
+
+      return true;
+    });
+
+    if (removed.length > 0 || modified) {
+      this.rebuildIndexes();
+      this.persist();
+    }
+    return removed.length;
+  }
+
   public deleteDictionaryEntry(id: string): boolean {
     if (!this.data.dictionary) return false;
     const initialLen = this.data.dictionary.length;
     this.data.dictionary = this.data.dictionary.filter(d => d.id !== id);
     if (this.data.dictionary.length !== initialLen) {
+      this.rebuildIndexes();
       this.persist();
       if (this.firestore) {
         deleteDoc(doc(this.firestore, 'dictionary', id)).catch(() => {});
@@ -1851,6 +2242,141 @@ class DatabaseService {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Bulk deletes multiple dictionary entries by IDs (Requirement 4)
+   */
+  public deleteDictionaryEntries(ids: string[]): number {
+    if (!this.data.dictionary || ids.length === 0) return 0;
+    const idsSet = new Set(ids);
+    const initialLen = this.data.dictionary.length;
+    this.data.dictionary = this.data.dictionary.filter(d => !idsSet.has(d.id));
+    const deletedCount = initialLen - this.data.dictionary.length;
+    if (deletedCount > 0) {
+      this.rebuildIndexes();
+      this.persist();
+      if (this.firestore) {
+        for (const id of ids) {
+          deleteDoc(doc(this.firestore, 'dictionary', id)).catch(() => {});
+        }
+      }
+    }
+    return deletedCount;
+  }
+
+  /**
+   * Clears all dictionary entries (Requirement 4)
+   */
+  public clearAllDictionaryEntries(): number {
+    if (!this.data.dictionary || this.data.dictionary.length === 0) return 0;
+    const allIds = this.data.dictionary.map(d => d.id);
+    const count = allIds.length;
+    this.data.dictionary = [];
+    this.rebuildIndexes();
+    this.persist();
+    if (this.firestore) {
+      for (const id of allIds) {
+        deleteDoc(doc(this.firestore, 'dictionary', id)).catch(() => {});
+      }
+    }
+    return count;
+  }
+
+  /**
+   * Sanitizes and repairs any malformed dictionary entries (e.g. "Tark=ترک=Abandonment", duplicated terms, equal signs)
+   * Separates Perso-Arabic, Latin transliteration, English meaning, and Urdu definition into clean, distinct columns.
+   * Dynamically auto-assigns correct Part of Speech (POS).
+   */
+  public cleanAndRepairMalformedDictionaryEntries(): number {
+    if (!this.data.dictionary || this.data.dictionary.length === 0) return 0;
+    let repairedCount = 0;
+
+    for (const entry of this.data.dictionary) {
+      let changed = false;
+      const rawTerm = entry.term || '';
+      const rawLatin = entry.latinTerm || '';
+      const rawMeaning = entry.meaning || '';
+      const rawEnglish = entry.englishMeaning || '';
+      const rawUrdu = entry.urduMeaning || '';
+
+      // Check if term, meaning, or urdu contains raw '=' or malformed strings
+      if (
+        rawTerm.includes('=') ||
+        rawMeaning.includes('=') ||
+        rawUrdu.includes('=') ||
+        (rawLatin && rawLatin === rawEnglish && !/[\u0600-\u06FF]/.test(rawTerm))
+      ) {
+        const combined = `${rawTerm}=${rawMeaning}=${rawUrdu}=${rawLatin}`
+          .split('=')
+          .map(p => p.trim().replace(/^["'«»“]+|["'«»”]+$/g, '').replace(/[.?!۔؟;:،,]+$/, '').trim())
+          .filter(Boolean);
+
+        const uniqueParts = Array.from(new Set(combined));
+        const arabicParts = uniqueParts.filter(p => /[\u0600-\u06FF]/.test(p));
+        const latinParts = uniqueParts.filter(p => !/[\u0600-\u06FF]/.test(p));
+
+        if (arabicParts.length > 0) {
+          entry.term = arabicParts[0];
+          changed = true;
+          if (arabicParts.length > 1) {
+            entry.urduMeaning = arabicParts[1];
+          } else {
+            entry.urduMeaning = undefined;
+          }
+        }
+
+        if (latinParts.length === 1) {
+          entry.meaning = latinParts[0];
+          entry.englishMeaning = latinParts[0];
+          if (!/^to\s+[a-z]+/i.test(latinParts[0]) && latinParts[0].length <= 15 && !/\s/.test(latinParts[0])) {
+            entry.latinTerm = latinParts[0];
+          }
+          changed = true;
+        } else if (latinParts.length >= 2) {
+          // Identify transliteration vs English definition
+          const sorted = [...latinParts].sort((a, b) => a.length - b.length);
+          entry.latinTerm = sorted[0]; // e.g. "Tark"
+          entry.meaning = sorted.slice(1).join(' / '); // e.g. "Abandonment"
+          entry.englishMeaning = sorted.slice(1).join(' / ');
+          changed = true;
+        }
+      }
+
+      // Auto-assign Part of Speech if missing or generic 'Noun'
+      const detectedPos = determinePartOfSpeech({
+        term: entry.term,
+        latinTerm: entry.latinTerm,
+        meaning: entry.meaning,
+        englishMeaning: entry.englishMeaning,
+        urduMeaning: entry.urduMeaning,
+      });
+
+      if (entry.partOfSpeech !== detectedPos) {
+        entry.partOfSpeech = detectedPos;
+        changed = true;
+      }
+
+      // Clean up urduMeaning if duplicated as term
+      if (entry.urduMeaning === entry.term) {
+        entry.urduMeaning = undefined;
+        changed = true;
+      }
+
+      if (changed) {
+        repairedCount++;
+        if (this.firestore) {
+          setDoc(doc(this.firestore, 'dictionary', entry.id), sanitizeForFirestore(entry)).catch(() => {});
+        }
+      }
+    }
+
+    if (repairedCount > 0) {
+      console.log(`[Dictionary DB] Repaired & auto-categorized ${repairedCount} malformed/unclassified dictionary entries.`);
+      this.rebuildIndexes();
+      this.persist();
+    }
+    return repairedCount;
   }
 
   // --- Knowledge Documents ---
@@ -2249,6 +2775,12 @@ ${exText}`;
       const urduDef = match[4]?.trim();
 
       if (termRaw && engDef && termRaw.length > 1 && engDef.length > 1) {
+        // Enforce strict single-word lexicon guard
+        const tCount = termRaw.split(/\s+/).filter(Boolean).length;
+        const mCount = engDef.split(/\s+/).filter(Boolean).length;
+        if (tCount > 2 || mCount > 4 || /[.?!۔؟]/.test(termRaw)) {
+          continue;
+        }
         // Determine whether term is English, Brahui or Urdu
         const isPersoArabic = /[\u0600-\u06FF]/.test(termRaw);
         const corpusSource = engDef;

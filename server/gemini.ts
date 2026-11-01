@@ -1,7 +1,7 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { dbService } from './db.js';
 import type { Language, TranslationResult, GrammarRule, KnowledgeDocument } from '../src/types/index.js';
-import { dynamicTranslateSentence } from './dynamicTranslator.js';
+import { dynamicTranslateSentence, BRAHUI_LEXICON } from './dynamicTranslator.js';
 
 // Available Flash models in order of priority (fastest & lowest latency first)
 const CANDIDATE_MODELS = [
@@ -1373,31 +1373,25 @@ export async function extractVocabularyTermsFromCorrection(params: {
 }): Promise<ExtractedVocabTerm[]> {
   const fallbackTerms: ExtractedVocabTerm[] = [];
 
-  // Intelligent heuristic extraction for immediate fallback
+  // 1. Intelligent heuristic single-word extraction using BRAHUI_LEXICON
   const brahuiTokens = params.correctedTranslation
-    .split(/[\s,،.۔!؟?;:()\[\]]+/)
+    .replace(/[.?!۔؟;:،,()\[\]]+/g, ' ')
+    .split(/\s+/)
     .map(t => t.trim())
-    .filter(t => t.length > 1 && !/^(او|ای|ءِ|ٹی|آن|نا|کن|نان|تو|دا|ہما|اس|اُٹ|ء)$/i.test(t));
+    .filter(t => t.length > 1 && !/^(او|ای|ءِ|ٹی|آن|نا|کن|نان|تو|دا|ہما|اس|اُٹ|ء|آ)$/i.test(t));
 
-  if (brahuiTokens.length === 1 || params.correctedTranslation.split(/\s+/).length <= 2) {
-    fallbackTerms.push({
-      term: params.correctedTranslation.trim(),
-      latinTerm: params.alternativeScript || '',
-      meaning: params.sourceText.trim(),
-      englishMeaning: params.sourceLang === 'english' ? params.sourceText.trim() : undefined,
-      urduMeaning: params.sourceLang === 'urdu' ? params.sourceText.trim() : undefined,
-      partOfSpeech: 'Term',
-      dialect: params.dialect || 'Standard'
-    });
-  } else if (brahuiTokens.length > 0) {
-    for (const token of brahuiTokens.slice(0, 3)) {
+  for (const token of brahuiTokens) {
+    const lex = Object.values(BRAHUI_LEXICON).find(
+      l => l.arabic === token || l.latin.toLowerCase() === token.toLowerCase()
+    );
+    if (lex) {
       fallbackTerms.push({
-        term: token,
-        latinTerm: params.alternativeScript || '',
-        meaning: params.sourceText.slice(0, 80),
-        englishMeaning: params.sourceLang === 'english' ? params.sourceText.slice(0, 80) : undefined,
-        urduMeaning: params.sourceLang === 'urdu' ? params.sourceText.slice(0, 80) : undefined,
-        partOfSpeech: 'Lexicon Item',
+        term: lex.arabic,
+        latinTerm: lex.latin,
+        meaning: lex.english,
+        englishMeaning: lex.english,
+        urduMeaning: lex.urdu,
+        partOfSpeech: lex.pos.charAt(0).toUpperCase() + lex.pos.slice(1),
         dialect: params.dialect || 'Standard'
       });
     }
@@ -1407,21 +1401,26 @@ export async function extractVocabularyTermsFromCorrection(params: {
     return await callWithRetryAndFallback<ExtractedVocabTerm[]>(
       async (ai, modelName) => {
         const prompt = `You are a specialist lexicographer in Brahui Dravidian linguistics.
-Analyze this translation correction pair and extract key vocabulary terms (nouns, verbs, adjectives, idioms, lexical stems) with their definitions.
+Analyze this translation correction pair and extract strictly INDIVIDUAL SINGLE-WORD lexicon entries (nouns, verbs, adjectives, lexical stems).
 
-Source Text (${params.sourceLang}): "${params.sourceText}"
-Corrected Brahui Translation (${params.targetLang}): "${params.correctedTranslation}"
+Source Sentence (${params.sourceLang}): "${params.sourceText}"
+Corrected Brahui Sentence (${params.targetLang}): "${params.correctedTranslation}"
 ${params.alternativeScript ? `Alternative Script: "${params.alternativeScript}"` : ''}
 
-Output ONLY valid JSON formatted as an array of objects matching this schema:
+CRITICAL RULES:
+1. Extract ONLY single word-to-word mappings (e.g. 'صبح' = 'dawn', 'وخت' = 'time', 'چڑیالک' = 'birds', 'توار' = 'sound/call').
+2. NEVER output full sentences as meanings. Each meaning must be a single word or 2-word phrase definition.
+3. Exclude pure grammatical particles like '-na', '-ṭī', '-ā', copulas ('e').
+
+Output valid JSON array:
 [
   {
-    "term": "Brahui term in authentic script (e.g., 'اُرا' or 'خوانِنگ')",
-    "latinTerm": "Roman Latin transliteration (e.g., 'Urā' or 'Khwāning')",
-    "meaning": "Primary concise definition / meaning",
-    "englishMeaning": "English meaning",
-    "urduMeaning": "Urdu meaning (e.g., 'گھر' or 'پڑھنا')",
-    "partOfSpeech": "Noun" | "Verb" | "Adjective" | "Adverb" | "Postposition" | "Idiom"
+    "term": "Single Brahui word in authentic script (e.g. 'چڑیالک')",
+    "latinTerm": "Roman Latin transliteration (e.g. 'Ciŕyālak')",
+    "meaning": "Single English word meaning (e.g. 'birds')",
+    "englishMeaning": "English word (e.g. 'birds')",
+    "urduMeaning": "Urdu word (e.g. 'پرندے')",
+    "partOfSpeech": "Noun" | "Verb" | "Adjective" | "Adverb"
   }
 ]`;
         const response = await ai.models.generateContent({
@@ -1431,22 +1430,33 @@ Output ONLY valid JSON formatted as an array of objects matching this schema:
 
         const parsed = cleanAndParseJson<any[]>(response.text || '[]', []);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed
+          const validated = parsed
             .map(item => ({
               term: String(item.term || '').trim(),
               latinTerm: item.latinTerm ? String(item.latinTerm).trim() : undefined,
-              meaning: String(item.meaning || item.englishMeaning || item.urduMeaning || params.sourceText).trim(),
+              meaning: String(item.meaning || item.englishMeaning || item.urduMeaning || '').trim(),
               englishMeaning: item.englishMeaning ? String(item.englishMeaning).trim() : undefined,
               urduMeaning: item.urduMeaning ? String(item.urduMeaning).trim() : undefined,
               partOfSpeech: item.partOfSpeech ? String(item.partOfSpeech).trim() : 'Noun',
               dialect: params.dialect || 'Standard',
             }))
-            .filter(t => t.term.length > 0 && t.meaning.length > 0);
+            .filter(t => {
+              const termWords = t.term.split(/\s+/).filter(Boolean).length;
+              const meaningWords = t.meaning.split(/\s+/).filter(Boolean).length;
+              const isNotSentence =
+                termWords <= 2 &&
+                meaningWords <= 4 &&
+                t.meaning.toLowerCase() !== params.sourceText.trim().toLowerCase() &&
+                t.term !== params.correctedTranslation.trim();
+              return t.term.length > 0 && t.meaning.length > 0 && isNotSentence;
+            });
+
+          if (validated.length > 0) return validated;
         }
         return fallbackTerms;
       },
       () => fallbackTerms,
-      4000
+      5000
     );
   } catch {
     return fallbackTerms;

@@ -2,7 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import crypto from 'crypto';
 import * as XLSX from 'xlsx';
-import { dbService, GOOGLE_TRANSLATE_CATALOG } from './db.js';
+import { dbService, GOOGLE_TRANSLATE_CATALOG, determinePartOfSpeech } from './db.js';
 import {
   translateText,
   induceGrammarRule,
@@ -11,7 +11,8 @@ import {
   generateCandidateRulesFromText,
   sanitizeBrahuiOutput,
 } from './gemini.js';
-import { dynamicTranslateSentence } from './dynamicTranslator.js';
+import { dynamicTranslateSentence, BRAHUI_LEXICON } from './dynamicTranslator.js';
+import { normalizeInputText, formatTargetPunctuation, executeTwoStepTranslation } from './fastPipeline.js';
 import type { Language } from '../src/types/index.js';
 
 const upload = multer({
@@ -160,15 +161,32 @@ apiRouter.post('/translate', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Source text is required' });
     }
 
+    // Step 0: Robust Punctuation Normalization (Requirement 1)
+    // Strip trailing punctuation before processing so adding or removing full stop does not distort translation output
+    const norm = normalizeInputText(sourceText);
+    const cleanText = norm.normalized;
+    if (!cleanText) {
+      return res.status(400).json({ error: 'Source text is required' });
+    }
+
     const sLang = (sourceLang || 'english') as Language;
     const tLang = (targetLang || 'brahui-arabic') as Language;
-    const cleanText = sourceText.trim();
     const cacheKey = `${sLang}:${tLang}:${cleanText.toLowerCase()}`;
 
-    // Priority 1: Check fast in-memory cache for recent identical requests
+    const isTargetArabic = tLang === 'brahui-arabic';
+    const targetPunct = formatTargetPunctuation(norm, tLang);
+    const altPunct = formatTargetPunctuation(norm, isTargetArabic ? 'brahui-latin' : 'brahui-arabic');
+
+    // Priority 1: Check fast in-memory cache for recent identical requests (normalized)
     const cached = translationFastCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < 3600000) {
-      return res.json(cached.result);
+      const formattedCached = {
+        ...cached.result,
+        sourceText: norm.raw,
+        translatedText: cached.result.translatedText.replace(/[.?!۔؟;:،,]+$/, '') + targetPunct,
+        alternativeScript: cached.result.alternativeScript ? cached.result.alternativeScript.replace(/[.?!۔؟;:،,]+$/, '') + altPunct : '',
+      };
+      return res.json(formattedCached);
     }
 
     // Priority 2: Instant O(1) lookup in synchronized cloud corpus for exact verified corrections
@@ -177,18 +195,22 @@ apiRouter.post('/translate', async (req: Request, res: Response) => {
     if (matchingEntries.length > 0) {
       if (matchingEntries.length > 1) {
         // Requirement 5: Multiple dialect variants exist - display each followed by dialect name in brackets
-        const dialectVariants = matchingEntries.map(e => ({
-          dialect: formatDialectLabel(e.dialect),
-          text: e.targetText,
-          alternativeScript: e.alternativeScript
-        }));
+        const dialectVariants = matchingEntries.map(e => {
+          const cleanTgt = e.targetText.replace(/[.?!۔؟;:،,]+$/, '');
+          const cleanAlt = e.alternativeScript ? e.alternativeScript.replace(/[.?!۔؟;:،,]+$/, '') : '';
+          return {
+            dialect: formatDialectLabel(e.dialect),
+            text: cleanTgt + targetPunct,
+            alternativeScript: cleanAlt ? cleanAlt + altPunct : undefined,
+          };
+        });
 
         const formattedTranslations = dialectVariants
           .map(v => `${v.text} (${v.dialect})`)
           .join('\n');
 
         const multiResult = {
-          sourceText: cleanText,
+          sourceText: norm.raw,
           sourceLang: sLang,
           targetLang: tLang,
           translatedText: formattedTranslations,
@@ -221,18 +243,21 @@ apiRouter.post('/translate', async (req: Request, res: Response) => {
       const dialectLabel = formatDialectLabel(exactCorrection.dialect);
       const isSpecificDialect = exactCorrection.dialect && exactCorrection.dialect !== 'Standard' && exactCorrection.dialect !== 'All';
 
+      const cleanTgt = exactCorrection.targetText.replace(/[.?!۔؟;:،,]+$/, '') + targetPunct;
+      const cleanAlt = exactCorrection.alternativeScript ? exactCorrection.alternativeScript.replace(/[.?!۔؟;:،,]+$/, '') + altPunct : '';
+
       const correctionResult = {
-        sourceText: cleanText,
+        sourceText: norm.raw,
         sourceLang: sLang,
         targetLang: tLang,
-        translatedText: isSpecificDialect ? `${exactCorrection.targetText} (${dialectLabel})` : exactCorrection.targetText,
-        alternativeScript: exactCorrection.alternativeScript || '',
+        translatedText: isSpecificDialect ? `${cleanTgt} (${dialectLabel})` : cleanTgt,
+        alternativeScript: cleanAlt,
         confidence: 99,
         dialectVariants: [
           {
             dialect: dialectLabel,
-            text: exactCorrection.targetText,
-            alternativeScript: exactCorrection.alternativeScript
+            text: cleanTgt,
+            alternativeScript: cleanAlt
           }
         ],
         rulesApplied: associatedRule
@@ -254,43 +279,40 @@ apiRouter.post('/translate', async (req: Request, res: Response) => {
     // Priority 2.5: Fast O(1) synchronized cloud dictionary match for terms & short phrases
     if (cleanText.split(/\s+/).length <= 4) {
       const dictMatches = dbService.findMatchingDictionary(cleanText);
-      const verifiedMatch = dictMatches.find(d => d.verified);
+      const verifiedMatch = dictMatches.find(d => d.verified) || dictMatches[0];
       if (verifiedMatch) {
-        const isTargetArabic = tLang === 'brahui-arabic';
-        const isTargetLatin = tLang === 'brahui-latin' || tLang === 'brahui-roman';
-        const isTargetUrdu = tLang === 'urdu';
-        const isTargetEnglish = tLang === 'english';
-
         let targetText = '';
         let altScript = '';
 
         if (isTargetArabic) {
           targetText = verifiedMatch.term;
           altScript = verifiedMatch.latinTerm || '';
-        } else if (isTargetLatin) {
+        } else if (tLang === 'brahui-latin' || tLang === 'brahui-roman') {
           targetText = verifiedMatch.latinTerm || verifiedMatch.term;
           altScript = verifiedMatch.term;
-        } else if (isTargetUrdu && verifiedMatch.urduMeaning) {
+        } else if (tLang === 'urdu' && verifiedMatch.urduMeaning) {
           targetText = verifiedMatch.urduMeaning;
           altScript = verifiedMatch.meaning;
-        } else if (isTargetEnglish) {
+        } else if (tLang === 'english') {
           targetText = verifiedMatch.englishMeaning || verifiedMatch.meaning;
           altScript = verifiedMatch.latinTerm || '';
         }
 
         if (targetText) {
+          const formattedTgt = targetText.replace(/[.?!۔؟;:،,]+$/, '') + targetPunct;
+          const formattedAlt = altScript ? altScript.replace(/[.?!۔؟;:،,]+$/, '') + altPunct : '';
           const dictResult = {
-            sourceText: cleanText,
+            sourceText: norm.raw,
             sourceLang: sLang,
             targetLang: tLang,
-            translatedText: targetText,
-            alternativeScript: altScript,
+            translatedText: formattedTgt,
+            alternativeScript: formattedAlt,
             confidence: 99,
             dialectVariants: [
               {
                 dialect: formatDialectLabel(verifiedMatch.dialect),
-                text: targetText,
-                alternativeScript: altScript
+                text: formattedTgt,
+                alternativeScript: formattedAlt
               }
             ],
             rulesApplied: [],
@@ -315,6 +337,21 @@ apiRouter.post('/translate', async (req: Request, res: Response) => {
       }
     }
 
+    // Priority 2.8: High-Speed Two-Step Linguistic Pipeline (Nanosecond Execution via In-Memory Trie/Index) (Requirement 5)
+    // STEP 1: Scan tokens against Dictionary & Lexicon
+    // STEP 2: Strict Syntax & Grammar Re-Ordering (enforcing Brahui Dravidian SOV structure)
+    const fastPipeline = executeTwoStepTranslation(cleanText, sLang, tLang);
+    if (fastPipeline.success && fastPipeline.result && (fastPipeline.coverageRatio >= 0.5 || cleanText.split(/\s+/).length <= 2)) {
+      const fastResult = {
+        ...fastPipeline.result,
+        sourceText: norm.raw,
+        translatedText: fastPipeline.result.translatedText.replace(/[.?!۔؟;:،,]+$/, '') + targetPunct,
+        alternativeScript: fastPipeline.result.alternativeScript ? fastPipeline.result.alternativeScript.replace(/[.?!۔؟;:،,]+$/, '') + altPunct : '',
+      };
+      translationFastCache.set(cacheKey, { result: fastResult, timestamp: Date.now() });
+      return res.json(fastResult);
+    }
+
     const rawApiKey =
       (req.headers['x-gemini-api-key'] as string) ||
       (req.headers['x-api-key'] as string) ||
@@ -330,14 +367,15 @@ apiRouter.post('/translate', async (req: Request, res: Response) => {
       forceDynamicAI: true,
     });
 
-    // Ensure zero foreign token leakage and script normalization
-    result.translatedText = sanitizeBrahuiOutput(result.translatedText, tLang, sLang);
+    result.sourceText = norm.raw;
+    // Ensure zero foreign token leakage, script normalization, and punctuation formatting
+    result.translatedText = sanitizeBrahuiOutput(result.translatedText, tLang, sLang).replace(/[.?!۔؟;:،,]+$/, '') + targetPunct;
     if (result.alternativeScript) {
       result.alternativeScript = sanitizeBrahuiOutput(
         result.alternativeScript,
         tLang === 'brahui-arabic' ? 'brahui-latin' : 'brahui-arabic',
         sLang
-      );
+      ).replace(/[.?!۔؟;:،,]+$/, '') + altPunct;
     }
 
     // If multi-dialect variants are returned, ensure bracketed dialect labels are present in translatedText
@@ -345,7 +383,7 @@ apiRouter.post('/translate', async (req: Request, res: Response) => {
       const hasBrackets = result.translatedText.includes('(') && result.translatedText.includes(')');
       if (!hasBrackets) {
         result.translatedText = result.dialectVariants
-          .map(v => `${v.text} (${formatDialectLabel(v.dialect)})`)
+          .map(v => `${v.text.replace(/[.?!۔؟;:،,]+$/, '') + targetPunct} (${formatDialectLabel(v.dialect)})`)
           .join('\n');
       }
     }
@@ -362,14 +400,20 @@ apiRouter.post('/translate', async (req: Request, res: Response) => {
     try {
       const sLang = (req.body?.sourceLang || 'english') as Language;
       const tLang = (req.body?.targetLang || 'brahui-arabic') as Language;
-      const fallbackResult = dynamicTranslateSentence(req.body?.sourceText || '', sLang, tLang);
-      fallbackResult.translatedText = sanitizeBrahuiOutput(fallbackResult.translatedText, tLang, sLang);
+      const norm = normalizeInputText(req.body?.sourceText || '');
+      const isTargetArabic = tLang === 'brahui-arabic';
+      const targetPunct = formatTargetPunctuation(norm, tLang);
+      const altPunct = formatTargetPunctuation(norm, isTargetArabic ? 'brahui-latin' : 'brahui-arabic');
+
+      const fallbackResult = dynamicTranslateSentence(norm.normalized || req.body?.sourceText || '', sLang, tLang);
+      fallbackResult.sourceText = norm.raw || req.body?.sourceText || '';
+      fallbackResult.translatedText = sanitizeBrahuiOutput(fallbackResult.translatedText, tLang, sLang).replace(/[.?!۔؟;:،,]+$/, '') + targetPunct;
       if (fallbackResult.alternativeScript) {
         fallbackResult.alternativeScript = sanitizeBrahuiOutput(
           fallbackResult.alternativeScript,
           tLang === 'brahui-arabic' ? 'brahui-latin' : 'brahui-arabic',
           sLang
-        );
+        ).replace(/[.?!۔؟;:،,]+$/, '') + altPunct;
       }
       return res.json({ ...fallbackResult, isFallback: true });
     } catch {
@@ -432,23 +476,78 @@ apiRouter.post('/corrections/submit', async (req: Request, res: Response) => {
       verifiedAt: new Date().toISOString(),
     });
 
-    // Step 3: Save Extracted Terms into Dynamic Dictionary Database (Requirement 3)
+    // Step 3: Save Extracted Terms into Dynamic Dictionary Database (Strict Single-Word Lexicon Extraction - Requirement 2)
     const savedDictEntries: any[] = [];
     if (Array.isArray(extractedTerms) && extractedTerms.length > 0) {
       for (const termItem of extractedTerms) {
-        const dictEntry = dbService.addDictionaryEntry({
-          term: termItem.term,
-          latinTerm: termItem.latinTerm,
-          meaning: termItem.meaning,
-          englishMeaning: termItem.englishMeaning,
-          urduMeaning: termItem.urduMeaning,
-          partOfSpeech: termItem.partOfSpeech || 'Lexicon Item',
-          dialect: dialect || 'Standard',
-          sourceType: 'user_correction',
-          sourceDocTitle: `User Translation Correction: "${sourceText.slice(0, 30)}"`,
-          verified: true,
-        });
-        savedDictEntries.push(dictEntry);
+        const cleanT = (termItem.term || '').trim().replace(/[.?!۔؟;:،,]+$/, '');
+        const cleanM = (termItem.meaning || termItem.englishMeaning || '').trim().replace(/[.?!۔؟;:،,]+$/, '');
+        // Strict Single-Word Guard: Never save full sentences as dictionary entries
+        if (cleanT.split(/\s+/).length <= 2 && cleanM.split(/\s+/).length <= 4 && !/[.?!۔؟]/.test(cleanT)) {
+          const dictEntry = dbService.addDictionaryEntry({
+            term: cleanT,
+            latinTerm: termItem.latinTerm?.trim(),
+            meaning: cleanM,
+            englishMeaning: termItem.englishMeaning?.trim() || cleanM,
+            urduMeaning: termItem.urduMeaning?.trim(),
+            partOfSpeech: termItem.partOfSpeech || 'Lexicon Item',
+            dialect: dialect || 'Standard',
+            sourceType: 'user_correction',
+            sourceDocTitle: `Learned from Correction: "${sourceText.slice(0, 30)}"`,
+            verified: true,
+          });
+          if (dictEntry) savedDictEntries.push(dictEntry);
+        }
+      }
+    }
+
+    // Fallback: If AI extraction returned no terms, tokenize single words from correctedTranslation
+    if (savedDictEntries.length === 0) {
+      const cleanTargetWords = correctedTranslation
+        .replace(/[.?!۔؟;:،,()\[\]«»"']+/g, ' ')
+        .split(/\s+/)
+        .map((w: string) => w.trim())
+        .filter((w: string) => w.length > 1 && !/^(ءِ|او|ای|ٹی|آن|نا|کی|کن|نان|دا|ہما|اس|اُٹ|ء)$/i.test(w));
+
+      const sourceWords = sourceText
+        .replace(/[.?!۔؟;:،,()\[\]«»"']+/g, ' ')
+        .split(/\s+/)
+        .map((w: string) => w.trim())
+        .filter((w: string) => w.length > 1);
+
+      for (let idx = 0; idx < cleanTargetWords.length; idx++) {
+        const word = cleanTargetWords[idx];
+        const lexHit = Object.values(BRAHUI_LEXICON).find(
+          l => l.arabic === word || l.latin.toLowerCase() === word.toLowerCase()
+        );
+        if (lexHit) {
+          const entry = dbService.addDictionaryEntry({
+            term: lexHit.arabic,
+            latinTerm: lexHit.latin,
+            meaning: lexHit.english,
+            englishMeaning: lexHit.english,
+            urduMeaning: lexHit.urdu,
+            partOfSpeech: lexHit.pos.charAt(0).toUpperCase() + lexHit.pos.slice(1),
+            dialect: dialect || 'Standard',
+            sourceType: 'user_correction',
+            sourceDocTitle: `Learned Term: "${word}"`,
+            verified: true,
+          });
+          if (entry) savedDictEntries.push(entry);
+        } else if (sourceWords.length === 1 && cleanTargetWords.length === 1) {
+          // Direct 1-to-1 word pair
+          const entry = dbService.addDictionaryEntry({
+            term: word,
+            meaning: sourceWords[0],
+            englishMeaning: sourceWords[0],
+            partOfSpeech: 'Noun',
+            dialect: dialect || 'Standard',
+            sourceType: 'user_correction',
+            sourceDocTitle: `Learned Term: "${word} = ${sourceWords[0]}"`,
+            verified: true,
+          });
+          if (entry) savedDictEntries.push(entry);
+        }
       }
     }
 
@@ -1560,6 +1659,419 @@ apiRouter.get('/dictionary/export', async (req: Request, res: Response) => {
     res.status(500).json({ error: error.message || 'Failed to export dictionary' });
   }
 });
+
+// Export Morphological and Postpositional Grammar Rules to Excel (.xlsx) (Tri-Export System - Requirement 3)
+const handleGrammarRulesExport = async (req: Request, res: Response) => {
+  try {
+    await dbService.ensureFirestoreSynced();
+    const format = ((req.query.format as string) || 'xlsx').toLowerCase();
+    const allRules = dbService.getGrammarRules();
+    // Filter for morphological, postpositional, affix, orthographic, and inflectional rules (non-syntax)
+    const grammarRules = allRules.filter(r => r.category !== 'Syntax');
+    const dateStr = new Date().toISOString().split('T')[0];
+
+    const exportRows = grammarRules.map((rule, index) => {
+      const ex = rule.examples && rule.examples.length > 0 ? rule.examples[0] : null;
+      return {
+        'Rule #': index + 1,
+        'Rule ID': rule.id,
+        'Rule Title': rule.title,
+        'Linguistic Category': rule.category || 'Morphology',
+        'Morphological Pattern / Formula': rule.pattern || '',
+        'Grammar Rule Explanation': rule.explanation || '',
+        'Correct Inflection (Brahui Perso-Arabic)': ex ? ex.correct : '',
+        'Incorrect Contrast (Ungrammatical)': ex ? ex.incorrect : '',
+        'English Gloss & Meaning': ex ? ex.englishGloss : '',
+        'Dialect': rule.dialect || 'Standard',
+        'Confidence Score (%)': rule.confidence || 98,
+        'Verification Status': rule.status || 'verified',
+        'Verified By': rule.verifiedBy || 'Linguistic Board',
+        'Source Origin': rule.sourceDocTitle || rule.sourceType || 'Brahui Linguistic Reference',
+        'Date Added': rule.verifiedAt ? new Date(rule.verifiedAt).toLocaleDateString() : dateStr,
+      };
+    });
+
+    if (format === 'csv') {
+      const headers = Object.keys(exportRows[0] || { 'Rule #': 1, 'Rule Title': '' });
+      const csvLines = [
+        headers.join(','),
+        ...exportRows.map(row => headers.map(h => `"${String((row as any)[h] || '').replace(/"/g, '""')}"`).join(','))
+      ];
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="Brahui_Grammar_Rules_Morphology_${dateStr}.csv"`);
+      return res.send('\uFEFF' + csvLines.join('\r\n'));
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+    worksheet['!cols'] = [
+      { wch: 8 },  // Rule #
+      { wch: 18 }, // Rule ID
+      { wch: 34 }, // Title
+      { wch: 18 }, // Category
+      { wch: 30 }, // Pattern
+      { wch: 45 }, // Explanation
+      { wch: 26 }, // Correct
+      { wch: 26 }, // Incorrect
+      { wch: 32 }, // Gloss
+      { wch: 14 }, // Dialect
+      { wch: 12 }, // Confidence
+      { wch: 14 }, // Status
+      { wch: 22 }, // Verified By
+      { wch: 30 }, // Source
+      { wch: 14 }, // Date
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Grammar Rules (Morphology)');
+
+    const metaRows = [
+      { 'Property': 'Dataset Name', 'Value': 'Brahui Morphological & Postpositional Grammar Rules' },
+      { 'Property': 'Export Date', 'Value': new Date().toISOString() },
+      { 'Property': 'Total Rules', 'Value': grammarRules.length },
+      { 'Property': 'Domain', 'Value': 'Dravidian Brahui Morphology, Case Affixes & Suffixal Paradigms' },
+      { 'Property': 'Target Corpus Standards', 'Value': 'Google Translate & Multi-lingual MT Induction' },
+    ];
+    const metaSheet = XLSX.utils.json_to_sheet(metaRows);
+    metaSheet['!cols'] = [{ wch: 26 }, { wch: 55 }];
+    XLSX.utils.book_append_sheet(workbook, metaSheet, 'Dataset Metadata');
+
+    const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="Brahui_Grammar_Rules_Morphology_${dateStr}.xlsx"`);
+    return res.send(excelBuffer);
+  } catch (error: any) {
+    console.error('Error exporting grammar rules:', error);
+    res.status(500).json({ error: error.message || 'Failed to export grammar rules' });
+  }
+};
+
+apiRouter.get('/grammar/export', handleGrammarRulesExport);
+apiRouter.get('/admin/export/grammar-rules-excel', handleGrammarRulesExport);
+
+// Export Sentence Structural Syntax Patterns & SOV Concord to Excel (.xlsx) (Tri-Export System - Requirement 3)
+const handleSyntaxPatternsExport = async (req: Request, res: Response) => {
+  try {
+    await dbService.ensureFirestoreSynced();
+    const format = ((req.query.format as string) || 'xlsx').toLowerCase();
+    const allRules = dbService.getGrammarRules();
+    // Filter for Syntax category, SOV alignments, clause ordering, and verb-final structures
+    const syntaxRules = allRules.filter(r => r.category === 'Syntax' || /sov|word order|clause|verb[- ]final/i.test(r.title + ' ' + r.pattern));
+    const dateStr = new Date().toISOString().split('T')[0];
+
+    const exportRows = syntaxRules.map((pattern, index) => {
+      const ex = pattern.examples && pattern.examples.length > 0 ? pattern.examples[0] : null;
+      return {
+        'Pattern #': index + 1,
+        'Pattern ID': pattern.id,
+        'Syntax Rule Title': pattern.title,
+        'Structural Alignment': 'Strict Dravidian SOV (Subject + Object + Finite Verb)',
+        'Syntactic Formula Pattern': pattern.pattern || 'Subject + Object/Complement + Final Verb',
+        'Detailed Clause Ordering & Rule': pattern.explanation || '',
+        'Canonical Sentence (Brahui Perso-Arabic)': ex ? ex.correct : '',
+        'Contrastive Ungrammatical Order (SVO)': ex ? ex.incorrect : '',
+        'English Translation & Syntactic Gloss': ex ? ex.englishGloss : '',
+        'Dialect Concord': pattern.dialect || 'Standard',
+        'Confidence Score (%)': pattern.confidence || 99,
+        'Verification Status': pattern.status || 'verified',
+        'Verified By': pattern.verifiedBy || 'Linguistic Board',
+        'Source Origin': pattern.sourceDocTitle || pattern.sourceType || 'Brahui Syntactic Grammar',
+        'Date Added': pattern.verifiedAt ? new Date(pattern.verifiedAt).toLocaleDateString() : dateStr,
+      };
+    });
+
+    if (format === 'csv') {
+      const headers = Object.keys(exportRows[0] || { 'Pattern #': 1, 'Syntax Rule Title': '' });
+      const csvLines = [
+        headers.join(','),
+        ...exportRows.map(row => headers.map(h => `"${String((row as any)[h] || '').replace(/"/g, '""')}"`).join(','))
+      ];
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="Brahui_Syntax_Patterns_SOV_${dateStr}.csv"`);
+      return res.send('\uFEFF' + csvLines.join('\r\n'));
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+    worksheet['!cols'] = [
+      { wch: 10 }, // Pattern #
+      { wch: 18 }, // Pattern ID
+      { wch: 36 }, // Title
+      { wch: 38 }, // Structural Alignment
+      { wch: 36 }, // Syntactic Formula
+      { wch: 48 }, // Detailed Clause Ordering
+      { wch: 28 }, // Canonical Brahui
+      { wch: 28 }, // Contrastive SVO
+      { wch: 34 }, // Gloss
+      { wch: 14 }, // Dialect
+      { wch: 12 }, // Confidence
+      { wch: 14 }, // Status
+      { wch: 22 }, // Verified By
+      { wch: 30 }, // Source
+      { wch: 14 }, // Date
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Syntax Patterns (SOV Concord)');
+
+    const metaRows = [
+      { 'Property': 'Dataset Name', 'Value': 'Brahui Syntactic Patterns & Clause Structural Alignments' },
+      { 'Property': 'Export Date', 'Value': new Date().toISOString() },
+      { 'Property': 'Total Syntax Patterns', 'Value': syntaxRules.length },
+      { 'Property': 'Linguistic Typology', 'Value': 'Strict Dravidian SOV (Subject - Object - Verb) Word Order' },
+      { 'Property': 'Target Systems', 'Value': 'High-Speed Two-Step Translation Engine & MT Fine-Tuning' },
+    ];
+    const metaSheet = XLSX.utils.json_to_sheet(metaRows);
+    metaSheet['!cols'] = [{ wch: 26 }, { wch: 55 }];
+    XLSX.utils.book_append_sheet(workbook, metaSheet, 'Dataset Metadata');
+
+    const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="Brahui_Syntax_Patterns_SOV_${dateStr}.xlsx"`);
+    return res.send(excelBuffer);
+  } catch (error: any) {
+    console.error('Error exporting syntax patterns:', error);
+    res.status(500).json({ error: error.message || 'Failed to export syntax patterns' });
+  }
+};
+
+apiRouter.get('/syntax/export', handleSyntaxPatternsExport);
+apiRouter.get('/admin/export/syntax-patterns-excel', handleSyntaxPatternsExport);
+
+// Admin Bulk Dictionary Input (Copy-Paste Option) (Requirement 4)
+const handleBulkAddDictionary = async (req: Request, res: Response) => {
+  try {
+    await dbService.ensureFirestoreSynced();
+    const { bulkText, dialect } = req.body;
+    if (!bulkText || typeof bulkText !== 'string' || !bulkText.trim()) {
+      return res.status(400).json({ error: 'bulkText is required' });
+    }
+
+    const session = getAdminSession(req);
+    const lines = bulkText.split(/\r?\n/).map(l => l.trim()).filter(l => l && !l.startsWith('#') && !l.startsWith('//'));
+    const addedEntries: any[] = [];
+    let skippedCount = 0;
+
+    for (const rawLine of lines) {
+      let line = rawLine;
+      let explicitLatin: string | undefined = undefined;
+      let explicitUrdu: string | undefined = undefined;
+      let explicitPos: string | undefined = undefined;
+
+      // Extract optional metadata in parentheses: (Latin: ...), (Urdu: ...), (POS: ...)
+      const latinMatch = line.match(/\((?:Latin|Roman):\s*([^)]+)\)/i);
+      if (latinMatch) {
+        explicitLatin = latinMatch[1].trim();
+        line = line.replace(latinMatch[0], '').trim();
+      }
+      const urduMatch = line.match(/\((?:Urdu|اردو):\s*([^)]+)\)/i);
+      if (urduMatch) {
+        explicitUrdu = urduMatch[1].trim();
+        line = line.replace(urduMatch[0], '').trim();
+      }
+      const posMatch = line.match(/\((?:POS|Part of Speech):\s*([^)]+)\)/i);
+      if (posMatch) {
+        explicitPos = posMatch[1].trim();
+        line = line.replace(posMatch[0], '').trim();
+      }
+
+      // Split line into distinct parts:
+      // Handles:
+      // "Tark = ترک = Abandonment"
+      // "Tark \t ترک \t Abandonment \t چھوڑنا"
+      // "Tark | ترک | Abandonment"
+      // "Tark - ترک - Abandonment"
+      // "ترک = Abandonment"
+      let rawParts: string[] = [];
+      if (line.includes('\t')) {
+        rawParts = line.split('\t');
+      } else if (line.includes('|')) {
+        rawParts = line.split('|');
+      } else if (line.includes('=')) {
+        rawParts = line.split('=');
+      } else if (line.includes('::')) {
+        rawParts = line.split('::');
+      } else if (/\s+-\s+/.test(line)) {
+        rawParts = line.split(/\s+-\s+/);
+      } else if (line.includes(',')) {
+        rawParts = line.split(',');
+      } else {
+        const spaceParts = line.split(/\s+/);
+        if (spaceParts.length === 2) {
+          rawParts = spaceParts;
+        } else {
+          skippedCount++;
+          continue;
+        }
+      }
+
+      const cleanParts = rawParts
+        .map(p => p.replace(/^["'«»“]+|["'«»”]+$/g, '').replace(/[.?!۔؟;:،,]+$/, '').trim())
+        .filter(Boolean);
+
+      if (cleanParts.length < 2) {
+        skippedCount++;
+        continue;
+      }
+
+      let term = '';
+      let latinTerm = explicitLatin;
+      let meaning = '';
+      let englishMeaning = '';
+      let urduMeaning = explicitUrdu;
+
+      const arabicParts = cleanParts.filter(p => /[\u0600-\u06FF]/.test(p));
+      const nonArabicParts = cleanParts.filter(p => !/[\u0600-\u06FF]/.test(p));
+
+      if (cleanParts.length >= 3 && arabicParts.length === 1 && nonArabicParts.length >= 2) {
+        // e.g. "Tark = ترک = Abandonment" or "ترک = Tark = Abandonment"
+        term = arabicParts[0]; // "ترک"
+        // Decide which non-Arabic part is Latin transliteration vs English definition:
+        // Transliteration is shorter and closer to Brahui phonetics; definition is typically longer
+        const sorted = [...nonArabicParts].sort((a, b) => a.length - b.length);
+        latinTerm = latinTerm || sorted[0]; // e.g. "Tark"
+        englishMeaning = sorted.slice(1).join(' / '); // e.g. "Abandonment"
+        meaning = englishMeaning;
+      } else if (cleanParts.length >= 3 && arabicParts.length >= 2 && nonArabicParts.length >= 1) {
+        // e.g. "ترک = چھوڑنا = Abandonment"
+        term = arabicParts[0];
+        urduMeaning = urduMeaning || arabicParts[1];
+        englishMeaning = nonArabicParts.join(' / ');
+        meaning = englishMeaning;
+      } else if (cleanParts.length >= 4) {
+        // e.g. "Tark \t ترک \t Abandonment \t چھوڑنا"
+        if (arabicParts.length >= 1) term = arabicParts[0];
+        if (arabicParts.length >= 2) urduMeaning = urduMeaning || arabicParts[1];
+        if (nonArabicParts.length >= 1) latinTerm = latinTerm || nonArabicParts[0];
+        if (nonArabicParts.length >= 2) {
+          englishMeaning = nonArabicParts.slice(1).join(' / ');
+          meaning = englishMeaning;
+        }
+      } else {
+        // Exactly 2 parts:
+        const p1 = cleanParts[0];
+        const p2 = cleanParts[1];
+        const p1IsArabic = /[\u0600-\u06FF]/.test(p1);
+        const p2IsArabic = /[\u0600-\u06FF]/.test(p2);
+
+        if (p1IsArabic && !p2IsArabic) {
+          term = p1;
+          meaning = p2;
+          englishMeaning = p2;
+        } else if (!p1IsArabic && p2IsArabic) {
+          term = p2;
+          meaning = p1;
+          englishMeaning = p1;
+          latinTerm = latinTerm || p1;
+        } else if (p1IsArabic && p2IsArabic) {
+          term = p1;
+          urduMeaning = urduMeaning || p2;
+          meaning = p2;
+        } else {
+          // Both non-Arabic:
+          latinTerm = latinTerm || p1;
+          term = p1;
+          meaning = p2;
+          englishMeaning = p2;
+        }
+      }
+
+      // Final sanitization of fields:
+      term = term.replace(/^["'«»“]+|["'«»”]+$/g, '').replace(/[.?!۔؟;:،,]+$/, '').trim();
+      meaning = meaning.replace(/^["'«»“]+|["'«»”]+$/g, '').replace(/[.?!۔؟;:،,]+$/, '').trim();
+      if (latinTerm) latinTerm = latinTerm.replace(/^["'«»“]+|["'«»”]+$/g, '').replace(/[.?!۔؟;:،,]+$/, '').trim();
+      if (urduMeaning) urduMeaning = urduMeaning.replace(/^["'«»“]+|["'«»”]+$/g, '').replace(/[.?!۔؟;:،,]+$/, '').trim();
+      if (englishMeaning) englishMeaning = englishMeaning.replace(/^["'«»“]+|["'«»”]+$/g, '').replace(/[.?!۔؟;:،,]+$/, '').trim();
+
+      if (!term || !meaning) {
+        skippedCount++;
+        continue;
+      }
+
+      // Strict single-word lexicon guard:
+      const termWords = term.split(/\s+/).filter(Boolean).length;
+      if (termWords > 2 || /[.?!۔؟]/.test(term)) {
+        skippedCount++;
+        continue;
+      }
+
+      // Automated POS Determination (Requirement 3):
+      const autoPos = determinePartOfSpeech({
+        term,
+        latinTerm,
+        meaning,
+        englishMeaning,
+        urduMeaning,
+      });
+      const pos = explicitPos || autoPos;
+
+      const saved = dbService.addDictionaryEntry({
+        term,
+        latinTerm,
+        meaning,
+        englishMeaning: englishMeaning || meaning,
+        urduMeaning,
+        partOfSpeech: pos,
+        dialect: dialect || 'Standard',
+        sourceType: 'admin_direct',
+        sourceDocTitle: `Admin Bulk Input (${session?.username || 'Admin'})`,
+        verified: true,
+      });
+
+      if (saved) {
+        addedEntries.push(saved);
+      } else {
+        skippedCount++;
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Successfully processed ${lines.length} lines. Populated ${addedEntries.length} single-word vocabulary entries into Dictionary (${skippedCount} skipped).`,
+      addedCount: addedEntries.length,
+      skippedCount,
+      entries: addedEntries,
+    });
+  } catch (error: any) {
+    console.error('Error in bulk dictionary input:', error);
+    res.status(500).json({ error: error.message || 'Failed to bulk add dictionary words' });
+  }
+};
+
+apiRouter.post('/dictionary/bulk-add', handleBulkAddDictionary);
+apiRouter.post('/admin/dictionary/bulk', handleBulkAddDictionary);
+
+// Bulk delete dictionary entries (Protected - Requirement 4)
+const handleBulkDeleteDictionary = async (req: Request, res: Response) => {
+  try {
+    await dbService.ensureFirestoreSynced();
+    const { ids, deleteAll } = req.body;
+
+    if (deleteAll) {
+      const deletedCount = dbService.clearAllDictionaryEntries();
+      return res.json({
+        success: true,
+        message: `Successfully cleared all ${deletedCount} dictionary entries.`,
+        deletedCount,
+      });
+    }
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'ids array is required when deleteAll is not specified' });
+    }
+
+    const deletedCount = dbService.deleteDictionaryEntries(ids);
+    res.json({
+      success: true,
+      message: `Successfully deleted ${deletedCount} dictionary entries.`,
+      deletedCount,
+    });
+  } catch (error: any) {
+    console.error('Error in bulk delete dictionary:', error);
+    res.status(500).json({ error: error.message || 'Failed to delete dictionary entries' });
+  }
+};
+
+apiRouter.post('/dictionary/bulk-delete', requireAdminAuth, handleBulkDeleteDictionary);
+apiRouter.post('/admin/dictionary/bulk-delete', requireAdminAuth, handleBulkDeleteDictionary);
 
 // 3. Admin create or update dictionary entry (Protected)
 apiRouter.post('/dictionary', requireAdminAuth, async (req: Request, res: Response) => {

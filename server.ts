@@ -52,7 +52,7 @@ async function startServer() {
 
   const distPath = path.join(process.cwd(), 'dist');
   const isProduction =
-    process.env.NODE_ENV === 'production' || fs.existsSync(path.join(distPath, 'index.html'));
+    process.env.NODE_ENV === 'production' && fs.existsSync(path.join(distPath, 'index.html'));
 
   if (isProduction) {
     app.use(express.static(distPath));

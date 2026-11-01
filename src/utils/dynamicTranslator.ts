@@ -529,14 +529,22 @@ export function dynamicTranslateSentence(
   sourceLang: Language,
   targetLang: Language
 ): TranslationResult {
-  const trimmed = sourceText.trim();
-  const lower = trimmed.toLowerCase();
+  const punctMatch = sourceText.trim().match(/[.?!۔؟;:،,]+$/);
+  const trailingPunct = punctMatch ? punctMatch[0] : '';
+  const cleanSource = trailingPunct ? sourceText.trim().slice(0, -trailingPunct.length).trim() : sourceText.trim();
+  const lower = cleanSource.toLowerCase();
+
+  const isTargetArabic = targetLang === 'brahui-arabic' || targetLang === 'urdu';
+  let targetPunct = '';
+  if (/[?؟]/.test(trailingPunct)) targetPunct = isTargetArabic ? '؟' : '?';
+  else if (/!/.test(trailingPunct)) targetPunct = '!';
+  else if (/[.۔]/.test(trailingPunct)) targetPunct = isTargetArabic ? '۔' : '.';
 
   // 1. Check exact phrase dictionary first
   for (const item of PHRASE_DICTIONARY) {
     const matched = item.triggers.some((trigger) => {
-      const cleanTrigger = trigger.toLowerCase().trim();
-      return lower === cleanTrigger || lower === cleanTrigger + '?' || lower === cleanTrigger + '.';
+      const cleanTrigger = trigger.toLowerCase().trim().replace(/[.?!۔؟;:،,]+$/, '');
+      return lower === cleanTrigger;
     });
 
     if (matched) {
@@ -554,12 +562,15 @@ export function dynamicTranslateSentence(
         altText = item.latin;
       }
 
+      const cleanMain = mainText.replace(/[.?!۔؟;:،,]+$/, '');
+      const cleanAlt = altText.replace(/[.?!۔؟;:،,]+$/, '');
+
       return {
-        sourceText: trimmed,
+        sourceText: sourceText.trim(),
         sourceLang,
         targetLang,
-        translatedText: mainText,
-        alternativeScript: altText,
+        translatedText: cleanMain + targetPunct,
+        alternativeScript: cleanAlt + (isTargetArabic ? (targetPunct === '۔' ? '.' : targetPunct) : (targetPunct === '.' ? '۔' : targetPunct)),
         confidence: 96,
         dialectVariants: (item as any).dialectVariants,
         grammaticalNotes: [
@@ -568,8 +579,8 @@ export function dynamicTranslateSentence(
         ],
         morphemeBreakdown: [
           {
-            word: mainText,
-            root: item.latin.split(' ')[0] || mainText,
+            word: cleanMain,
+            root: item.latin.split(' ')[0] || cleanMain,
             partOfSpeech: 'Idiomatic Expression',
             meaning: item.english,
           },
@@ -579,7 +590,7 @@ export function dynamicTranslateSentence(
   }
 
   // 2. Tokenize the actual input text into words preserving punctuation
-  const tokens = trimmed.split(/\s+/).filter(Boolean);
+  const tokens = cleanSource.split(/\s+/).filter(Boolean);
   const words = tokens.map((t) => t.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"'«»،؟]/g, ''));
 
   const parsedWords: {
@@ -680,33 +691,21 @@ export function dynamicTranslateSentence(
     const latinParts = [...subjectsLatin, ...objectsLatin, ...othersLatin, ...verbsLatin];
 
     if (arabicParts.length === 0) {
-      arabicParts.push(trimmed);
-      latinParts.push(trimmed);
+      arabicParts.push(cleanSource);
+      latinParts.push(cleanSource);
     }
 
-    finalArabic = arabicParts.join(' ');
-    finalLatin = latinParts.join(' ');
-
-    // Add appropriate ending punctuation if missing
-    if (trimmed.endsWith('?')) {
-      finalArabic += '؟';
-      finalLatin += '?';
-    } else if (trimmed.endsWith('!')) {
-      finalArabic += '!';
-      finalLatin += '!';
-    } else if (trimmed.endsWith('.')) {
-      finalArabic += '۔';
-      finalLatin += '.';
-    }
+    finalArabic = arabicParts.join(' ') + targetPunct;
+    finalLatin = latinParts.join(' ') + (targetPunct === '۔' ? '.' : targetPunct === '؟' ? '?' : targetPunct);
   } else if (targetLang === 'urdu') {
     const urduParts = [...subjects, ...objects, ...others, ...verbs];
-    if (urduParts.length === 0) urduParts.push(trimmed);
-    finalUrdu = urduParts.join(' ');
-    finalLatin = othersLatin.join(' ') || trimmed;
+    if (urduParts.length === 0) urduParts.push(cleanSource);
+    finalUrdu = urduParts.join(' ') + targetPunct;
+    finalLatin = othersLatin.join(' ') || cleanSource;
   } else {
     // English
-    finalEnglish = others.join(' ') || trimmed;
-    finalLatin = othersLatin.join(' ') || trimmed;
+    finalEnglish = (others.join(' ') || cleanSource) + (targetPunct === '۔' ? '.' : targetPunct === '؟' ? '?' : targetPunct);
+    finalLatin = othersLatin.join(' ') || cleanSource;
   }
 
   let translatedText = finalArabic;
@@ -724,7 +723,7 @@ export function dynamicTranslateSentence(
   }
 
   return {
-    sourceText: trimmed,
+    sourceText: sourceText.trim(),
     sourceLang,
     targetLang,
     translatedText,

@@ -101,6 +101,8 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({
   // Category Filtering & Grouping State (Requirement 1)
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<'all' | ReferenceCategory>('all');
   const [isExportingDict, setIsExportingDict] = useState(false);
+  const [isExportingGrammar, setIsExportingGrammar] = useState(false);
+  const [isExportingSyntax, setIsExportingSyntax] = useState(false);
   const [dictExportFeedback, setDictExportFeedback] = useState<string | null>(null);
   const [deleteFeedback, setDeleteFeedback] = useState<string | null>(null);
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Search, CheckCircle2, BookOpen, Filter, Check, X, ShieldAlert, Cpu } from 'lucide-react';
+import { Sparkles, Search, CheckCircle2, BookOpen, Filter, Check, X, ShieldAlert, Cpu, FileSpreadsheet } from 'lucide-react';
 import { GrammarRule } from '../types/index.js';
 import { authFetch, authSafeFetchJson } from '../utils/auth.js';
 import { useRealtimeRules } from '../services/realtimeSync.js';
@@ -16,6 +16,38 @@ export const RulesCatalogView: React.FC<RulesCatalogViewProps> = ({ onRefreshDat
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [isExportingGrammar, setIsExportingGrammar] = useState(false);
+  const [isExportingSyntax, setIsExportingSyntax] = useState(false);
+  const [isExportingDict, setIsExportingDict] = useState(false);
+
+  const handleExport = async (type: 'grammar' | 'syntax' | 'dictionary') => {
+    if (type === 'grammar') setIsExportingGrammar(true);
+    else if (type === 'syntax') setIsExportingSyntax(true);
+    else setIsExportingDict(true);
+
+    try {
+      const endpoint = type === 'grammar' ? '/api/grammar/export?format=xlsx' : type === 'syntax' ? '/api/syntax/export?format=xlsx' : '/api/dictionary/export?format=xlsx';
+      const filename = type === 'grammar' ? `Brahui_Grammar_Rules_${new Date().toISOString().split('T')[0]}.xlsx` : type === 'syntax' ? `Brahui_Syntax_Patterns_${new Date().toISOString().split('T')[0]}.xlsx` : `Brahui_Dictionary_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+      const res = await authFetch(endpoint);
+      if (!res.ok) throw new Error('Failed to export');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export error:', err);
+    } finally {
+      setIsExportingGrammar(false);
+      setIsExportingSyntax(false);
+      setIsExportingDict(false);
+    }
+  };
 
   const fetchRules = async () => {
     setIsLoading(true);
@@ -88,6 +120,41 @@ export const RulesCatalogView: React.FC<RulesCatalogViewProps> = ({ onRefreshDat
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
             <Sparkles className="w-4 h-4 text-emerald-600" />
             <span>{rules.length} Induced Rules Active</span>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => handleExport('grammar')}
+              disabled={isExportingGrammar}
+              className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer"
+              title="Export morphological rules to Excel (.xlsx)"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>{isExportingGrammar ? 'Exporting...' : 'Grammar Rules (.xlsx)'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleExport('syntax')}
+              disabled={isExportingSyntax}
+              className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer"
+              title="Export syntax patterns to Excel (.xlsx)"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>{isExportingSyntax ? 'Exporting...' : 'Syntax Patterns (.xlsx)'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleExport('dictionary')}
+              disabled={isExportingDict}
+              className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer"
+              title="Export dictionary to Excel (.xlsx)"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>{isExportingDict ? 'Exporting...' : 'Dictionary (.xlsx)'}</span>
+            </button>
           </div>
 
           {onLogout && (

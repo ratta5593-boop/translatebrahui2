@@ -27,7 +27,10 @@ import {
   Plus,
   Trash2,
   Sliders,
-  BookMarked
+  BookMarked,
+  ClipboardPaste,
+  PlusCircle,
+  AlertTriangle
 } from 'lucide-react';
 import { DailyReport, GrammarRule, CorpusEntry, DynamicLanguage, DictionaryEntry } from '../types/index.js';
 import { authFetch, authSafeFetchJson, setAdminSession, getAdminToken } from '../utils/auth.js';
@@ -68,8 +71,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [dictDialectFilter, setDictDialectFilter] = useState('all');
   const [isExportingDictExcel, setIsExportingDictExcel] = useState(false);
   const [isExportingDictCsv, setIsExportingDictCsv] = useState(false);
+  const [isExportingGrammarExcel, setIsExportingGrammarExcel] = useState(false);
+  const [isExportingSyntaxExcel, setIsExportingSyntaxExcel] = useState(false);
   const [dictStats, setDictStats] = useState<any>(null);
   const [dictFeedback, setDictFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Admin Fast Bulk Add Dictionary State (Requirement 2 & 3: Automated POS Detection)
+  const [isBulkAdding, setIsBulkAdding] = useState(false);
+  const [bulkText, setBulkText] = useState('');
+  const [bulkDialect, setBulkDialect] = useState('Standard');
+  const [isBulkPanelOpen, setIsBulkPanelOpen] = useState(false);
+  const [bulkFeedback, setBulkFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Dictionary Selection & Bulk Delete State (Requirement 4)
+  const [selectedDictIds, setSelectedDictIds] = useState<Set<string>>(new Set());
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [confirmDeleteModal, setConfirmDeleteModal] = useState<{
+    isOpen: boolean;
+    mode: 'selected' | 'all';
+    count: number;
+  }>({ isOpen: false, mode: 'selected', count: 0 });
 
   // Dynamic Language & Settings State
   const [allowDynamicLanguages, setAllowDynamicLanguages] = useState<boolean>(true);
@@ -308,17 +329,232 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
+  const handleExportGrammarRules = async (format: 'xlsx' | 'csv' = 'xlsx') => {
+    setIsExportingGrammarExcel(true);
+    try {
+      const res = await authFetch(`/api/grammar/export?format=${format}`);
+      if (!res.ok) throw new Error('Failed to export grammar rules');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Brahui_Grammar_Rules_Morphology_${new Date().toISOString().split('T')[0]}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error('Grammar rules export error:', err);
+    } finally {
+      setIsExportingGrammarExcel(false);
+    }
+  };
+
+  const handleExportSyntaxPatterns = async (format: 'xlsx' | 'csv' = 'xlsx') => {
+    setIsExportingSyntaxExcel(true);
+    try {
+      const res = await authFetch(`/api/syntax/export?format=${format}`);
+      if (!res.ok) throw new Error('Failed to export syntax patterns');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Brahui_Syntax_Patterns_SOV_${new Date().toISOString().split('T')[0]}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error('Syntax patterns export error:', err);
+    } finally {
+      setIsExportingSyntaxExcel(false);
+    }
+  };
+
+  const handleBulkAddDictionary = async () => {
+    if (!bulkText.trim()) return;
+    setIsBulkAdding(true);
+    setBulkFeedback(null);
+    try {
+      const res = await authSafeFetchJson<{ success: boolean; message: string; addedCount: number; skippedCount: number }>('/api/dictionary/bulk-add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bulkText,
+          dialect: bulkDialect,
+        }),
+      });
+      if (res.ok && res.data) {
+        setBulkFeedback({
+          type: 'success',
+          message: res.data.message || `Successfully added ${res.data.addedCount} words to Dictionary!`,
+        });
+        setBulkText('');
+        fetchDictionary();
+      } else {
+        throw new Error(res.error || 'Failed to bulk add dictionary words');
+      }
+    } catch (err: any) {
+      setBulkFeedback({
+        type: 'error',
+        message: err.message || 'Error processing bulk dictionary words.',
+      });
+    } finally {
+      setIsBulkAdding(false);
+    }
+  };
+
   const handleDeleteDictionaryEntry = async (id: string, term: string) => {
     if (!confirm(`Are you sure you want to remove "${term}" from the dynamic dictionary?`)) return;
     try {
       const res = await authSafeFetchJson(`/api/dictionary/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setDictionaryEntries(prev => prev.filter(e => e.id !== id));
+        setSelectedDictIds(prev => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
         setDictFeedback({ type: 'success', message: `Term "${term}" removed from dictionary.` });
       }
     } catch (err) {
       console.error('Failed to delete dictionary entry:', err);
     }
+  };
+
+  // Bulk Selection & Deletion Handlers (Requirement 4)
+  const handleToggleSelectRow = (id: string) => {
+    setSelectedDictIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleToggleSelectAll = (filteredItems: DictionaryEntry[]) => {
+    if (selectedDictIds.size === filteredItems.length && filteredItems.length > 0) {
+      setSelectedDictIds(new Set());
+    } else {
+      setSelectedDictIds(new Set(filteredItems.map(e => e.id)));
+    }
+  };
+
+  const handlePromptBulkDelete = (mode: 'selected' | 'all', count: number) => {
+    if (count <= 0) return;
+    setConfirmDeleteModal({ isOpen: true, mode, count });
+  };
+
+  const handleExecuteBulkDelete = async () => {
+    const { mode } = confirmDeleteModal;
+    setIsBulkDeleting(true);
+    setDictFeedback(null);
+    try {
+      const body = mode === 'all' ? { deleteAll: true } : { ids: Array.from(selectedDictIds) };
+      const res = await authSafeFetchJson<{ success: boolean; message: string; deletedCount: number }>('/api/admin/dictionary/bulk-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (res.ok && res.data) {
+        setDictFeedback({
+          type: 'success',
+          message: res.data.message || `Successfully deleted ${res.data.deletedCount} dictionary entries.`,
+        });
+        setSelectedDictIds(new Set());
+        setConfirmDeleteModal({ isOpen: false, mode: 'selected', count: 0 });
+        await fetchDictionary();
+      } else {
+        throw new Error(res.error || 'Failed to bulk delete dictionary entries');
+      }
+    } catch (err: any) {
+      setDictFeedback({
+        type: 'error',
+        message: err.message || 'Error executing bulk delete.',
+      });
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
+  // Clean and map dictionary entry columns without overlapping or duplicated strings (Requirement 1)
+  const cleanDisplayEntry = (entry: DictionaryEntry) => {
+    let term = (entry.term || '').trim();
+    let latinTerm = (entry.latinTerm || '').trim();
+    let english = (entry.englishMeaning || entry.meaning || '').trim();
+    let urdu = (entry.urduMeaning || '').trim();
+
+    // Check if any field contains delimiters ('=', '\t', '|', '::')
+    const hasDelimiter = (s: string) => /[=\t|]|::/.test(s);
+    if (hasDelimiter(term) || hasDelimiter(latinTerm) || hasDelimiter(english) || hasDelimiter(urdu)) {
+      // Gather all distinct raw tokens
+      const rawTokens: string[] = [];
+      const fields = [term, latinTerm, english, urdu];
+      for (const f of fields) {
+        if (!f) continue;
+        if (hasDelimiter(f)) {
+          const parts = f.split(/[=\t|]|::/).map(p => p.trim()).filter(Boolean);
+          for (const p of parts) {
+            if (!rawTokens.includes(p)) rawTokens.push(p);
+          }
+        } else if (!rawTokens.includes(f)) {
+          rawTokens.push(f);
+        }
+      }
+
+      if (rawTokens.length >= 2) {
+        const arabic = rawTokens.filter(p => /[\u0600-\u06FF]/.test(p));
+        const latin = rawTokens.filter(p => !/[\u0600-\u06FF]/.test(p));
+
+        if (arabic.length >= 1) term = arabic[0];
+        if (arabic.length >= 2) urdu = arabic[1];
+        else if (urdu === term) urdu = '';
+
+        if (latin.length === 1) {
+          english = latin[0];
+          latinTerm = '';
+        } else if (latin.length >= 2) {
+          // Typically shorter Latin string is romanized Brahui (e.g. "Tark"), longer is English definition ("Abandonment")
+          const sorted = [...latin].sort((a, b) => a.length - b.length);
+          latinTerm = sorted[0];
+          english = sorted.slice(1).join(' / ');
+        }
+      }
+    }
+
+    // Strip any remaining lingering delimiters in individual fields
+    const strip = (s: string) => s.replace(/^[=\t|:;\s]+|[=\t|:;\s]+$/g, '').trim();
+    term = strip(term);
+    latinTerm = strip(latinTerm);
+    english = strip(english);
+    urdu = strip(urdu);
+
+    // Cross-column deduplication:
+    // 1. If Urdu is identical to the Brahui term (e.g. both are "ترک"), clear Urdu
+    if (urdu === term) {
+      urdu = '';
+    }
+    // 2. If Latin term is identical to English definition (e.g. both are "Abandonment"), clear Latin
+    if (latinTerm.toLowerCase() === english.toLowerCase()) {
+      latinTerm = '';
+    }
+    // 3. If English accidentally captured the Brahui term
+    if (english === term) {
+      english = '';
+    }
+    // 4. If Latin term contains Arabic characters, it shouldn't be in Latin column
+    if (/[\u0600-\u06FF]/.test(latinTerm)) {
+      if (!urdu && latinTerm !== term) urdu = latinTerm;
+      latinTerm = '';
+    }
+
+    return {
+      term: term || '-',
+      latinTerm,
+      english: english || '-',
+      urdu: urdu || '-',
+    };
   };
 
   useEffect(() => {
@@ -590,17 +826,41 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         {/* Primary Action Buttons */}
         <div className="flex items-center gap-2 flex-wrap w-full md:w-auto">
-          {/* EXCEL EXPORT FEATURE FOR DICTIONARY (Requirement 4) */}
+          {/* TRI-EXPORT SYSTEM: Dedicated Excel (.xlsx) Download for Dictionary, Grammar, & Syntax (Requirement 3) */}
           <button
             type="button"
             id="admin-export-dictionary-excel-btn"
             onClick={() => handleExportDictionary('xlsx')}
             disabled={isExportingDictExcel}
             className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer flex-1 sm:flex-initial"
-            title="Export complete synchronized Brahui vocabulary database directly to Microsoft Excel (.xlsx)"
+            title="Export complete single-word Brahui vocabulary database directly to Microsoft Excel (.xlsx)"
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
-            <span>{isExportingDictExcel ? 'Exporting...' : 'Export Dictionary to Excel'}</span>
+            <span>{isExportingDictExcel ? 'Exporting...' : 'Export Dictionary (.xlsx)'}</span>
+          </button>
+
+          <button
+            type="button"
+            id="admin-export-grammar-excel-btn"
+            onClick={() => handleExportGrammarRules('xlsx')}
+            disabled={isExportingGrammarExcel}
+            className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer flex-1 sm:flex-initial"
+            title="Export morphological and postpositional grammar rules directly to Microsoft Excel (.xlsx)"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span>{isExportingGrammarExcel ? 'Exporting...' : 'Export Grammar Rules (.xlsx)'}</span>
+          </button>
+
+          <button
+            type="button"
+            id="admin-export-syntax-excel-btn"
+            onClick={() => handleExportSyntaxPatterns('xlsx')}
+            disabled={isExportingSyntaxExcel}
+            className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer flex-1 sm:flex-initial"
+            title="Export sentence structural rules, SOV alignments, and clause ordering directly to Microsoft Excel (.xlsx)"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span>{isExportingSyntaxExcel ? 'Exporting...' : 'Export Syntax Patterns (.xlsx)'}</span>
           </button>
 
           <button
@@ -1117,6 +1377,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {/* TAB 1: Newly Learned Grammar Rules */}
         {activeTab === 'rules' && (
           <div className="p-4 sm:p-5 space-y-4">
+            {/* Header & Tri-Export Strip for Rules (Requirement 3) */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-slate-50/80 border border-slate-200 rounded-xl">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Grammar &amp; Syntax Linguistic Modules</h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Export morphological suffix paradigms and strict Dravidian SOV syntax patterns directly into Microsoft Excel (.xlsx).
+                </p>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  id="tab-export-grammar-excel-btn"
+                  onClick={() => handleExportGrammarRules('xlsx')}
+                  disabled={isExportingGrammarExcel}
+                  className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer"
+                  title="Export morphological and postpositional grammar rules to Excel (.xlsx)"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                  <span>{isExportingGrammarExcel ? 'Exporting...' : 'Export Grammar Rules (.xlsx)'}</span>
+                </button>
+                <button
+                  type="button"
+                  id="tab-export-syntax-excel-btn"
+                  onClick={() => handleExportSyntaxPatterns('xlsx')}
+                  disabled={isExportingSyntaxExcel}
+                  className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer"
+                  title="Export sentence structural rules & SOV alignments to Excel (.xlsx)"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                  <span>{isExportingSyntaxExcel ? 'Exporting...' : 'Export Syntax Patterns (.xlsx)'}</span>
+                </button>
+              </div>
+            </div>
             {isLoading ? (
               <div className="py-12 text-center text-xs text-slate-500">Loading daily report...</div>
             ) : filteredRules.length === 0 ? (
@@ -1260,6 +1553,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
+                  id="tab-toggle-bulk-dict-btn"
+                  onClick={() => setIsBulkPanelOpen(!isBulkPanelOpen)}
+                  className={`px-3.5 py-2 text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+                    isBulkPanelOpen
+                      ? 'bg-indigo-700 text-white border border-indigo-800'
+                      : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                  }`}
+                  title="Toggle Admin Fast Bulk Add Words (Copy-Paste Option)"
+                >
+                  <ClipboardPaste className="w-4 h-4" />
+                  <span>{isBulkPanelOpen ? 'Close Bulk Input' : 'Bulk Add Words'}</span>
+                </button>
+
+                <button
+                  type="button"
                   id="tab-export-dictionary-excel-btn"
                   onClick={() => handleExportDictionary('xlsx')}
                   disabled={isExportingDictExcel}
@@ -1292,6 +1600,89 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </button>
               </div>
             </div>
+
+            {/* Admin Fast Bulk Dictionary Input (Copy-Paste Option) (Requirement 4) */}
+            {isBulkPanelOpen && (
+              <div className="p-4 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-3 transition-all">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ClipboardPaste className="w-4 h-4 text-indigo-700" />
+                    <h4 className="text-xs font-bold text-slate-900">Admin Bulk Dictionary Input (Copy-Paste Option)</h4>
+                    <span className="text-[10px] bg-indigo-100 text-indigo-800 font-semibold px-2 py-0.5 rounded-full border border-indigo-200">
+                      Single-Word Lexicon Populator
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsBulkPanelOpen(false)}
+                    className="text-slate-400 hover:text-slate-700 text-xs cursor-pointer font-bold px-1.5 py-0.5"
+                  >
+                    &times;
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-600">
+                  Paste bulk word pairs directly into this field. Accepts <code className="bg-white px-1.5 py-0.5 rounded border border-slate-200 font-mono text-[10px]">Word = Meaning</code>, <code className="bg-white px-1.5 py-0.5 rounded border border-slate-200 font-mono text-[10px]">Word - Meaning</code>, or Tab-separated tabular columns (<code className="bg-white px-1.5 py-0.5 rounded border border-slate-200 font-mono text-[10px]">Term \t Meaning \t Latin \t Urdu \t POS</code>). Strict single-word extraction enforces that full sentences are never saved as dictionary entries.
+                </p>
+                <textarea
+                  id="admin-bulk-dictionary-textarea"
+                  value={bulkText}
+                  onChange={(e) => setBulkText(e.target.value)}
+                  placeholder={`Paste word pairs here (one pair per line):
+شاہر = City (Urdu: شہر, Latin: shahr)
+اُرا = House (Urdu: گھر, Latin: urā)
+کتاب = Book (Urdu: کتاب, Latin: kitāb)
+صبح = Dawn / Morning
+خوانِنگ = To read / To study`}
+                  rows={5}
+                  className="w-full text-xs font-mono p-3 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 shadow-inner"
+                />
+                <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <select
+                      value={bulkDialect}
+                      onChange={(e) => setBulkDialect(e.target.value)}
+                      className="px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white cursor-pointer font-medium text-slate-700"
+                    >
+                      <option value="Standard">Dialect: Standard</option>
+                      <option value="Sarawan">Dialect: Sarawani</option>
+                      <option value="Jhalawan">Dialect: Jhalawani</option>
+                    </select>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-indigo-100/80 text-indigo-800 border border-indigo-200">
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>Automated POS Detection</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setBulkText('')}
+                      disabled={!bulkText || isBulkAdding}
+                      className="px-3 py-1.5 text-xs text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 cursor-pointer disabled:opacity-40"
+                    >
+                      Clear
+                    </button>
+                    <button
+                      type="button"
+                      id="admin-bulk-populate-btn"
+                      onClick={handleBulkAddDictionary}
+                      disabled={!bulkText.trim() || isBulkAdding}
+                      className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" />
+                      <span>{isBulkAdding ? 'Processing Words...' : 'Populate Dictionary'}</span>
+                    </button>
+                  </div>
+                </div>
+                {bulkFeedback && (
+                  <div className={`p-2.5 rounded-lg text-xs flex items-center justify-between ${
+                    bulkFeedback.type === 'success' ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-rose-100 text-rose-900 border border-rose-300'
+                  }`}>
+                    <span>{bulkFeedback.message}</span>
+                    <button onClick={() => setBulkFeedback(null)} className="cursor-pointer font-bold ml-2">&times;</button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {dictFeedback && (
               <div className={`p-3 rounded-lg text-xs flex items-center justify-between ${
@@ -1369,6 +1760,65 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
             </div>
 
+            {/* Bulk Selection Action Toolbar (Requirement 4) */}
+            <div className="flex items-center justify-between flex-wrap gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  id="admin-toggle-select-all-btn"
+                  onClick={() => handleToggleSelectAll(filteredDictionary)}
+                  className="px-2.5 py-1 text-xs font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-md cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                  title="Toggle Select All filtered terms"
+                >
+                  <input
+                    type="checkbox"
+                    readOnly
+                    checked={selectedDictIds.size > 0 && selectedDictIds.size === filteredDictionary.length}
+                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer pointer-events-none"
+                  />
+                  <span>
+                    {selectedDictIds.size > 0 && selectedDictIds.size === filteredDictionary.length
+                      ? 'Deselect All'
+                      : 'Select All'}
+                  </span>
+                </button>
+
+                {selectedDictIds.size > 0 && (
+                  <span className="text-xs font-semibold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-200">
+                    {selectedDictIds.size} of {filteredDictionary.length} selected
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                {selectedDictIds.size > 0 && (
+                  <button
+                    type="button"
+                    id="admin-delete-selected-dict-btn"
+                    onClick={() => handlePromptBulkDelete('selected', selectedDictIds.size)}
+                    disabled={isBulkDeleting}
+                    className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                    title="Delete all selected dictionary entries"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete Selected ({selectedDictIds.size})</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  id="admin-clear-all-dict-btn"
+                  onClick={() => handlePromptBulkDelete('all', dictionaryEntries.length)}
+                  disabled={isBulkDeleting || dictionaryEntries.length === 0}
+                  className="px-2.5 py-1.5 bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-700 hover:border-rose-300 border border-slate-300 text-xs font-semibold rounded-lg shadow-2xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-40"
+                  title="Delete all dictionary entries with confirmation"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                  <span>Delete All ({dictionaryEntries.length})</span>
+                </button>
+              </div>
+            </div>
+
             {/* Terms Table */}
             {isDictLoading ? (
               <div className="py-12 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
@@ -1384,6 +1834,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <table className="w-full text-left text-xs border border-slate-200 rounded-lg min-w-[700px]">
                   <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
                     <tr>
+                      <th className="p-3 w-10 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedDictIds.size > 0 && selectedDictIds.size === filteredDictionary.length}
+                          onChange={() => handleToggleSelectAll(filteredDictionary)}
+                          className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                          title="Select / Deselect All Filtered Terms"
+                        />
+                      </th>
                       <th className="p-3">Brahui Term</th>
                       <th className="p-3">Meaning / English</th>
                       <th className="p-3">Urdu Definition (اردو)</th>
@@ -1394,53 +1853,119 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {filteredDictionary.map((entry) => (
-                      <tr key={entry.id} className="hover:bg-slate-50/70">
-                        <td className="p-3">
-                          <div className="font-bold text-slate-900 text-sm font-amiri">
-                            {entry.term}
-                          </div>
-                          {entry.latinTerm && (
-                            <div className="text-[11px] text-slate-500 font-mono">
-                              {entry.latinTerm}
+                    {filteredDictionary.map((entry) => {
+                      const display = cleanDisplayEntry(entry);
+                      const isSelected = selectedDictIds.has(entry.id);
+                      return (
+                        <tr key={entry.id} className={`hover:bg-slate-50/70 transition-colors ${isSelected ? 'bg-indigo-50/50' : ''}`}>
+                          <td className="p-3 text-center">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => handleToggleSelectRow(entry.id)}
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                            />
+                          </td>
+                          <td className="p-3">
+                            <div className="font-bold text-slate-900 text-sm font-amiri">
+                              {display.term}
                             </div>
-                          )}
-                        </td>
-                        <td className="p-3">
-                          <span className="font-medium text-slate-800">{entry.meaning || entry.englishMeaning}</span>
-                        </td>
-                        <td className="p-3 font-amiri text-slate-700 text-xs">
-                          {entry.urduMeaning || '-'}
-                        </td>
-                        <td className="p-3">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                            {entry.partOfSpeech || 'Noun'}
-                          </span>
-                        </td>
-                        <td className="p-3 text-slate-600">
-                          <span className="px-2 py-0.5 bg-slate-100 rounded text-[11px]">
-                            {entry.dialect || 'Standard'}
-                          </span>
-                        </td>
-                        <td className="p-3 text-[11px] text-slate-500">
-                          <div className="truncate max-w-[180px]" title={entry.sourceDocTitle || entry.sourceType}>
-                            {entry.sourceDocTitle || (entry.sourceType === 'user_correction' ? 'Translation Correction' : 'Lexicon PDF')}
-                          </div>
-                        </td>
-                        <td className="p-3 text-right">
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteDictionaryEntry(entry.id, entry.term)}
-                            className="p-1 text-slate-400 hover:text-rose-600 rounded cursor-pointer"
-                            title="Remove term"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                            {display.latinTerm && (
+                              <div className="text-[11px] text-slate-500 font-mono">
+                                {display.latinTerm}
+                              </div>
+                            )}
+                          </td>
+                          <td className="p-3">
+                            <span className="font-medium text-slate-800">{display.english}</span>
+                          </td>
+                          <td className="p-3 font-amiri text-slate-700 text-xs">
+                            {display.urdu}
+                          </td>
+                          <td className="p-3">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                              {entry.partOfSpeech || 'Noun'}
+                            </span>
+                          </td>
+                          <td className="p-3 text-slate-600">
+                            <span className="px-2 py-0.5 bg-slate-100 rounded text-[11px]">
+                              {entry.dialect || 'Standard'}
+                            </span>
+                          </td>
+                          <td className="p-3 text-[11px] text-slate-500">
+                            <div className="truncate max-w-[180px]" title={entry.sourceDocTitle || entry.sourceType}>
+                              {entry.sourceDocTitle || (entry.sourceType === 'user_correction' ? 'Translation Correction' : 'Lexicon PDF')}
+                            </div>
+                          </td>
+                          <td className="p-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteDictionaryEntry(entry.id, display.term)}
+                              className="p-1 text-slate-400 hover:text-rose-600 rounded cursor-pointer"
+                              title="Remove term"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {/* Bulk Delete Confirmation Modal (Requirement 4) */}
+            {confirmDeleteModal.isOpen && (
+              <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                      <AlertTriangle className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900">
+                        {confirmDeleteModal.mode === 'all' ? 'Delete Entire Dictionary?' : 'Delete Selected Terms?'}
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        {confirmDeleteModal.mode === 'all'
+                          ? `This will permanently delete all ${confirmDeleteModal.count} vocabulary entries in the dictionary across all devices.`
+                          : `Are you sure you want to permanently delete ${confirmDeleteModal.count} selected terms?`}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-800">
+                    <strong>Warning:</strong> This deletion will be synchronized instantly to Firebase Firestore and across all connected devices.
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteModal({ isOpen: false, mode: 'selected', count: 0 })}
+                      disabled={isBulkDeleting}
+                      className="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      id="confirm-bulk-delete-action-btn"
+                      onClick={handleExecuteBulkDelete}
+                      disabled={isBulkDeleting}
+                      className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      {isBulkDeleting && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                      <span>
+                        {isBulkDeleting
+                          ? 'Deleting...'
+                          : confirmDeleteModal.mode === 'all'
+                          ? `Delete All (${confirmDeleteModal.count})`
+                          : `Delete Selected (${confirmDeleteModal.count})`}
+                      </span>
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
