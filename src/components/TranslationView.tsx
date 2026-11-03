@@ -23,10 +23,10 @@ import { dynamicTranslateSentence } from '../utils/dynamicTranslator.js';
 import { realtimeSync } from '../services/realtimeSync.js';
 
 export type BrahuiDialectOption =
-  | 'Sarawani (ساراوانی)'
-  | 'Jhalawani (جالاوانی)'
-  | 'Rakhshani (رخشانی)'
-  | 'Maloom Af (معلوم اف)';
+  | 'ساراوانی'
+  | 'جھلاوانی'
+  | 'رخشانی'
+  | 'معلوم اف';
 
 export const getNativeInputAttrs = (lang: Language, dynamicLangs?: DynamicLanguage[]) => {
   switch (lang) {
@@ -130,11 +130,13 @@ export const TranslationView: React.FC<TranslationViewProps> = ({
   // Correction Panel State
   const [isCorrectionOpen, setIsCorrectionOpen] = useState(false);
   const [correctionText, setCorrectionText] = useState('');
-  const [selectedDialect, setSelectedDialect] = useState<BrahuiDialectOption>('Sarawani (ساراوانی)');
+  const [selectedDialect, setSelectedDialect] = useState<BrahuiDialectOption>('ساراوانی');
   const [isSubmittingCorrection, setIsSubmittingCorrection] = useState(false);
   const [correctionSuccessMsg, setCorrectionSuccessMsg] = useState<string | null>(null);
   const [correctionError, setCorrectionError] = useState<string | null>(null);
   const [translationError, setTranslationError] = useState<string | null>(null);
+
+
 
   // Fetch dynamic language configuration and active dynamic languages from server
   const fetchDynamicLanguages = async () => {
@@ -437,11 +439,17 @@ export const TranslationView: React.FC<TranslationViewProps> = ({
 
     setIsSubmittingCorrection(true);
     setCorrectionError(null);
+    setCorrectionSuccessMsg(null);
+
+    // Enforce 6-second client-side timeout so browser state never hangs
+    const abortCtrl = new AbortController();
+    const timeoutTimer = setTimeout(() => abortCtrl.abort(), 6000);
 
     try {
       const res = await safeFetchJson<any>('/api/corrections/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: abortCtrl.signal,
         body: JSON.stringify({
           sourceText: result ? result.sourceText : sourceText.trim(),
           sourceLang,
@@ -453,6 +461,8 @@ export const TranslationView: React.FC<TranslationViewProps> = ({
           contributorRole: 'User',
         }),
       });
+
+      clearTimeout(timeoutTimer);
 
       if (!res.ok) {
         throw new Error(res.error || 'Failed to submit correction');
@@ -480,6 +490,12 @@ export const TranslationView: React.FC<TranslationViewProps> = ({
         });
       }
 
+      // Real-time Push-Update into Dynamic Dictionary UI State (Requirement 2)
+      if (Array.isArray(data.syncedDictionaryTerms) && data.syncedDictionaryTerms.length > 0) {
+        realtimeSync.addDictionaryEntriesLocally(data.syncedDictionaryTerms);
+        realtimeSync.saveDictionaryEntries(data.syncedDictionaryTerms).catch(() => {});
+      }
+
       if (data.inducedRule) {
         onRuleInduced(data.inducedRule);
         realtimeSync.saveLearnedRule(data.inducedRule).catch(() => {});
@@ -488,13 +504,21 @@ export const TranslationView: React.FC<TranslationViewProps> = ({
         realtimeSync.saveCorpusCorrection(data.corpusEntry).catch(() => {});
       }
 
+      const newTermsCount = data.syncedTermsCount || data.syncedDictionaryTerms?.length || 0;
+      const termsMsg =
+        newTermsCount > 0
+          ? ` اور ${newTermsCount} نئے الفاظ براہ راست لغت میں شامل ہو گئے۔ (${newTermsCount} new words synced to Dynamic Dictionary!)`
+          : '';
+
       if (data.requiresApproval) {
         setCorrectionSuccessMsg(
           data.message ||
-          'تصحیح موصول ہو گئی۔ ایڈمن کی منظوری کے بعد یہ باقاعدہ فعال ہو جائے گی۔ (Correction queued for Admin Review and will become active once approved)'
+          `تصحیح موصول ہو گئی۔ ایڈمن کی منظوری کے بعد یہ باقاعدہ فعال ہو جائے گی۔${termsMsg}`
         );
       } else {
-        setCorrectionSuccessMsg('ترجمہ کامیابی سے درست ہو گیا! ماڈل نے نیا اصول سیکھ لیا۔ (Correction learned)');
+        setCorrectionSuccessMsg(
+          `ترجمہ کامیابی سے درست ہو گیا! ماڈل نے نیا اصول سیکھ لیا${termsMsg}`
+        );
       }
 
       setTimeout(() => {
@@ -502,8 +526,14 @@ export const TranslationView: React.FC<TranslationViewProps> = ({
         setCorrectionSuccessMsg(null);
       }, 3500);
     } catch (err: any) {
+      clearTimeout(timeoutTimer);
       console.error('Correction submission error:', err);
-      setCorrectionError(err.message || 'تصحیح جمع کرنے میں مسئلہ پیش آیا۔');
+      const isAbort = err?.name === 'AbortError' || err?.message?.includes('aborted');
+      setCorrectionError(
+        isAbort
+          ? 'درخواست میں تاخیر ہوئی۔ تصحیح پس منظر میں محفوظ ہو رہی ہے۔ (Request timed out, correction is processing in background)'
+          : (err.message || 'تصحیح جمع کرنے میں مسئلہ پیش آیا۔')
+      );
     } finally {
       setIsSubmittingCorrection(false);
     }
@@ -526,7 +556,7 @@ export const TranslationView: React.FC<TranslationViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Requirement 2: Main translation toolbar Add Language button rendered when enabled by admin */}
+          {/* Main translation toolbar Add Language button rendered when enabled by admin */}
           {allowDynamicLanguages && (
             <button
               type="button"
@@ -1085,12 +1115,13 @@ export const TranslationView: React.FC<TranslationViewProps> = ({
                       value={selectedDialect}
                       onChange={(e) => setSelectedDialect(e.target.value as BrahuiDialectOption)}
                       required
-                      className="px-3 py-1.5 text-xs font-semibold bg-white border border-blue-300 rounded-lg text-slate-800 shadow-2xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+                      className="px-3 py-1.5 text-xs font-semibold bg-white border border-blue-300 rounded-lg text-slate-800 shadow-2xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer font-amiri text-right"
+                      dir="rtl"
                     >
-                      <option value="Sarawani (ساراوانی)">Sarawani (ساراوانی)</option>
-                      <option value="Jhalawani (جالاوانی)">Jhalawani (جالاوانی)</option>
-                      <option value="Rakhshani (رخشانی)">Rakhshani (رخشانی)</option>
-                      <option value="Maloom Af (معلوم اف)">Maloom Af (معلوم اف)</option>
+                      <option value="ساراوانی">ساراوانی</option>
+                      <option value="جھلاوانی">جھلاوانی</option>
+                      <option value="رخشانی">رخشانی</option>
+                      <option value="معلوم اف">معلوم اف</option>
                     </select>
                   </div>
 

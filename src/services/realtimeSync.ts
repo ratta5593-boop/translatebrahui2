@@ -215,29 +215,97 @@ class RealtimeSyncManager {
   }
 
   /**
-   * Instantly saves a new learned rule to Firebase Firestore (attalibrary-1761f)
-   * Broadcasts immediately to all other connected devices across the globe.
+   * Immediately updates in-memory dictionary cache and broadcasts to all UI subscribers in 0ms,
+   * guaranteeing real-time UI updates without requiring page reload.
    */
-  public async saveLearnedRule(rule: GrammarRule): Promise<void> {
-    try {
-      const ruleRef = doc(db, 'grammar_rules', rule.id);
-      await setDoc(ruleRef, sanitizeForFirestore(rule));
-      console.log(`[Realtime Sync] Rule "${rule.title}" broadcasted to Firestore attalibrary-1761f`);
-    } catch (err) {
-      console.error('[Realtime Sync] Failed to directly save rule to Firestore:', err);
+  public addDictionaryEntriesLocally(entries: DictionaryEntry[]): void {
+    if (!entries || entries.length === 0) return;
+    const existingIds = new Set(this.cachedDict.map((d) => d.id));
+    const toAdd: DictionaryEntry[] = [];
+
+    for (const entry of entries) {
+      if (!entry || !entry.id) continue;
+      if (!existingIds.has(entry.id)) {
+        existingIds.add(entry.id);
+        toAdd.push(entry);
+      }
+    }
+
+    if (toAdd.length > 0) {
+      this.cachedDict = [...toAdd, ...this.cachedDict];
+      this.dictSubscribers.forEach((cb) => {
+        try {
+          cb(this.cachedDict);
+        } catch (e) {
+          console.warn('[Realtime Sync] Error notifying dictionary subscriber:', e);
+        }
+      });
     }
   }
 
   /**
-   * Instantly saves a translation correction into the central Firestore corpus
+   * Instantly saves a new learned rule to Firebase Firestore (attalibrary-1761f).
+   * Guarded with a 2500ms timeout so offline/slow connections never hang the app.
+   */
+  public async saveLearnedRule(rule: GrammarRule): Promise<void> {
+    try {
+      const ruleRef = doc(db, 'grammar_rules', rule.id);
+      const writePromise = setDoc(ruleRef, sanitizeForFirestore(rule));
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Firestore rule write timeout')), 2500)
+      );
+      await Promise.race([writePromise, timeoutPromise]);
+      console.log(`[Realtime Sync] Rule "${rule.title}" broadcasted to Firestore attalibrary-1761f`);
+    } catch (err: any) {
+      console.warn('[Realtime Sync] Rule Firestore save handled gracefully:', err?.message || err);
+    }
+  }
+
+  /**
+   * Instantly saves a translation correction into the central Firestore corpus.
+   * Guarded with a 2500ms timeout.
    */
   public async saveCorpusCorrection(entry: CorpusEntry): Promise<void> {
     try {
       const entryRef = doc(db, 'corpus', entry.id);
-      await setDoc(entryRef, sanitizeForFirestore(entry));
+      const writePromise = setDoc(entryRef, sanitizeForFirestore(entry));
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Firestore corpus write timeout')), 2500)
+      );
+      await Promise.race([writePromise, timeoutPromise]);
       console.log(`[Realtime Sync] Correction "${entry.sourceText}" broadcasted to Firestore attalibrary-1761f`);
-    } catch (err) {
-      console.error('[Realtime Sync] Failed to directly save corpus entry to Firestore:', err);
+    } catch (err: any) {
+      console.warn('[Realtime Sync] Corpus Firestore save handled gracefully:', err?.message || err);
+    }
+  }
+
+  /**
+   * Instantly saves a dictionary entry to Firebase Firestore (attalibrary-1761f)
+   * and updates local subscribers immediately.
+   */
+  public async saveDictionaryEntry(entry: DictionaryEntry): Promise<void> {
+    this.addDictionaryEntriesLocally([entry]);
+    try {
+      const entryRef = doc(db, 'dictionary', entry.id);
+      const writePromise = setDoc(entryRef, sanitizeForFirestore(entry));
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Firestore dict write timeout')), 2500)
+      );
+      await Promise.race([writePromise, timeoutPromise]);
+      console.log(`[Realtime Sync] Dictionary entry "${entry.term}" broadcasted to Firestore attalibrary-1761f`);
+    } catch (err: any) {
+      console.warn('[Realtime Sync] Dictionary Firestore save handled gracefully:', err?.message || err);
+    }
+  }
+
+  /**
+   * Batch saves multiple dictionary entries to Firebase Firestore
+   */
+  public async saveDictionaryEntries(entries: DictionaryEntry[]): Promise<void> {
+    if (!entries || entries.length === 0) return;
+    this.addDictionaryEntriesLocally(entries);
+    for (const entry of entries) {
+      this.saveDictionaryEntry(entry).catch(() => {});
     }
   }
 }
@@ -278,4 +346,8 @@ export function useRealtimeStats(callback: StatsSubscriber) {
 
 export function useRealtimeNewRule(callback: NewRuleSubscriber) {
   return realtimeSync.subscribeNewRule(callback);
+}
+
+export function useRealtimeDictionary(callback: DictSubscriber) {
+  return realtimeSync.subscribeDictionary(callback);
 }

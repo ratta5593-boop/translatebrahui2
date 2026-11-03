@@ -9,10 +9,10 @@ interface UserCorrectionFormProps {
 }
 
 export type UserCorrectionDialect =
-  | 'Sarawani (ساراوانی)'
-  | 'Jhalawani (جالاوانی)'
-  | 'Rakhshani (رخشانی)'
-  | 'Maloom Af (معلوم اف)';
+  | 'ساراوانی'
+  | 'جھلاوانی'
+  | 'رخشانی'
+  | 'معلوم اف';
 
 export const UserCorrectionForm: React.FC<UserCorrectionFormProps> = ({
   translationResult,
@@ -22,7 +22,7 @@ export const UserCorrectionForm: React.FC<UserCorrectionFormProps> = ({
   const isArabicTarget = translationResult.targetLang === 'brahui-arabic';
   const [correctedText, setCorrectedText] = useState(translationResult.translatedText);
   const [alternativeScript, setAlternativeScript] = useState(translationResult.alternativeScript || '');
-  const [dialect, setDialect] = useState<UserCorrectionDialect>('Sarawani (ساراوانی)');
+  const [dialect, setDialect] = useState<UserCorrectionDialect>('ساراوانی');
   const [userNotes, setUserNotes] = useState('');
   const [contributorName, setContributorName] = useState('');
   const [contributorRole, setContributorRole] = useState<'Native Speaker' | 'Linguist' | 'User'>('Native Speaker');
@@ -286,12 +286,13 @@ export const UserCorrectionForm: React.FC<UserCorrectionFormProps> = ({
                 value={dialect}
                 onChange={(e) => setDialect(e.target.value as UserCorrectionDialect)}
                 required
-                className="px-3 py-1.5 text-xs font-semibold bg-white border border-indigo-300 rounded-lg text-slate-800 shadow-2xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
+                className="px-3 py-1.5 text-xs font-semibold bg-white border border-indigo-300 rounded-lg text-slate-800 shadow-2xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer font-amiri text-right"
+                dir="rtl"
               >
-                <option value="Sarawani (ساراوانی)">Sarawani (ساراوانی)</option>
-                <option value="Jhalawani (جالاوانی)">Jhalawani (جالاوانی)</option>
-                <option value="Rakhshani (رخشانی)">Rakhshani (رخشانی)</option>
-                <option value="Maloom Af (معلوم اف)">Maloom Af (معلوم اف)</option>
+                <option value="ساراوانی">ساراوانی</option>
+                <option value="جھلاوانی">جھلاوانی</option>
+                <option value="رخشانی">رخشانی</option>
+                <option value="معلوم اف">معلوم اف</option>
               </select>
             </div>
 

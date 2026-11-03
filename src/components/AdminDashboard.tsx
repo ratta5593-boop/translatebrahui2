@@ -30,11 +30,16 @@ import {
   BookMarked,
   ClipboardPaste,
   PlusCircle,
-  AlertTriangle
+  AlertTriangle,
+  Save,
+  Edit3,
+  Undo,
+  Volume2
 } from 'lucide-react';
 import { DailyReport, GrammarRule, CorpusEntry, DynamicLanguage, DictionaryEntry } from '../types/index.js';
 import { authFetch, authSafeFetchJson, setAdminSession, getAdminToken } from '../utils/auth.js';
 import { safeFetchJson } from '../utils/api.js';
+import { useRealtimeDictionary } from '../services/realtimeSync.js';
 
 interface AdminDashboardProps {
   onRefreshData?: () => void;
@@ -88,9 +93,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [confirmDeleteModal, setConfirmDeleteModal] = useState<{
     isOpen: boolean;
-    mode: 'selected' | 'all';
+    mode: 'selected' | 'all' | 'single';
     count: number;
+    singleId?: string;
+    singleTerm?: string;
   }>({ isOpen: false, mode: 'selected', count: 0 });
+  const [isDeduplicating, setIsDeduplicating] = useState(false);
+
+  // Multi-Word / Batch Edit State (Requirement 2)
+  const [isBatchEditMode, setIsBatchEditMode] = useState(false);
+  const [batchDrafts, setBatchDrafts] = useState<Record<string, {
+    term: string;
+    pronunciation: string;
+    latinTerm: string;
+    meaning: string;
+    urduMeaning: string;
+    partOfSpeech: string;
+    dialect: string;
+  }>>({});
+  const [isSavingBatch, setIsSavingBatch] = useState(false);
+
+  // Single Word Real-Time Edit State (Requirement 1)
+  const [editingEntry, setEditingEntry] = useState<{
+    id: string;
+    term: string;
+    pronunciation: string;
+    meaning: string;
+    urduMeaning: string;
+    partOfSpeech: string;
+    dialect: string;
+  } | null>(null);
+  const [isSavingSingleWord, setIsSavingSingleWord] = useState(false);
+  const [justUpdatedId, setJustUpdatedId] = useState<string | null>(null);
 
   // Dynamic Language & Settings State
   const [allowDynamicLanguages, setAllowDynamicLanguages] = useState<boolean>(true);
@@ -404,22 +438,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
-  const handleDeleteDictionaryEntry = async (id: string, term: string) => {
-    if (!confirm(`Are you sure you want to remove "${term}" from the dynamic dictionary?`)) return;
-    try {
-      const res = await authSafeFetchJson(`/api/dictionary/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setDictionaryEntries(prev => prev.filter(e => e.id !== id));
-        setSelectedDictIds(prev => {
-          const next = new Set(prev);
-          next.delete(id);
-          return next;
-        });
-        setDictFeedback({ type: 'success', message: `Term "${term}" removed from dictionary.` });
-      }
-    } catch (err) {
-      console.error('Failed to delete dictionary entry:', err);
-    }
+  const handlePromptSingleDelete = (id: string, term: string) => {
+    setConfirmDeleteModal({
+      isOpen: true,
+      mode: 'single',
+      count: 1,
+      singleId: id,
+      singleTerm: term,
+    });
+  };
+
+  const handleDeleteDictionaryEntry = (id: string, term: string) => {
+    handlePromptSingleDelete(id, term);
   };
 
   // Bulk Selection & Deletion Handlers (Requirement 4)
@@ -445,52 +475,112 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setConfirmDeleteModal({ isOpen: true, mode, count });
   };
 
-  const handleExecuteBulkDelete = async () => {
-    const { mode } = confirmDeleteModal;
+  const handleExecuteDelete = async () => {
+    const { mode, singleId, singleTerm } = confirmDeleteModal;
     setIsBulkDeleting(true);
     setDictFeedback(null);
     try {
-      const body = mode === 'all' ? { deleteAll: true } : { ids: Array.from(selectedDictIds) };
-      const res = await authSafeFetchJson<{ success: boolean; message: string; deletedCount: number }>('/api/admin/dictionary/bulk-delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-
-      if (res.ok && res.data) {
-        setDictFeedback({
-          type: 'success',
-          message: res.data.message || `Successfully deleted ${res.data.deletedCount} dictionary entries.`,
+      if (mode === 'single' && singleId) {
+        let res = await authSafeFetchJson<{ success: boolean; message: string }>(`/api/dictionary/${singleId}`, {
+          method: 'DELETE',
         });
-        setSelectedDictIds(new Set());
-        setConfirmDeleteModal({ isOpen: false, mode: 'selected', count: 0 });
-        await fetchDictionary();
+        if (!res.ok) {
+          res = await authSafeFetchJson<{ success: boolean; message: string }>(`/api/admin/dictionary/${singleId}`, {
+            method: 'DELETE',
+          });
+        }
+
+        if (res.ok) {
+          setDictionaryEntries(prev => prev.filter(e => e.id !== singleId));
+          setSelectedDictIds(prev => {
+            const next = new Set(prev);
+            next.delete(singleId);
+            return next;
+          });
+          setDictFeedback({
+            type: 'success',
+            message: `✓ Term "${singleTerm || 'Selected entry'}" completely deleted from dictionary and Firebase Firestore (attalibrary-1761f).`,
+          });
+          setConfirmDeleteModal({ isOpen: false, mode: 'selected', count: 0 });
+        } else {
+          throw new Error(res.error || 'Failed to delete dictionary entry');
+        }
       } else {
-        throw new Error(res.error || 'Failed to bulk delete dictionary entries');
+        const body = mode === 'all' ? { deleteAll: true } : { ids: Array.from(selectedDictIds) };
+        const res = await authSafeFetchJson<{ success: boolean; message: string; deletedCount: number }>('/api/admin/dictionary/bulk-delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        if (res.ok && res.data) {
+          setDictFeedback({
+            type: 'success',
+            message: res.data.message || `Successfully deleted ${res.data.deletedCount} dictionary entries.`,
+          });
+          setSelectedDictIds(new Set());
+          setConfirmDeleteModal({ isOpen: false, mode: 'selected', count: 0 });
+          await fetchDictionary();
+        } else {
+          throw new Error(res.error || 'Failed to bulk delete dictionary entries');
+        }
       }
     } catch (err: any) {
       setDictFeedback({
         type: 'error',
-        message: err.message || 'Error executing bulk delete.',
+        message: err.message || 'Error executing deletion.',
       });
     } finally {
       setIsBulkDeleting(false);
     }
   };
 
-  // Clean and map dictionary entry columns without overlapping or duplicated strings (Requirement 1)
+  const handleDeduplicateDictionary = async () => {
+    setIsDeduplicating(true);
+    setDictFeedback(null);
+    try {
+      const res = await authSafeFetchJson<{ success: boolean; message: string; purgedCount: number; totalCount: number }>('/api/admin/dictionary/deduplicate', {
+        method: 'POST',
+      });
+      if (res.ok && res.data) {
+        setDictFeedback({
+          type: 'success',
+          message: res.data.message || 'Dictionary deduplication complete.',
+        });
+        await fetchDictionary();
+      } else {
+        throw new Error(res.error || 'Failed to deduplicate dictionary');
+      }
+    } catch (err: any) {
+      setDictFeedback({
+        type: 'error',
+        message: err.message || 'Error running deduplication.',
+      });
+    } finally {
+      setIsDeduplicating(false);
+    }
+  };
+
+  // Clean and map dictionary entry columns with dedicated pronunciation (Requirements 1 & 2)
   const cleanDisplayEntry = (entry: DictionaryEntry) => {
     let term = (entry.term || '').trim();
-    let latinTerm = (entry.latinTerm || '').trim();
+    let pronunciation = (entry.pronunciation || entry.latinTerm || '').trim();
     let english = (entry.englishMeaning || entry.meaning || '').trim();
     let urdu = (entry.urduMeaning || '').trim();
 
+    // Check if term contains Latin characters (e.g. "اُرا (ura)" or "ترک = Tark" or "اُرا\nura")
+    if (/[\u0600-\u06FF]/.test(term) && /[a-zA-Z]/.test(term)) {
+      const arPart = term.match(/[\u0600-\u06FF\s]+/g)?.join(' ').replace(/\s+/g, ' ').trim();
+      const latPart = term.match(/[a-zA-Z0-9āīūēōṭḍṛṣśñ\-_'/]+/g)?.join(' ').replace(/\s+/g, ' ').trim();
+      if (arPart) term = arPart;
+      if (latPart && !pronunciation) pronunciation = latPart;
+    }
+
     // Check if any field contains delimiters ('=', '\t', '|', '::')
     const hasDelimiter = (s: string) => /[=\t|]|::/.test(s);
-    if (hasDelimiter(term) || hasDelimiter(latinTerm) || hasDelimiter(english) || hasDelimiter(urdu)) {
-      // Gather all distinct raw tokens
+    if (hasDelimiter(term) || hasDelimiter(pronunciation) || hasDelimiter(english) || hasDelimiter(urdu)) {
       const rawTokens: string[] = [];
-      const fields = [term, latinTerm, english, urdu];
+      const fields = [term, pronunciation, english, urdu];
       for (const f of fields) {
         if (!f) continue;
         if (hasDelimiter(f)) {
@@ -513,48 +603,234 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         if (latin.length === 1) {
           english = latin[0];
-          latinTerm = '';
         } else if (latin.length >= 2) {
-          // Typically shorter Latin string is romanized Brahui (e.g. "Tark"), longer is English definition ("Abandonment")
           const sorted = [...latin].sort((a, b) => a.length - b.length);
-          latinTerm = sorted[0];
+          pronunciation = sorted[0];
           english = sorted.slice(1).join(' / ');
         }
       }
     }
 
     // Strip any remaining lingering delimiters in individual fields
-    const strip = (s: string) => s.replace(/^[=\t|:;\s]+|[=\t|:;\s]+$/g, '').trim();
+    const strip = (s: string) => s.replace(/^[=\t|:;\s()]+|[=\t|:;\s()]+$/g, '').trim();
     term = strip(term);
-    latinTerm = strip(latinTerm);
+    pronunciation = strip(pronunciation);
     english = strip(english);
     urdu = strip(urdu);
 
     // Cross-column deduplication:
-    // 1. If Urdu is identical to the Brahui term (e.g. both are "ترک"), clear Urdu
-    if (urdu === term) {
-      urdu = '';
-    }
-    // 2. If Latin term is identical to English definition (e.g. both are "Abandonment"), clear Latin
-    if (latinTerm.toLowerCase() === english.toLowerCase()) {
-      latinTerm = '';
-    }
-    // 3. If English accidentally captured the Brahui term
-    if (english === term) {
-      english = '';
-    }
-    // 4. If Latin term contains Arabic characters, it shouldn't be in Latin column
-    if (/[\u0600-\u06FF]/.test(latinTerm)) {
-      if (!urdu && latinTerm !== term) urdu = latinTerm;
-      latinTerm = '';
+    if (urdu === term) urdu = '';
+    if (pronunciation.toLowerCase() === english.toLowerCase()) pronunciation = '';
+    if (english === term) english = '';
+    if (/[\u0600-\u06FF]/.test(pronunciation)) {
+      if (!urdu && pronunciation !== term) urdu = pronunciation;
+      pronunciation = '';
     }
 
     return {
       term: term || '-',
-      latinTerm,
+      pronunciation,
+      latinTerm: pronunciation,
       english: english || '-',
       urdu: urdu || '-',
     };
+  };
+
+  // Single Word Real-Time Edit Handlers (Requirement 1)
+  const handleOpenSingleWordEdit = (entry: DictionaryEntry) => {
+    const d = cleanDisplayEntry(entry);
+    setEditingEntry({
+      id: entry.id,
+      term: d.term === '-' ? '' : d.term,
+      pronunciation: d.pronunciation || '',
+      meaning: d.english === '-' ? '' : d.english,
+      urduMeaning: d.urdu === '-' ? '' : d.urdu,
+      partOfSpeech: entry.partOfSpeech || 'Noun',
+      dialect: entry.dialect || 'Standard',
+    });
+  };
+
+  const handleSaveSingleWord = async () => {
+    if (!editingEntry) return;
+    setIsSavingSingleWord(true);
+    setDictFeedback(null);
+    try {
+      const payload = {
+        term: editingEntry.term.trim(),
+        pronunciation: editingEntry.pronunciation.trim(),
+        latinTerm: editingEntry.pronunciation.trim(),
+        meaning: editingEntry.meaning.trim(),
+        englishMeaning: editingEntry.meaning.trim(),
+        urduMeaning: editingEntry.urduMeaning.trim(),
+        partOfSpeech: editingEntry.partOfSpeech,
+        dialect: editingEntry.dialect,
+      };
+
+      const res = await authSafeFetchJson<{ success: boolean; message: string; entry: DictionaryEntry }>(
+        `/api/admin/dictionary/${editingEntry.id}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (res.ok && res.data?.entry) {
+        const updated = res.data.entry;
+        // 1. Instant in-place state update so the UI updates immediately without showing the old/stale version:
+        setDictionaryEntries(prev => prev.map(e => e.id === updated.id ? updated : e));
+        
+        // 2. Immediate notification alert confirming Firestore update:
+        setDictFeedback({
+          type: 'success',
+          message: `✓ Term "${updated.term}" has been updated successfully in Firebase Firestore (attalibrary-1761f)!`,
+        });
+
+        setJustUpdatedId(updated.id);
+        setTimeout(() => setJustUpdatedId(null), 3500);
+        setEditingEntry(null);
+      } else {
+        throw new Error(res.error || 'Failed to update entry');
+      }
+    } catch (err: any) {
+      setDictFeedback({
+        type: 'error',
+        message: err.message || 'Error updating dictionary entry.',
+      });
+    } finally {
+      setIsSavingSingleWord(false);
+    }
+  };
+
+  // Multi-Word / Batch Edit Handlers (Requirement 2)
+  const handleStartBatchEdit = (targetItems?: DictionaryEntry[]) => {
+    const items = targetItems || (
+      selectedDictIds.size > 0
+        ? filteredDictionary.filter(e => selectedDictIds.has(e.id))
+        : filteredDictionary
+    );
+    if (items.length === 0) return;
+
+    const drafts: Record<string, {
+      term: string;
+      pronunciation: string;
+      latinTerm: string;
+      meaning: string;
+      urduMeaning: string;
+      partOfSpeech: string;
+      dialect: string;
+    }> = {};
+
+    for (const e of items) {
+      const d = cleanDisplayEntry(e);
+      drafts[e.id] = {
+        term: d.term === '-' ? '' : d.term,
+        pronunciation: d.pronunciation || '',
+        latinTerm: d.pronunciation || '',
+        meaning: d.english === '-' ? '' : d.english,
+        urduMeaning: d.urdu === '-' ? '' : d.urdu,
+        partOfSpeech: e.partOfSpeech || 'Noun',
+        dialect: e.dialect || 'Standard',
+      };
+    }
+    setBatchDrafts(drafts);
+    setIsBatchEditMode(true);
+    setDictFeedback(null);
+  };
+
+  const handleCancelBatchEdit = () => {
+    setIsBatchEditMode(false);
+    setBatchDrafts({});
+  };
+
+  const handleUpdateBatchDraft = (
+    id: string,
+    field: 'term' | 'pronunciation' | 'latinTerm' | 'meaning' | 'urduMeaning' | 'partOfSpeech' | 'dialect',
+    val: string
+  ) => {
+    setBatchDrafts(prev => ({
+      ...prev,
+      [id]: {
+        ...(prev[id] || {
+          term: '',
+          pronunciation: '',
+          latinTerm: '',
+          meaning: '',
+          urduMeaning: '',
+          partOfSpeech: 'Noun',
+          dialect: 'Standard',
+        }),
+        [field]: val,
+        ...(field === 'pronunciation' ? { latinTerm: val } : {}),
+      },
+    }));
+  };
+
+  const handleSaveAllBatchEdits = async () => {
+    const entriesToSave = Object.entries(batchDrafts);
+    if (entriesToSave.length === 0) return;
+
+    setIsSavingBatch(true);
+    setDictFeedback(null);
+
+    try {
+      const updates = entriesToSave.map(([id, d]) => ({
+        id,
+        term: d.term,
+        pronunciation: d.pronunciation || d.latinTerm,
+        latinTerm: d.pronunciation || d.latinTerm,
+        meaning: d.meaning,
+        englishMeaning: d.meaning,
+        urduMeaning: d.urduMeaning,
+        partOfSpeech: d.partOfSpeech,
+        dialect: d.dialect,
+      }));
+
+      const res = await authSafeFetchJson<{ success: boolean; message: string; updatedCount: number }>('/api/admin/dictionary/batch-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ updates }),
+      });
+
+      if (res.ok && res.data) {
+        // Instant in-place state update of all batch entries:
+        setDictionaryEntries(prev =>
+          prev.map(e => {
+            const draft = batchDrafts[e.id];
+            if (draft) {
+              return {
+                ...e,
+                term: draft.term,
+                pronunciation: draft.pronunciation || draft.latinTerm,
+                latinTerm: draft.pronunciation || draft.latinTerm,
+                meaning: draft.meaning,
+                englishMeaning: draft.meaning,
+                urduMeaning: draft.urduMeaning,
+                partOfSpeech: draft.partOfSpeech,
+                dialect: draft.dialect,
+              };
+            }
+            return e;
+          })
+        );
+
+        setDictFeedback({
+          type: 'success',
+          message: `✓ Successfully saved and committed ${res.data.updatedCount} dictionary entries to Firebase Firestore in a single operation.`,
+        });
+        setIsBatchEditMode(false);
+        setBatchDrafts({});
+      } else {
+        throw new Error(res.error || 'Failed to batch update dictionary entries');
+      }
+    } catch (err: any) {
+      setDictFeedback({
+        type: 'error',
+        message: err.message || 'Error executing batch update to Firestore.',
+      });
+    } finally {
+      setIsSavingBatch(false);
+    }
   };
 
   useEffect(() => {
@@ -562,6 +838,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     fetchReviewQueue();
     fetchLanguageSettings();
     fetchDictionary();
+
+    // Subscribe to real-time dictionary updates from Firebase Firestore (attalibrary-1761f)
+    const unsubDict = useRealtimeDictionary((liveEntries) => {
+      if (liveEntries && liveEntries.length > 0) {
+        setDictionaryEntries(liveEntries);
+      }
+    });
+
+    return () => {
+      unsubDict();
+    };
   }, [selectedDate]);
 
   const handleApproveRule = async (ruleId: string) => {
@@ -792,6 +1079,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const matchesQ =
       !q ||
       entry.term.toLowerCase().includes(q) ||
+      (entry.pronunciation && entry.pronunciation.toLowerCase().includes(q)) ||
       (entry.latinTerm && entry.latinTerm.toLowerCase().includes(q)) ||
       entry.meaning.toLowerCase().includes(q) ||
       (entry.englishMeaning && entry.englishMeaning.toLowerCase().includes(q)) ||
@@ -805,288 +1093,285 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Top Banner & Governance Controls - Fully Responsive on Mobile & Desktop */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-start sm:items-center gap-3">
-          <span className="p-2 sm:p-2.5 rounded-lg bg-indigo-600 text-white shadow-2xs shrink-0 mt-0.5 sm:mt-0">
-            <ShieldCheck className="w-5 h-5" />
-          </span>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-base font-bold text-slate-900">Admin Control Panel: Daily Report &amp; Governance</h2>
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200">
-                User: {adminUsername}
-              </span>
+      {/* Redesigned Admin Header & Live Cloud Hub */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-700 text-white flex items-center justify-center shadow-md shrink-0">
+              <ShieldCheck className="w-6 h-6" />
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Review induced grammar rules, verify community corrections, update credentials, and export datasets.
-            </p>
+            <div>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">Admin Control Panel</h2>
+                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                  Logged in as: {adminUsername}
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-semibold border border-emerald-200 shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>Cloud Live: attalibrary-1761f</span>
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Centralized management for dictionary vocabulary, grammar rules, verification queue, and automated self-learning pipelines.
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* Primary Action Buttons */}
-        <div className="flex items-center gap-2 flex-wrap w-full md:w-auto">
-          {/* TRI-EXPORT SYSTEM: Dedicated Excel (.xlsx) Download for Dictionary, Grammar, & Syntax (Requirement 3) */}
-          <button
-            type="button"
-            id="admin-export-dictionary-excel-btn"
-            onClick={() => handleExportDictionary('xlsx')}
-            disabled={isExportingDictExcel}
-            className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer flex-1 sm:flex-initial"
-            title="Export complete single-word Brahui vocabulary database directly to Microsoft Excel (.xlsx)"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5" />
-            <span>{isExportingDictExcel ? 'Exporting...' : 'Export Dictionary (.xlsx)'}</span>
-          </button>
-
-          <button
-            type="button"
-            id="admin-export-grammar-excel-btn"
-            onClick={() => handleExportGrammarRules('xlsx')}
-            disabled={isExportingGrammarExcel}
-            className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer flex-1 sm:flex-initial"
-            title="Export morphological and postpositional grammar rules directly to Microsoft Excel (.xlsx)"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5" />
-            <span>{isExportingGrammarExcel ? 'Exporting...' : 'Export Grammar Rules (.xlsx)'}</span>
-          </button>
-
-          <button
-            type="button"
-            id="admin-export-syntax-excel-btn"
-            onClick={() => handleExportSyntaxPatterns('xlsx')}
-            disabled={isExportingSyntaxExcel}
-            className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer flex-1 sm:flex-initial"
-            title="Export sentence structural rules, SOV alignments, and clause ordering directly to Microsoft Excel (.xlsx)"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5" />
-            <span>{isExportingSyntaxExcel ? 'Exporting...' : 'Export Syntax Patterns (.xlsx)'}</span>
-          </button>
-
-          <button
-            type="button"
-            id="admin-languages-top-btn"
-            onClick={() => setActiveTab('languages')}
-            className={`px-3 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer flex-1 sm:flex-initial ${
-              activeTab === 'languages'
-                ? 'bg-blue-100 text-blue-900 border border-blue-300'
-                : 'bg-white hover:bg-slate-50 border border-slate-300 text-slate-700'
-            }`}
-            title="Configure Dynamic Languages & Add Language Control"
-          >
-            <Globe className="w-3.5 h-3.5 text-blue-600" />
-            <span>Languages &amp; Settings</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('security')}
-            className={`px-3 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer flex-1 sm:flex-initial ${
-              activeTab === 'security'
-                ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                : 'bg-white hover:bg-slate-50 border border-slate-300 text-slate-700'
-            }`}
-            title="Update Admin Username and Password"
-          >
-            <KeyRound className="w-3.5 h-3.5 text-amber-600" />
-            <span>Admin Credentials</span>
-          </button>
-
-          <button
-            type="button"
-            id="download-corpus-json-btn"
-            onClick={handleDownloadJSON}
-            className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer flex-1 sm:flex-initial"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Export JSON</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleDownloadTSV}
-            className="px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg shadow-2xs flex items-center justify-center gap-1.5 transition-all cursor-pointer flex-1 sm:flex-initial"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
-            <span>TSV</span>
-          </button>
-
-          {onLogout && (
+          {/* Quick Action Shortcut Hub */}
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
-              id="admin-logout-btn"
-              onClick={onLogout}
-              className="px-3 py-2 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 border border-slate-300 text-slate-600 text-xs font-medium rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer flex-1 sm:flex-initial"
-              title="Sign out of Admin Session"
+              id="admin-export-dictionary-excel-btn"
+              onClick={() => handleExportDictionary('xlsx')}
+              disabled={isExportingDictExcel}
+              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              title="Export complete Brahui vocabulary database directly to Microsoft Excel (.xlsx)"
             >
-              <span>Sign Out</span>
+              <FileSpreadsheet className="w-4 h-4" />
+              <span>{isExportingDictExcel ? 'Exporting...' : 'Export Excel (.xlsx)'}</span>
             </button>
-          )}
-        </div>
-      </div>
 
-      {/* Date Filter & KPI Metrics */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Calendar className="w-4 h-4 text-indigo-600 shrink-0" />
-            <span className="text-xs font-bold text-slate-700">Select Report Date:</span>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="px-2.5 py-1 text-xs border border-slate-300 rounded-lg bg-white font-medium focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-            />
-          </div>
-
-          <div className="flex items-center gap-1.5 text-xs">
             <button
-              onClick={setDateToday}
-              className={`px-3 py-1 rounded-md font-medium border cursor-pointer transition-colors ${
-                selectedDate === new Date().toISOString().split('T')[0]
-                  ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
-                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
+              type="button"
+              onClick={() => handleExportDictionary('csv')}
+              disabled={isExportingDictCsv}
+              className="px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl shadow-2xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              title="Export complete vocabulary database as CSV"
             >
-              Today
+              <Download className="w-3.5 h-3.5 text-slate-500" />
+              <span>CSV</span>
             </button>
+
             <button
-              onClick={setDateYesterday}
-              className="px-3 py-1 bg-white border border-slate-200 hover:bg-slate-50 rounded-md font-medium text-slate-600 cursor-pointer transition-colors"
+              type="button"
+              onClick={() => {
+                setActiveTab('dictionary');
+                setIsBulkPanelOpen(true);
+              }}
+              className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all cursor-pointer"
+              title="Open Bulk Dictionary Importer"
             >
-              Yesterday
+              <ClipboardPaste className="w-3.5 h-3.5" />
+              <span>Bulk Import</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('dictionary');
+                handleStartBatchEdit();
+              }}
+              className="px-3 py-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all cursor-pointer"
+              title="Enter Inline Batch Edit Mode"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Batch Edit</span>
+            </button>
+
+            {onLogout && (
+              <button
+                type="button"
+                id="admin-logout-btn"
+                onClick={onLogout}
+                className="px-3 py-2 bg-slate-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 border border-slate-300 text-slate-600 text-xs font-medium rounded-xl flex items-center justify-center gap-1 transition-all cursor-pointer"
+                title="Sign out of Admin Session"
+              >
+                <span>Sign Out</span>
+              </button>
+            )}
           </div>
         </div>
 
-        {/* 5 Key Metric Cards - Mobile Stack / Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          <div className="p-3 bg-indigo-50/60 border border-indigo-200/80 rounded-lg">
-            <span className="text-[11px] font-semibold text-indigo-700 block">Rules Learned on Date</span>
-            <span className="text-2xl font-bold text-indigo-950 mt-1 block">
-              {report?.rulesLearnedToday ?? 0}
+        {/* Action KPI Cards (Interactive Overview) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-2 border-t border-slate-100">
+          {/* Card 1: Dynamic Dictionary */}
+          <div
+            onClick={() => setActiveTab('dictionary')}
+            className={`p-4 rounded-xl border transition-all cursor-pointer ${
+              activeTab === 'dictionary'
+                ? 'bg-blue-50/90 border-blue-300 ring-2 ring-blue-500/20'
+                : 'bg-slate-50/60 hover:bg-blue-50/50 border-slate-200 hover:border-blue-200'
+            }`}
+          >
+            <div className="flex items-center justify-between text-blue-700 mb-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider">Dynamic Dictionary</span>
+              <BookMarked className="w-4 h-4" />
+            </div>
+            <span className="text-2xl font-extrabold text-slate-900 block mt-0.5">
+              {dictionaryEntries.length}
             </span>
-            <span className="text-[10px] text-indigo-600">Induced via active learning</span>
+            <span className="text-[11px] text-slate-500 mt-1 block">
+              Terms with dedicated pronunciation
+            </span>
           </div>
 
-          <div className="p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-lg">
-            <span className="text-[11px] font-semibold text-emerald-700 block">Corrections Ingested</span>
-            <span className="text-2xl font-bold text-emerald-950 mt-1 block">
-              {report?.correctionsIngestedToday ?? 0}
+          {/* Card 2: Review Queue */}
+          <div
+            onClick={() => setActiveTab('review')}
+            className={`p-4 rounded-xl border transition-all cursor-pointer ${
+              activeTab === 'review'
+                ? 'bg-amber-50/90 border-amber-300 ring-2 ring-amber-500/20'
+                : 'bg-slate-50/60 hover:bg-amber-50/50 border-slate-200 hover:border-amber-200'
+            }`}
+          >
+            <div className="flex items-center justify-between text-amber-700 mb-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider">Review Queue</span>
+              <Inbox className="w-4 h-4" />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-extrabold text-slate-900 block mt-0.5">
+                {(reviewQueue?.pendingRules?.length || 0) + (reviewQueue?.pendingCorpusEntries?.length || 0)}
+              </span>
+              {((reviewQueue?.pendingRules?.length || 0) + (reviewQueue?.pendingCorpusEntries?.length || 0)) > 0 && (
+                <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-200 text-amber-900 animate-pulse">
+                  Pending
+                </span>
+              )}
+            </div>
+            <span className="text-[11px] text-slate-500 mt-1 block">
+              {((reviewQueue?.pendingRules?.length || 0) + (reviewQueue?.pendingCorpusEntries?.length || 0)) > 0
+                ? 'Action needed on submissions'
+                : 'All submissions reviewed'}
             </span>
-            <span className="text-[10px] text-emerald-600">Community verified pairs</span>
           </div>
 
-          <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-            <span className="text-[11px] font-semibold text-slate-600 block">Total Active Rules</span>
-            <span className="text-2xl font-bold text-slate-900 mt-1 block">
+          {/* Card 3: Learned Rules */}
+          <div
+            onClick={() => setActiveTab('rules')}
+            className={`p-4 rounded-xl border transition-all cursor-pointer ${
+              activeTab === 'rules'
+                ? 'bg-indigo-50/90 border-indigo-300 ring-2 ring-indigo-500/20'
+                : 'bg-slate-50/60 hover:bg-indigo-50/50 border-slate-200 hover:border-indigo-200'
+            }`}
+          >
+            <div className="flex items-center justify-between text-indigo-700 mb-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider">Learned Rules</span>
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <span className="text-2xl font-extrabold text-slate-900 block mt-0.5">
               {report?.totalActiveRules ?? 0}
             </span>
-            <span className="text-[10px] text-slate-500">System-wide knowledge</span>
+            <span className="text-[11px] text-slate-500 mt-1 block">
+              Active SOV syntactic patterns
+            </span>
           </div>
 
-          <div className="p-3 bg-amber-50/60 border border-amber-200/80 rounded-lg">
-            <span className="text-[11px] font-semibold text-amber-700 block">Total Parallel Corpus</span>
-            <span className="text-2xl font-bold text-amber-950 mt-1 block">
+          {/* Card 4: Parallel Corpus */}
+          <div
+            onClick={() => setActiveTab('corpus')}
+            className={`p-4 rounded-xl border transition-all cursor-pointer ${
+              activeTab === 'corpus'
+                ? 'bg-emerald-50/90 border-emerald-300 ring-2 ring-emerald-500/20'
+                : 'bg-slate-50/60 hover:bg-emerald-50/50 border-slate-200 hover:border-emerald-200'
+            }`}
+          >
+            <div className="flex items-center justify-between text-emerald-700 mb-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider">Parallel Corpus</span>
+              <Layers className="w-4 h-4" />
+            </div>
+            <span className="text-2xl font-extrabold text-slate-900 block mt-0.5">
               {report?.totalCorpusEntries ?? 0}
             </span>
-            <span className="text-[10px] text-amber-600">Google contribution ready</span>
+            <span className="text-[11px] text-slate-500 mt-1 block">
+              Bilingual aligned sentence pairs
+            </span>
           </div>
 
-          <div className="p-3 bg-purple-50/60 border border-purple-200/80 rounded-lg">
-            <span className="text-[11px] font-semibold text-purple-700 block">Reference Books Ingested</span>
-            <span className="text-2xl font-bold text-purple-950 mt-1 block">
+          {/* Card 5: Reference Documents */}
+          <div className="p-4 rounded-xl border bg-slate-50/60 border-slate-200">
+            <div className="flex items-center justify-between text-purple-700 mb-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider">Reference Books</span>
+              <FileText className="w-4 h-4" />
+            </div>
+            <span className="text-2xl font-extrabold text-slate-900 block mt-0.5">
               {report?.totalKnowledgeDocs ?? 0}
             </span>
-            <span className="text-[10px] text-purple-600">PDF Lexicons &amp; Grammars</span>
+            <span className="text-[11px] text-slate-500 mt-1 block">
+              PDF lexicons &amp; handbooks
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Main Admin Body */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-        {/* Responsive Tabs & Filter Bar */}
-        <div className="p-3 sm:p-4 bg-slate-50/70 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
+      {/* Main Admin Tabbed Interface */}
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        {/* Navigation Tabs Bar */}
+        <div className="p-3 sm:p-4 bg-slate-50/80 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-1 md:pb-0">
             <button
-              onClick={() => setActiveTab('review')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                activeTab === 'review'
-                  ? 'bg-amber-600 text-white shadow-2xs'
+              id="admin-dictionary-tab-btn"
+              onClick={() => setActiveTab('dictionary')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+                activeTab === 'dictionary'
+                  ? 'bg-blue-600 text-white shadow-xs'
                   : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
               }`}
             >
-              <Inbox className="w-3.5 h-3.5" />
+              <BookMarked className="w-4 h-4 text-blue-400" />
+              <span>Dynamic Dictionary</span>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                activeTab === 'dictionary' ? 'bg-blue-800 text-white' : 'bg-blue-100 text-blue-800'
+              }`}>
+                {dictionaryEntries.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('review')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+                activeTab === 'review'
+                  ? 'bg-amber-600 text-white shadow-xs'
+                  : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+              }`}
+            >
+              <Inbox className="w-4 h-4 text-amber-400" />
               <span>Review Queue</span>
               {((reviewQueue?.pendingRules?.length || 0) + (reviewQueue?.pendingCorpusEntries?.length || 0)) > 0 ? (
-                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
                   activeTab === 'review' ? 'bg-amber-800 text-white' : 'bg-amber-500 text-white'
                 }`}>
                   {(reviewQueue?.pendingRules?.length || 0) + (reviewQueue?.pendingCorpusEntries?.length || 0)}
                 </span>
               ) : (
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-200 text-slate-600">0</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-200 text-slate-600">0</span>
               )}
             </button>
 
             <button
               onClick={() => setActiveTab('rules')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
                 activeTab === 'rules'
-                  ? 'bg-indigo-600 text-white shadow-2xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
               }`}
             >
-              Learned Grammar Rules ({filteredRules.length})
-            </button>
-
-            <button
-              id="admin-dictionary-tab-btn"
-              onClick={() => setActiveTab('dictionary')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                activeTab === 'dictionary'
-                  ? 'bg-blue-600 text-white shadow-2xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-              }`}
-            >
-              <BookMarked className="w-3.5 h-3.5 text-blue-500" />
-              <span>Dynamic Dictionary ({dictionaryEntries.length})</span>
+              <Sparkles className="w-4 h-4 text-indigo-400" />
+              <span>Learned Rules ({filteredRules.length})</span>
             </button>
 
             <button
               onClick={() => setActiveTab('corpus')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
                 activeTab === 'corpus'
-                  ? 'bg-indigo-600 text-white shadow-2xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
               }`}
             >
-              Dataset Additions ({filteredCorpus.length})
-            </button>
-
-            <button
-              onClick={() => setActiveTab('security')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                activeTab === 'security'
-                  ? 'bg-indigo-600 text-white shadow-2xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-              }`}
-            >
-              <KeyRound className="w-3.5 h-3.5 text-amber-500" />
-              <span>Admin Credentials</span>
+              <Layers className="w-4 h-4 text-emerald-400" />
+              <span>Parallel Corpus ({filteredCorpus.length})</span>
             </button>
 
             <button
               id="admin-languages-tab-btn"
               onClick={() => setActiveTab('languages')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
                 activeTab === 'languages'
-                  ? 'bg-indigo-600 text-white shadow-2xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  ? 'bg-slate-800 text-white shadow-xs'
+                  : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
               }`}
             >
-              <Globe className="w-3.5 h-3.5 text-blue-500" />
-              <span>Language Controls &amp; Settings</span>
+              <Globe className="w-4 h-4 text-blue-500" />
+              <span>Languages &amp; Settings</span>
               <span
                 className={`w-2 h-2 rounded-full ${
                   allowDynamicLanguages ? 'bg-emerald-400' : 'bg-slate-400'
@@ -1094,50 +1379,61 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 title={allowDynamicLanguages ? 'Add Language is Globally Enabled' : 'Add Language is Globally Disabled'}
               />
             </button>
+
+            <button
+              onClick={() => setActiveTab('security')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
+                activeTab === 'security'
+                  ? 'bg-slate-800 text-white shadow-xs'
+                  : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+              }`}
+            >
+              <KeyRound className="w-4 h-4 text-amber-500" />
+              <span>Admin Credentials</span>
+            </button>
           </div>
 
-          {activeTab !== 'security' && activeTab !== 'languages' && (
-            <div className="flex items-center gap-2 flex-wrap">
-              {activeTab === 'review' && (
-                <button
-                  type="button"
-                  onClick={fetchReviewQueue}
-                  disabled={isQueueLoading}
-                  className="px-2.5 py-1 text-xs bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
-                  title="Refresh Review Queue"
-                >
-                  <RefreshCw className={`w-3 h-3 ${isQueueLoading ? 'animate-spin text-amber-600' : 'text-slate-500'}`} />
-                  <span>Refresh Queue</span>
-                </button>
-              )}
+          <div className="flex items-center gap-2 flex-wrap">
+            {activeTab === 'review' && (
+              <button
+                type="button"
+                onClick={fetchReviewQueue}
+                disabled={isQueueLoading}
+                className="px-3 py-1.5 text-xs bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-lg flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+                title="Refresh Review Queue"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isQueueLoading ? 'animate-spin text-amber-600' : 'text-slate-500'}`} />
+                <span>Refresh Queue</span>
+              </button>
+            )}
 
-              {activeTab === 'rules' && (
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="px-2.5 py-1 text-xs bg-white border border-slate-300 rounded-lg cursor-pointer flex-1 sm:flex-initial"
-                >
-                  <option value="all">All Categories</option>
-                  <option value="Syntax">Syntax</option>
-                  <option value="Morphology">Morphology</option>
-                  <option value="Lexical">Lexical</option>
-                  <option value="Orthography">Orthography</option>
-                  <option value="Phonology">Phonology</option>
-                </select>
-              )}
-
+            {activeTab === 'rules' && (
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg cursor-pointer"
+              >
+                <option value="all">All Categories</option>
+                <option value="Syntax">Syntax</option>
+                <option value="Morphology">Morphology</option>
+                <option value="Lexical">Lexical</option>
+                <option value="Orthography">Orthography</option>
+                <option value="Phonology">Phonology</option>
+              </select>
+            )}
+            {(activeTab === 'rules' || activeTab === 'corpus') && (
               <div className="relative flex-1 sm:flex-initial">
                 <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search..."
-                  className="pl-8 pr-3 py-1 text-xs border border-slate-300 rounded-lg bg-white w-full sm:w-44 focus:sm:w-60 transition-all focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Filter items..."
+                  className="pl-8 pr-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white w-full sm:w-48 focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* TAB 0: REVIEW QUEUE (PDF EXTRACTIONS & USER CORRECTIONS) */}
@@ -1568,6 +1864,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                 <button
                   type="button"
+                  id="tab-toggle-batch-edit-btn"
+                  onClick={() => isBatchEditMode ? handleCancelBatchEdit() : handleStartBatchEdit()}
+                  disabled={isDictLoading || filteredDictionary.length === 0}
+                  className={`px-3.5 py-2 text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 ${
+                    isBatchEditMode
+                      ? 'bg-amber-600 hover:bg-amber-700 text-white border border-amber-700'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                  title="Multi-Word / Batch Edit: Edit words, meanings, Latin scripts, and Urdu definitions simultaneously"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  <span>{isBatchEditMode ? 'Exit Batch Edit' : 'Batch Edit Words'}</span>
+                </button>
+
+                <button
+                  type="button"
                   id="tab-export-dictionary-excel-btn"
                   onClick={() => handleExportDictionary('xlsx')}
                   disabled={isExportingDictExcel}
@@ -1576,6 +1888,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 >
                   <FileSpreadsheet className="w-4 h-4" />
                   <span>{isExportingDictExcel ? 'Exporting...' : 'Export Dictionary to Excel (.xlsx)'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  id="tab-deduplicate-dict-btn"
+                  onClick={handleDeduplicateDictionary}
+                  disabled={isDeduplicating || isDictLoading}
+                  className="px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-semibold rounded-lg shadow-2xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                  title="Purge duplicate words from dictionary and Firebase Firestore"
+                >
+                  <Sparkles className={`w-3.5 h-3.5 ${isDeduplicating ? 'animate-spin text-purple-600' : 'text-purple-600'}`} />
+                  <span>{isDeduplicating ? 'Purging Duplicates...' : 'Clean Duplicates'}</span>
                 </button>
 
                 <button
@@ -1792,17 +2116,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
               <div className="flex items-center gap-2">
                 {selectedDictIds.size > 0 && (
-                  <button
-                    type="button"
-                    id="admin-delete-selected-dict-btn"
-                    onClick={() => handlePromptBulkDelete('selected', selectedDictIds.size)}
-                    disabled={isBulkDeleting}
-                    className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
-                    title="Delete all selected dictionary entries"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Delete Selected ({selectedDictIds.size})</span>
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      id="admin-batch-edit-selected-btn"
+                      onClick={() => handleStartBatchEdit(filteredDictionary.filter(e => selectedDictIds.has(e.id)))}
+                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                      title="Batch edit selected words simultaneously"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Batch Edit Selected ({selectedDictIds.size})</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      id="admin-delete-selected-dict-btn"
+                      onClick={() => handlePromptBulkDelete('selected', selectedDictIds.size)}
+                      disabled={isBulkDeleting}
+                      className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                      title="Delete all selected dictionary entries"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete Selected ({selectedDictIds.size})</span>
+                    </button>
+                  </>
                 )}
 
                 <button
@@ -1819,6 +2156,52 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
             </div>
 
+            {/* Multi-Word / Batch Edit Active Floating Control Banner (Requirement 2) */}
+            {isBatchEditMode && (
+              <div className="p-3.5 bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border-2 border-emerald-400 rounded-xl flex items-center justify-between flex-wrap gap-3 shadow-sm animate-in fade-in">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                    <Edit3 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-xs font-bold text-emerald-950">
+                        Multi-Word Batch Edit Mode Active
+                      </h4>
+                      <span className="px-2 py-0.5 text-[10px] font-extrabold bg-emerald-200 text-emerald-900 rounded-full border border-emerald-300">
+                        {Object.keys(batchDrafts).length} Words in Editing
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-emerald-800 mt-0.5">
+                      Edit multiple words, meanings, Latin scripts, and Urdu definitions inline simultaneously. Click &quot;Save All Changes&quot; to commit all updates directly to Firebase Firestore in a single operation.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCancelBatchEdit}
+                    disabled={isSavingBatch}
+                    className="px-3.5 py-1.5 text-xs font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg shadow-2xs cursor-pointer disabled:opacity-40"
+                  >
+                    Discard Changes
+                  </button>
+                  <button
+                    type="button"
+                    id="save-all-batch-changes-btn"
+                    onClick={handleSaveAllBatchEdits}
+                    disabled={isSavingBatch || Object.keys(batchDrafts).length === 0}
+                    className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all"
+                    title="Commit all edited terms to Firebase Firestore in a single operation"
+                  >
+                    <Save className={`w-3.5 h-3.5 ${isSavingBatch ? 'animate-spin' : ''}`} />
+                    <span>{isSavingBatch ? 'Saving to Firestore...' : `Save All Changes (${Object.keys(batchDrafts).length})`}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Terms Table */}
             {isDictLoading ? (
               <div className="py-12 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
@@ -1831,8 +2214,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
             ) : (
               <div className="overflow-x-auto -mx-4 sm:mx-0">
-                <table className="w-full text-left text-xs border border-slate-200 rounded-lg min-w-[700px]">
-                  <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                <table className="w-full text-left text-xs border border-slate-200 rounded-lg min-w-[850px]">
+                  <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
                     <tr>
                       <th className="p-3 w-10 text-center">
                         <input
@@ -1843,21 +2226,141 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           title="Select / Deselect All Filtered Terms"
                         />
                       </th>
-                      <th className="p-3">Brahui Term</th>
-                      <th className="p-3">Meaning / English</th>
-                      <th className="p-3">Urdu Definition (اردو)</th>
-                      <th className="p-3">Part of Speech</th>
-                      <th className="p-3">Dialect</th>
-                      <th className="p-3">Source Origin</th>
-                      <th className="p-3 text-right">Actions</th>
+                      <th className="p-3 font-bold text-slate-800">Brahui Term (بلوچی / براہوئی)</th>
+                      <th className="p-3 font-bold text-indigo-900 bg-indigo-50/60 min-w-[150px]">
+                        <div className="flex items-center gap-1.5">
+                          <Volume2 className="w-3.5 h-3.5 text-indigo-600" />
+                          <span>Pronunciation / Latin Transliteration</span>
+                        </div>
+                      </th>
+                      <th className="p-3 font-bold text-slate-800">English Meaning</th>
+                      <th className="p-3 font-bold text-slate-800">Urdu Definition (اردو تعریف)</th>
+                      <th className="p-3 font-bold text-slate-800">Part of Speech</th>
+                      <th className="p-3 font-bold text-slate-800">Dialect</th>
+                      <th className="p-3 font-bold text-slate-800">Source Origin</th>
+                      <th className="p-3 text-right font-bold text-slate-800">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {filteredDictionary.map((entry) => {
+                      const isEditing = isBatchEditMode && !!batchDrafts[entry.id];
+                      const draft = batchDrafts[entry.id];
                       const display = cleanDisplayEntry(entry);
                       const isSelected = selectedDictIds.has(entry.id);
+                      const isJustUpdated = justUpdatedId === entry.id;
+
+                      if (isEditing && draft) {
+                        return (
+                          <tr key={entry.id} className="bg-amber-50/70 border-l-4 border-l-emerald-500 hover:bg-amber-100/50 transition-colors">
+                            <td className="p-2.5 text-center">
+                              <span className="text-[10px] font-mono font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-1.5 py-0.5 rounded">
+                                EDIT
+                              </span>
+                            </td>
+                            <td className="p-2.5 min-w-[140px]">
+                              <input
+                                type="text"
+                                value={draft.term}
+                                onChange={(e) => handleUpdateBatchDraft(entry.id, 'term', e.target.value)}
+                                dir="rtl"
+                                placeholder="Brahui Term"
+                                className="w-full px-2 py-1 text-sm font-bold font-amiri text-slate-900 bg-white border border-emerald-400 rounded focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                              />
+                            </td>
+                            <td className="p-2.5 min-w-[140px] bg-indigo-50/30">
+                              <input
+                                type="text"
+                                value={draft.pronunciation || draft.latinTerm}
+                                onChange={(e) => handleUpdateBatchDraft(entry.id, 'pronunciation', e.target.value)}
+                                placeholder="Pronunciation / Latin"
+                                className="w-full px-2 py-1 text-xs font-mono font-semibold text-indigo-700 bg-white border border-indigo-300 rounded focus:ring-2 focus:ring-indigo-500 shadow-2xs"
+                              />
+                            </td>
+                            <td className="p-2.5 min-w-[150px]">
+                              <input
+                                type="text"
+                                value={draft.meaning}
+                                onChange={(e) => handleUpdateBatchDraft(entry.id, 'meaning', e.target.value)}
+                                placeholder="English Meaning"
+                                className="w-full px-2 py-1 text-xs font-medium text-slate-800 bg-white border border-emerald-400 rounded focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                              />
+                            </td>
+                            <td className="p-2.5 min-w-[140px]">
+                              <input
+                                type="text"
+                                value={draft.urduMeaning}
+                                onChange={(e) => handleUpdateBatchDraft(entry.id, 'urduMeaning', e.target.value)}
+                                dir="rtl"
+                                placeholder="اردو تعریف / معنی"
+                                className="w-full px-2 py-1 text-xs font-amiri text-slate-800 bg-white border border-emerald-400 rounded focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                              />
+                            </td>
+                            <td className="p-2.5 min-w-[100px]">
+                              <select
+                                value={draft.partOfSpeech}
+                                onChange={(e) => handleUpdateBatchDraft(entry.id, 'partOfSpeech', e.target.value)}
+                                className="w-full px-2 py-1 text-xs font-semibold bg-white border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                              >
+                                <option value="Noun">Noun</option>
+                                <option value="Verb">Verb</option>
+                                <option value="Adjective">Adjective</option>
+                                <option value="Adverb">Adverb</option>
+                                <option value="Postposition">Postposition</option>
+                                <option value="Pronoun">Pronoun</option>
+                                <option value="Idiom">Idiom</option>
+                              </select>
+                            </td>
+                            <td className="p-2.5 min-w-[100px]">
+                              <select
+                                value={draft.dialect}
+                                onChange={(e) => handleUpdateBatchDraft(entry.id, 'dialect', e.target.value)}
+                                className="w-full px-2 py-1 text-xs font-amiri bg-white border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                                dir="rtl"
+                              >
+                                <option value="Standard">Standard (عام)</option>
+                                <option value="ساراوانی">ساراوانی</option>
+                                <option value="جھلاوانی">جھلاوانی</option>
+                                <option value="رخشانی">رخشانی</option>
+                                <option value="معلوم اف">معلوم اف</option>
+                              </select>
+                            </td>
+                            <td className="p-2.5 text-[11px] text-slate-500">
+                              <div className="truncate max-w-[120px]" title={entry.sourceDocTitle || entry.sourceType}>
+                                {entry.sourceDocTitle || 'Dictionary Term'}
+                              </div>
+                            </td>
+                            <td className="p-2.5 text-right">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setBatchDrafts(prev => {
+                                    const next = { ...prev };
+                                    delete next[entry.id];
+                                    if (Object.keys(next).length === 0) setIsBatchEditMode(false);
+                                    return next;
+                                  });
+                                }}
+                                className="px-2 py-1 text-[11px] text-slate-500 hover:text-slate-800 bg-white border border-slate-200 rounded hover:bg-slate-100 cursor-pointer shadow-2xs"
+                                title="Exclude from this batch edit"
+                              >
+                                Done
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      }
+
                       return (
-                        <tr key={entry.id} className={`hover:bg-slate-50/70 transition-colors ${isSelected ? 'bg-indigo-50/50' : ''}`}>
+                        <tr
+                          key={entry.id}
+                          className={`transition-all duration-300 ${
+                            isJustUpdated
+                              ? 'bg-emerald-50/80 ring-2 ring-emerald-400'
+                              : isSelected
+                              ? 'bg-indigo-50/60'
+                              : 'hover:bg-slate-50/80'
+                          }`}
+                        >
                           <td className="p-3 text-center">
                             <input
                               type="checkbox"
@@ -1867,19 +2370,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             />
                           </td>
                           <td className="p-3">
-                            <div className="font-bold text-slate-900 text-sm font-amiri">
+                            <div className="font-bold text-slate-900 text-base font-amiri leading-snug" dir="rtl">
                               {display.term}
                             </div>
-                            {display.latinTerm && (
-                              <div className="text-[11px] text-slate-500 font-mono">
-                                {display.latinTerm}
-                              </div>
+                          </td>
+                          <td className="p-3 bg-indigo-50/30">
+                            {display.pronunciation ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-indigo-200 text-indigo-800 font-mono text-xs font-semibold shadow-2xs">
+                                <Volume2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                                <span>{display.pronunciation}</span>
+                              </span>
+                            ) : (
+                              <span className="text-slate-300 italic text-xs font-mono">-</span>
                             )}
                           </td>
                           <td className="p-3">
                             <span className="font-medium text-slate-800">{display.english}</span>
                           </td>
-                          <td className="p-3 font-amiri text-slate-700 text-xs">
+                          <td className="p-3 font-amiri text-slate-700 text-sm" dir="rtl">
                             {display.urdu}
                           </td>
                           <td className="p-3">
@@ -1888,24 +2396,45 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             </span>
                           </td>
                           <td className="p-3 text-slate-600">
-                            <span className="px-2 py-0.5 bg-slate-100 rounded text-[11px]">
+                            <span className="px-2 py-0.5 bg-slate-100 rounded text-[11px] font-amiri text-slate-700">
                               {entry.dialect || 'Standard'}
                             </span>
                           </td>
                           <td className="p-3 text-[11px] text-slate-500">
-                            <div className="truncate max-w-[180px]" title={entry.sourceDocTitle || entry.sourceType}>
+                            <div className="truncate max-w-[160px]" title={entry.sourceDocTitle || entry.sourceType}>
                               {entry.sourceDocTitle || (entry.sourceType === 'user_correction' ? 'Translation Correction' : 'Lexicon PDF')}
                             </div>
                           </td>
                           <td className="p-3 text-right">
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteDictionaryEntry(entry.id, display.term)}
-                              className="p-1 text-slate-400 hover:text-rose-600 rounded cursor-pointer"
-                              title="Remove term"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenSingleWordEdit(entry)}
+                                className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg cursor-pointer transition-colors shadow-2xs border border-blue-100"
+                                title="Quick Edit Term (Real-Time Firestore Update)"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleStartBatchEdit([entry])}
+                                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                                title="Inline batch edit mode"
+                              >
+                                <Sliders className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handlePromptSingleDelete(entry.id, display.term || entry.term);
+                                }}
+                                className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg cursor-pointer transition-colors"
+                                title="Delete term from dictionary"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1915,7 +2444,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
             )}
 
-            {/* Bulk Delete Confirmation Modal (Requirement 4) */}
+            {/* Delete Confirmation Modal (Single, Selected, or All) */}
             {confirmDeleteModal.isOpen && (
               <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
                 <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
@@ -1925,18 +2454,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
                     <div>
                       <h3 className="text-sm font-bold text-slate-900">
-                        {confirmDeleteModal.mode === 'all' ? 'Delete Entire Dictionary?' : 'Delete Selected Terms?'}
+                        {confirmDeleteModal.mode === 'all'
+                          ? 'Delete Entire Dictionary?'
+                          : confirmDeleteModal.mode === 'single'
+                          ? 'Delete Vocabulary Term?'
+                          : 'Delete Selected Terms?'}
                       </h3>
                       <p className="text-xs text-slate-500">
                         {confirmDeleteModal.mode === 'all'
                           ? `This will permanently delete all ${confirmDeleteModal.count} vocabulary entries in the dictionary across all devices.`
+                          : confirmDeleteModal.mode === 'single'
+                          ? `Are you sure you want to permanently delete "${confirmDeleteModal.singleTerm || 'this term'}" from the dictionary and Firebase Firestore (attalibrary-1761f)?`
                           : `Are you sure you want to permanently delete ${confirmDeleteModal.count} selected terms?`}
                       </p>
                     </div>
                   </div>
 
                   <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-800">
-                    <strong>Warning:</strong> This deletion will be synchronized instantly to Firebase Firestore and across all connected devices.
+                    <strong>Warning:</strong> This deletion will be synchronized instantly to Firebase Firestore (attalibrary-1761f) and across all connected devices.
                   </div>
 
                   <div className="flex items-center justify-end gap-2 pt-2">
@@ -1950,8 +2485,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </button>
                     <button
                       type="button"
-                      id="confirm-bulk-delete-action-btn"
-                      onClick={handleExecuteBulkDelete}
+                      id="confirm-delete-action-btn"
+                      onClick={handleExecuteDelete}
                       disabled={isBulkDeleting}
                       className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                     >
@@ -1961,10 +2496,176 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           ? 'Deleting...'
                           : confirmDeleteModal.mode === 'all'
                           ? `Delete All (${confirmDeleteModal.count})`
+                          : confirmDeleteModal.mode === 'single'
+                          ? 'Delete Term'
                           : `Delete Selected (${confirmDeleteModal.count})`}
                       </span>
                     </button>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Single Word Real-Time Quick-Edit Modal (Requirement 1 & 2) */}
+            {editingEntry && (
+              <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                        <Edit3 className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900">Edit Vocabulary Term</h3>
+                        <p className="text-[11px] text-slate-500">
+                          Instant real-time sync with Firebase Firestore (<span className="font-mono text-blue-700 font-semibold">attalibrary-1761f</span>)
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEditingEntry(null)}
+                      className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSaveSingleWord();
+                    }}
+                    className="space-y-3.5"
+                  >
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Brahui Term (Perso-Arabic Script / براہوئی)
+                      </label>
+                      <input
+                        type="text"
+                        value={editingEntry.term}
+                        onChange={(e) => setEditingEntry(prev => prev ? { ...prev, term: e.target.value } : null)}
+                        dir="rtl"
+                        required
+                        placeholder="مثال: اُرا"
+                        className="w-full px-3 py-2 text-base font-bold font-amiri text-slate-900 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-indigo-900 mb-1 flex items-center gap-1.5">
+                        <Volume2 className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>Pronunciation / Latin Transliteration</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={editingEntry.pronunciation}
+                        onChange={(e) => setEditingEntry(prev => prev ? { ...prev, pronunciation: e.target.value } : null)}
+                        placeholder="e.g. ura, kanning, dūshī"
+                        className="w-full px-3 py-2 text-xs font-mono font-semibold text-indigo-800 bg-indigo-50/40 border border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-2xs"
+                      />
+                      <p className="text-[10px] text-slate-500 mt-1">
+                        Dedicated pronunciation field. Kept distinct from Perso-Arabic text.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          English Meaning
+                        </label>
+                        <input
+                          type="text"
+                          value={editingEntry.meaning}
+                          onChange={(e) => setEditingEntry(prev => prev ? { ...prev, meaning: e.target.value } : null)}
+                          placeholder="e.g. House, Home"
+                          className="w-full px-3 py-2 text-xs font-medium text-slate-900 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Urdu Definition (اردو تعریف)
+                        </label>
+                        <input
+                          type="text"
+                          value={editingEntry.urduMeaning}
+                          onChange={(e) => setEditingEntry(prev => prev ? { ...prev, urduMeaning: e.target.value } : null)}
+                          dir="rtl"
+                          placeholder="مثال: گھر، مکان"
+                          className="w-full px-3 py-2 text-xs font-amiri text-slate-900 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Part of Speech
+                        </label>
+                        <select
+                          value={editingEntry.partOfSpeech}
+                          onChange={(e) => setEditingEntry(prev => prev ? { ...prev, partOfSpeech: e.target.value } : null)}
+                          className="w-full px-3 py-2 text-xs font-semibold bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                        >
+                          <option value="Noun">Noun (اسم)</option>
+                          <option value="Verb">Verb (فعل)</option>
+                          <option value="Adjective">Adjective (صفت)</option>
+                          <option value="Adverb">Adverb (متعلق فعل)</option>
+                          <option value="Postposition">Postposition (حرف ربط)</option>
+                          <option value="Pronoun">Pronoun (ضمیر)</option>
+                          <option value="Idiom">Idiom (محاورہ)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Brahui Dialect
+                        </label>
+                        <select
+                          value={editingEntry.dialect}
+                          onChange={(e) => setEditingEntry(prev => prev ? { ...prev, dialect: e.target.value } : null)}
+                          className="w-full px-3 py-2 text-xs font-amiri bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                          dir="rtl"
+                        >
+                          <option value="Standard">Standard (عام معیار)</option>
+                          <option value="ساراوانی">ساراوانی</option>
+                          <option value="جھلاوانی">جھلاوانی</option>
+                          <option value="رخشانی">رخشانی</option>
+                          <option value="معلوم اف">معلوم اف</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => setEditingEntry(null)}
+                        disabled={isSavingSingleWord}
+                        className="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl cursor-pointer transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSavingSingleWord || !editingEntry.term.trim()}
+                        className="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all"
+                      >
+                        {isSavingSingleWord ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            <span>Updating Firestore...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-3.5 h-3.5" />
+                            <span>Save Changes</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             )}

@@ -1,10 +1,15 @@
 export type Language = 'brahui-arabic' | 'brahui-latin' | 'brahui-roman' | 'urdu' | 'english' | string;
 
 export type BrahuiDialect =
+  | 'ساراوانی'
+  | 'جھلاوانی'
+  | 'رخشانی'
+  | 'معلوم اف'
   | 'Sarawani (ساراوانی)'
   | 'Jhalawani (جالاوانی)'
   | 'Rakhshani (رخشانی)'
-  | 'Maloom Af (معلوم اف)';
+  | 'Maloom Af (معلوم اف)'
+  | string;
 
 export interface DynamicLanguage {
   code: string;
@@ -86,7 +91,8 @@ export interface CorpusEntry {
 
 export interface DictionaryEntry {
   id: string;
-  term: string; // Brahui term (Perso-Arabic or Roman)
+  term: string; // Brahui term (Perso-Arabic)
+  pronunciation?: string; // Dedicated Brahui Pronunciation / Latin Transliteration
   latinTerm?: string; // Roman/Latin Brahui script or transliteration
   meaning: string; // Primary definition / meaning
   englishMeaning?: string;

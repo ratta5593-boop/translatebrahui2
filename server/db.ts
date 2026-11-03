@@ -14,6 +14,7 @@ import {
   type Firestore
 } from 'firebase/firestore';
 import type { GrammarRule, CorpusEntry, KnowledgeDocument, DailyReport, DynamicLanguage, DatasetExportStats, DictionaryEntry } from '../src/types/index.js';
+import { BRAHUI_LEXICON } from './dynamicTranslator.js';
 
 export const DEFAULT_FIREBASE_CONFIG = {
   projectId: "attalibrary-1761f",
@@ -36,6 +37,37 @@ try {
   }
 } catch (e) {
   console.warn('[Firebase] Warning reading firebase-applet-config.json, using project default config:', e);
+}
+
+/**
+ * Normalizes dictionary terms for clean persistent storage:
+ * Strips leading/trailing whitespace, punctuation, quotes, and normalizes internal spaces.
+ */
+export function normalizeTermForStorage(text?: string): string {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/^["'«»“(\[]+|["'«»”)\]]+$/g, '')
+    .replace(/[.?!۔؟;:،,]+$/, '')
+    .trim();
+}
+
+/**
+ * Strict canonical normalization key for duplicate checks and dictionary indexing:
+ * Lowercases, strips punctuation, normalizes Unicode character variations (e.g. Arabic vs Urdu Kaf/Yeh/Heh).
+ */
+export function canonicalNormalizeKey(text?: string): string {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/[\u0643]/g, '\u06A9') // Arabic Kaf -> Persian/Urdu Keheh
+    .replace(/[\u064A\u0649]/g, '\u06CC') // Arabic Ya -> Persian/Urdu Yeh
+    .replace(/[\u0647]/g, '\u06C1') // Arabic Heh -> Urdu Goal Heh
+    .replace(/[.?!۔؟;:،,()\[\]«»"'`~=-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 export const GOOGLE_TRANSLATE_CATALOG: DynamicLanguage[] = [
@@ -1077,6 +1109,8 @@ class DatabaseService {
     this.init();
     this.cleanCorruptedDictionarySentences();
     this.cleanAndRepairMalformedDictionaryEntries();
+    this.migrateAndSeparatePronunciation();
+    this.deduplicateDictionary();
     this.rebuildIndexes();
   }
 
@@ -1526,6 +1560,10 @@ class DatabaseService {
       }
 
       this.isFirestoreSynced = true;
+      this.cleanCorruptedDictionarySentences();
+      this.cleanAndRepairMalformedDictionaryEntries();
+      this.migrateAndSeparatePronunciation();
+      this.deduplicateDictionary();
       this.rebuildIndexes();
       this.startRealtimeListeners();
       this.persist();
@@ -1920,11 +1958,19 @@ class DatabaseService {
   public addDictionaryEntry(entry: Omit<DictionaryEntry, 'id' | 'createdAt'> & { id?: string }): DictionaryEntry {
     if (!this.data.dictionary) this.data.dictionary = [];
 
-    let rawTerm = (entry.term || '').trim();
-    let rawLatin = (entry.latinTerm || '').trim();
-    let rawMeaning = (entry.meaning || '').trim();
-    let rawEnglish = (entry.englishMeaning || entry.meaning || '').trim();
-    let rawUrdu = (entry.urduMeaning || '').trim();
+    let rawTerm = normalizeTermForStorage(entry.term);
+    let rawLatin = normalizeTermForStorage(entry.pronunciation || entry.latinTerm);
+    let rawMeaning = normalizeTermForStorage(entry.meaning);
+    let rawEnglish = normalizeTermForStorage(entry.englishMeaning || entry.meaning);
+    let rawUrdu = normalizeTermForStorage(entry.urduMeaning);
+
+    // If term contains Latin pronunciation in parentheses or newline (e.g. "اُرا (ura)" or "اُرا \n ura"):
+    if (/[\u0600-\u06FF]/.test(rawTerm) && /[a-zA-Z]/.test(rawTerm)) {
+      const arPart = rawTerm.match(/[\u0600-\u06FF\s]+/g)?.join(' ').replace(/\s+/g, ' ').trim();
+      const latPart = rawTerm.match(/[a-zA-Z0-9āīūēōṭḍṛṣśñ\-_'/]+/g)?.join(' ').replace(/\s+/g, ' ').trim();
+      if (arPart) rawTerm = arPart;
+      if (latPart && !rawLatin) rawLatin = latPart;
+    }
 
     // If term or meaning contains raw '=' delimiter (e.g. "Tark=ترک=Abandonment"):
     if (rawTerm.includes('=') || rawMeaning.includes('=')) {
@@ -1946,8 +1992,10 @@ class DatabaseService {
       }
     }
 
-    const cleanTerm = rawTerm.replace(/^[^\w\u0600-\u06FF]+|[^\w\u0600-\u06FF]+$/g, '').replace(/[.?!۔؟;:،,]+$/, '');
-    const cleanMeaning = rawMeaning.replace(/[.?!۔؟;:،,]+$/, '');
+    const cleanTerm = normalizeTermForStorage(rawTerm);
+    const cleanMeaning = normalizeTermForStorage(rawMeaning);
+    const cleanLatin = normalizeTermForStorage(rawLatin);
+
     // Strict Single-Word Lexicon Guard (Requirement 2):
     // Full sentences or clauses must NEVER be saved as single dictionary entries.
     const termWordCount = cleanTerm.split(/\s+/).filter(Boolean).length;
@@ -1960,22 +2008,31 @@ class DatabaseService {
     // Automated POS Extraction Rule (Requirement 3)
     const detectedPos = determinePartOfSpeech({
       term: cleanTerm,
-      latinTerm: rawLatin || undefined,
+      latinTerm: cleanLatin || undefined,
       meaning: cleanMeaning,
       englishMeaning: rawEnglish || cleanMeaning,
       urduMeaning: rawUrdu || undefined,
     });
     const finalPos = entry.partOfSpeech && entry.partOfSpeech !== 'Noun' ? entry.partOfSpeech : detectedPos;
 
+    // Strict Canonical Duplicate Check:
+    const canonicalKey = canonicalNormalizeKey(cleanTerm);
+    const canonicalLatinKey = cleanLatin ? canonicalNormalizeKey(cleanLatin) : '';
+
     const existing = this.data.dictionary.find(
-      d => d.term.trim().toLowerCase() === cleanTerm.toLowerCase() ||
-           (d.latinTerm && rawLatin && d.latinTerm.trim().toLowerCase() === rawLatin.toLowerCase())
+      d => (d.term && canonicalNormalizeKey(d.term) === canonicalKey) ||
+           (canonicalLatinKey && d.latinTerm && canonicalNormalizeKey(d.latinTerm) === canonicalLatinKey) ||
+           (entry.id && d.id === entry.id)
     );
 
     if (existing) {
-      if (entry.meaning) existing.meaning = entry.meaning;
-      if (entry.englishMeaning) existing.englishMeaning = entry.englishMeaning;
-      if (entry.urduMeaning) existing.urduMeaning = entry.urduMeaning;
+      if (cleanMeaning) existing.meaning = cleanMeaning;
+      if (rawEnglish) existing.englishMeaning = rawEnglish;
+      if (rawUrdu) existing.urduMeaning = rawUrdu;
+      if (cleanLatin) {
+        existing.pronunciation = cleanLatin;
+        existing.latinTerm = cleanLatin;
+      }
       existing.partOfSpeech = entry.partOfSpeech && entry.partOfSpeech !== 'Noun' ? entry.partOfSpeech : finalPos;
       if (entry.dialect) existing.dialect = entry.dialect;
       if (entry.sourceDocTitle) existing.sourceDocTitle = entry.sourceDocTitle;
@@ -1993,6 +2050,11 @@ class DatabaseService {
     const newEntry: DictionaryEntry = {
       ...entry,
       term: cleanTerm,
+      pronunciation: cleanLatin || undefined,
+      latinTerm: cleanLatin || undefined,
+      meaning: cleanMeaning,
+      englishMeaning: rawEnglish || cleanMeaning,
+      urduMeaning: rawUrdu || undefined,
       partOfSpeech: finalPos,
       id: entry.id || `dict-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       createdAt: new Date().toISOString()
@@ -2229,15 +2291,67 @@ class DatabaseService {
     return removed.length;
   }
 
+  /**
+   * Updates a single dictionary entry in-memory and synchronously commits the update to Firestore (attalibrary-1761f).
+   * Ensures instant state synchronization without stale or cached UI representations.
+   */
+  public updateDictionaryEntry(id: string, updates: Partial<DictionaryEntry>): DictionaryEntry | null {
+    if (!this.data.dictionary) return null;
+    const entry = this.data.dictionary.find(d => d.id === id);
+    if (!entry) return null;
+
+    if (updates.term !== undefined) entry.term = normalizeTermForStorage(updates.term);
+    if (updates.pronunciation !== undefined) {
+      entry.pronunciation = normalizeTermForStorage(updates.pronunciation) || undefined;
+      entry.latinTerm = entry.pronunciation;
+    }
+    if (updates.latinTerm !== undefined && updates.pronunciation === undefined) {
+      entry.latinTerm = normalizeTermForStorage(updates.latinTerm) || undefined;
+      entry.pronunciation = entry.latinTerm;
+    }
+    if (updates.meaning !== undefined) entry.meaning = normalizeTermForStorage(updates.meaning);
+    if (updates.englishMeaning !== undefined) entry.englishMeaning = normalizeTermForStorage(updates.englishMeaning) || entry.meaning;
+    if (updates.urduMeaning !== undefined) entry.urduMeaning = normalizeTermForStorage(updates.urduMeaning) || undefined;
+    if (updates.partOfSpeech !== undefined) entry.partOfSpeech = updates.partOfSpeech.trim() || 'Noun';
+    if (updates.dialect !== undefined) entry.dialect = updates.dialect.trim() || 'Standard';
+
+    // Auto-detect POS if missing or generic
+    if (!entry.partOfSpeech) {
+      entry.partOfSpeech = determinePartOfSpeech({
+        term: entry.term,
+        latinTerm: entry.latinTerm || entry.pronunciation,
+        meaning: entry.meaning,
+        englishMeaning: entry.englishMeaning,
+        urduMeaning: entry.urduMeaning,
+      });
+    }
+
+    entry.verified = true;
+    this.rebuildIndexes();
+    this.persist();
+
+    if (!this.firestore) this.initFirestore();
+    if (this.firestore) {
+      setDoc(doc(this.firestore, 'dictionary', entry.id), sanitizeForFirestore(entry))
+        .then(() => console.log(`[Firebase DB] ⚡ Dictionary entry "${entry.term}" (${entry.id}) updated in Firestore attalibrary-1761f.`))
+        .catch(e => console.error('[Firebase DB] Failed to update dictionary entry in Firestore:', e));
+    }
+
+    return entry;
+  }
+
   public deleteDictionaryEntry(id: string): boolean {
-    if (!this.data.dictionary) return false;
+    if (!this.data.dictionary || !id) return false;
     const initialLen = this.data.dictionary.length;
     this.data.dictionary = this.data.dictionary.filter(d => d.id !== id);
     if (this.data.dictionary.length !== initialLen) {
       this.rebuildIndexes();
       this.persist();
+      if (!this.firestore) this.initFirestore();
       if (this.firestore) {
-        deleteDoc(doc(this.firestore, 'dictionary', id)).catch(() => {});
+        deleteDoc(doc(this.firestore, 'dictionary', id))
+          .then(() => console.log(`[Firebase DB] ⚡ Dictionary entry ${id} deleted from Firestore attalibrary-1761f.`))
+          .catch((e) => console.error(`[Firebase DB] Failed to delete entry ${id} from Firestore:`, e));
       }
       return true;
     }
@@ -2256,10 +2370,12 @@ class DatabaseService {
     if (deletedCount > 0) {
       this.rebuildIndexes();
       this.persist();
+      if (!this.firestore) this.initFirestore();
       if (this.firestore) {
         for (const id of ids) {
           deleteDoc(doc(this.firestore, 'dictionary', id)).catch(() => {});
         }
+        console.log(`[Firebase DB] ⚡ ${deletedCount} dictionary entries batch-deleted from Firestore attalibrary-1761f.`);
       }
     }
     return deletedCount;
@@ -2275,12 +2391,351 @@ class DatabaseService {
     this.data.dictionary = [];
     this.rebuildIndexes();
     this.persist();
+    if (!this.firestore) this.initFirestore();
     if (this.firestore) {
       for (const id of allIds) {
         deleteDoc(doc(this.firestore, 'dictionary', id)).catch(() => {});
       }
     }
     return count;
+  }
+
+  /**
+   * Real-time nanosecond lookup to check if an individual word or root already exists in the dictionary.
+   */
+  public hasDictionaryWord(word: string): boolean {
+    if (!word) return false;
+    const canonical = canonicalNormalizeKey(word);
+    if (!canonical) return false;
+
+    // 1. Nanosecond in-memory index map lookup
+    if (this.dictionaryIndexMap && (this.dictionaryIndexMap.has(canonical) || this.dictionaryIndexMap.has(word.trim().toLowerCase()))) {
+      return true;
+    }
+
+    // 2. Direct check across dictionary items using canonical normalization
+    if (this.data.dictionary) {
+      for (let i = 0; i < this.data.dictionary.length; i++) {
+        const d = this.data.dictionary[i];
+        if (d.term && canonicalNormalizeKey(d.term) === canonical) return true;
+        if (d.latinTerm && canonicalNormalizeKey(d.latinTerm) === canonical) return true;
+        if (d.pronunciation && canonicalNormalizeKey(d.pronunciation) === canonical) return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * One-time sanitization and deduplication routine on load.
+   * Scans all dictionary entries, eliminates duplicate words (by canonical normalized term/script),
+   * merges richer definitions/pronunciation into retained entries, and commits deletions to Firestore.
+   */
+  public deduplicateDictionary(): number {
+    if (!this.data.dictionary || this.data.dictionary.length <= 1) return 0;
+
+    const seenMap = new Map<string, DictionaryEntry>();
+    const duplicateIdsToDelete: string[] = [];
+    const uniqueList: DictionaryEntry[] = [];
+
+    for (const entry of this.data.dictionary) {
+      const normTerm = normalizeTermForStorage(entry.term);
+      if (!normTerm) {
+        duplicateIdsToDelete.push(entry.id);
+        continue;
+      }
+      entry.term = normTerm;
+      if (entry.pronunciation) entry.pronunciation = normalizeTermForStorage(entry.pronunciation);
+      if (entry.latinTerm) entry.latinTerm = normalizeTermForStorage(entry.latinTerm);
+      if (entry.meaning) entry.meaning = normalizeTermForStorage(entry.meaning);
+      if (entry.englishMeaning) entry.englishMeaning = normalizeTermForStorage(entry.englishMeaning);
+      if (entry.urduMeaning) entry.urduMeaning = normalizeTermForStorage(entry.urduMeaning);
+
+      const key = canonicalNormalizeKey(entry.term);
+      const existing = seenMap.get(key);
+
+      if (!existing) {
+        seenMap.set(key, entry);
+        uniqueList.push(entry);
+      } else {
+        duplicateIdsToDelete.push(entry.id);
+
+        // Merge richer metadata into existing entry
+        if (!existing.pronunciation && (entry.pronunciation || entry.latinTerm)) {
+          existing.pronunciation = entry.pronunciation || entry.latinTerm;
+          existing.latinTerm = existing.pronunciation;
+        }
+        if (!existing.urduMeaning && entry.urduMeaning) {
+          existing.urduMeaning = entry.urduMeaning;
+        }
+        if ((!existing.englishMeaning || existing.englishMeaning === existing.term) && entry.englishMeaning) {
+          existing.englishMeaning = entry.englishMeaning;
+          existing.meaning = entry.englishMeaning;
+        }
+        if ((!existing.partOfSpeech || existing.partOfSpeech === 'Noun') && entry.partOfSpeech && entry.partOfSpeech !== 'Noun') {
+          existing.partOfSpeech = entry.partOfSpeech;
+        }
+      }
+    }
+
+    if (duplicateIdsToDelete.length > 0) {
+      console.log(`[Dictionary DB] Deduplication routine: Purged ${duplicateIdsToDelete.length} duplicate entries from dictionary.`);
+      this.data.dictionary = uniqueList;
+      this.rebuildIndexes();
+      this.persist();
+
+      if (!this.firestore) this.initFirestore();
+      if (this.firestore) {
+        for (const id of duplicateIdsToDelete) {
+          deleteDoc(doc(this.firestore, 'dictionary', id)).catch(() => {});
+        }
+        console.log(`[Firebase DB] ⚡ ${duplicateIdsToDelete.length} duplicate entries deleted from Firestore attalibrary-1761f.`);
+      }
+    }
+
+    return duplicateIdsToDelete.length;
+  }
+
+  /**
+   * Real-Time High-Speed Word Ingestion on Correction:
+   * Tokenizes corrected sentence in memory and checks every individual word against
+   * the existing Dictionary database in nanoseconds.
+   * If the word already exists -> skips (prevents duplicate entries).
+   * If the word does NOT exist -> extracts word with context/meaning and inserts into official Firestore database (attalibrary-1761f).
+   */
+  public ingestNewWordsFromCorrection(params: {
+    correctedTranslation: string;
+    sourceText: string;
+    alternativeScript?: string;
+    sourceLang?: string;
+    targetLang?: string;
+    dialect?: string;
+    contributorName?: string;
+    extractedTerms?: Array<{ term: string; latinTerm?: string; meaning: string; englishMeaning?: string; urduMeaning?: string; partOfSpeech?: string }>;
+  }): DictionaryEntry[] {
+    const {
+      correctedTranslation,
+      sourceText,
+      alternativeScript,
+      dialect,
+      contributorName,
+      extractedTerms = []
+    } = params;
+
+    if (!correctedTranslation || !correctedTranslation.trim()) return [];
+
+    // 1. Tokenize corrected translation in memory
+    const tokens = correctedTranslation
+      .replace(/[.?!۔؟;:،,()\[\]«»"'`~]+/g, ' ')
+      .split(/\s+/)
+      .map(t => t.trim().replace(/^[^\w\u0600-\u06FF]+|[^\w\u0600-\u06FF]+$/g, ''))
+      .filter(t => t.length > 1 && !/^(ءِ|او|ای|ٹی|آن|نا|کی|کن|نان|تو|دا|ہما|اس|اُٹ|ء|آ|ئٹ|ے|ئے)$/i.test(t));
+
+    // Tokenize alternative script if present
+    const altTokens = (alternativeScript || '')
+      .replace(/[.?!۔؟;:،,()\[\]«»"'`~]+/g, ' ')
+      .split(/\s+/)
+      .map(t => t.trim())
+      .filter(t => t.length > 1);
+
+    const sourceTokens = (sourceText || '')
+      .replace(/[.?!۔؟;:،,()\[\]«»"'`~]+/g, ' ')
+      .split(/\s+/)
+      .map(t => t.trim())
+      .filter(t => t.length > 1);
+
+    // Build quick lookup for extracted AI terms
+    const extractedMap = new Map<string, any>();
+    for (const ext of extractedTerms) {
+      if (ext.term) {
+        extractedMap.set(ext.term.trim().toLowerCase(), ext);
+      }
+      if (ext.latinTerm) {
+        extractedMap.set(ext.latinTerm.trim().toLowerCase(), ext);
+      }
+    }
+
+    const newEntries: DictionaryEntry[] = [];
+    const seenInBatch = new Set<string>();
+
+    for (let i = 0; i < tokens.length; i++) {
+      const word = tokens[i];
+      const wordLower = word.toLowerCase();
+
+      // Duplicate prevention in current batch
+      if (seenInBatch.has(wordLower)) continue;
+      seenInBatch.add(wordLower);
+
+      // Nanosecond duplicate check against existing Dictionary
+      if (this.hasDictionaryWord(word)) {
+        // Word already exists in Dictionary -> do NOT add again!
+        continue;
+      }
+
+      // If we reach here, word is brand new!
+      let meaning = '';
+      let englishMeaning = '';
+      let urduMeaning = '';
+      let latinTerm = altTokens[i] || '';
+      let pos = '';
+
+      // Check extracted terms first
+      const extMatch = extractedMap.get(wordLower);
+      if (extMatch) {
+        meaning = extMatch.meaning || extMatch.englishMeaning || '';
+        englishMeaning = extMatch.englishMeaning || meaning;
+        urduMeaning = extMatch.urduMeaning || '';
+        if (extMatch.latinTerm) latinTerm = extMatch.latinTerm;
+        if (extMatch.partOfSpeech) pos = extMatch.partOfSpeech;
+      }
+
+      // Check lexical seeds if not found
+      if (!meaning) {
+        const lex = Object.values(BRAHUI_LEXICON).find(
+          l => l.arabic === word || l.latin.toLowerCase() === wordLower
+        );
+        if (lex) {
+          meaning = lex.english;
+          englishMeaning = lex.english;
+          urduMeaning = lex.urdu;
+          latinTerm = latinTerm || lex.latin;
+          pos = pos || (lex.pos.charAt(0).toUpperCase() + lex.pos.slice(1));
+        }
+      }
+
+      // If still no meaning and single-word sourceText
+      if (!meaning) {
+        if (sourceTokens.length === 1 && tokens.length === 1) {
+          meaning = sourceTokens[0];
+          englishMeaning = sourceTokens[0];
+        } else {
+          meaning = `Context: ${sourceText.slice(0, 35)}`;
+          englishMeaning = meaning;
+        }
+      }
+
+      // Automated POS
+      if (!pos) {
+        pos = determinePartOfSpeech({
+          term: word,
+          latinTerm,
+          meaning,
+          englishMeaning,
+          urduMeaning,
+        });
+      }
+
+      const inserted = this.addDictionaryEntry({
+        term: word,
+        latinTerm: latinTerm || undefined,
+        meaning,
+        englishMeaning: englishMeaning || meaning,
+        urduMeaning: urduMeaning || undefined,
+        partOfSpeech: pos,
+        dialect: dialect || 'Standard',
+        sourceType: 'user_correction',
+        sourceDocTitle: `Correction Word: "${word}" (${contributorName || 'Learned'})`,
+        verified: true,
+      });
+
+      if (inserted) {
+        newEntries.push(inserted);
+        console.log(`[Dictionary DB] ⚡ Ingested new learned word: "${word}" (${meaning}) into Firestore attalibrary-1761f.`);
+      }
+    }
+
+    return newEntries;
+  }
+
+  /**
+   * Multi-Word / Batch Edit: Updates multiple dictionary entries simultaneously
+   * and commits all changes to Firebase Firestore in a single atomic batch operation.
+   */
+  public async batchUpdateDictionaryEntries(
+    updates: Array<{
+      id: string;
+      term?: string;
+      pronunciation?: string;
+      latinTerm?: string;
+      meaning?: string;
+      englishMeaning?: string;
+      urduMeaning?: string;
+      partOfSpeech?: string;
+      dialect?: string;
+    }>
+  ): Promise<{ updatedCount: number; entries: DictionaryEntry[] }> {
+    if (!this.data.dictionary || updates.length === 0) {
+      return { updatedCount: 0, entries: [] };
+    }
+
+    const dictMap = new Map<string, DictionaryEntry>();
+    for (const d of this.data.dictionary) {
+      dictMap.set(d.id, d);
+    }
+
+    const updatedList: DictionaryEntry[] = [];
+    const modifiedEntriesToSync: DictionaryEntry[] = [];
+
+    for (const u of updates) {
+      if (!u.id) continue;
+      const existing = dictMap.get(u.id);
+      if (!existing) continue;
+
+      if (u.term !== undefined) existing.term = u.term.trim();
+      if (u.pronunciation !== undefined) {
+        existing.pronunciation = u.pronunciation.trim() || undefined;
+        existing.latinTerm = existing.pronunciation;
+      }
+      if (u.latinTerm !== undefined && u.pronunciation === undefined) {
+        existing.latinTerm = u.latinTerm.trim() || undefined;
+        existing.pronunciation = existing.latinTerm;
+      }
+      if (u.meaning !== undefined) existing.meaning = u.meaning.trim();
+      if (u.englishMeaning !== undefined) existing.englishMeaning = u.englishMeaning.trim() || existing.meaning;
+      if (u.urduMeaning !== undefined) existing.urduMeaning = u.urduMeaning.trim() || undefined;
+      if (u.partOfSpeech !== undefined) existing.partOfSpeech = u.partOfSpeech.trim() || 'Noun';
+      if (u.dialect !== undefined) existing.dialect = u.dialect.trim() || 'Standard';
+
+      if (!u.partOfSpeech) {
+        existing.partOfSpeech = determinePartOfSpeech({
+          term: existing.term,
+          latinTerm: existing.latinTerm || existing.pronunciation,
+          meaning: existing.meaning,
+          englishMeaning: existing.englishMeaning,
+          urduMeaning: existing.urduMeaning,
+        });
+      }
+
+      existing.verified = true;
+      updatedList.push(existing);
+      modifiedEntriesToSync.push(existing);
+    }
+
+    if (updatedList.length > 0) {
+      this.rebuildIndexes();
+      this.persist();
+
+      if (!this.firestore) this.initFirestore();
+      if (this.firestore) {
+        try {
+          const batchLimit = 450;
+          for (let i = 0; i < modifiedEntriesToSync.length; i += batchLimit) {
+            const chunk = modifiedEntriesToSync.slice(i, i + batchLimit);
+            const batch = writeBatch(this.firestore);
+            for (const item of chunk) {
+              const ref = doc(this.firestore, 'dictionary', item.id);
+              batch.set(ref, sanitizeForFirestore(item));
+            }
+            await batch.commit();
+          }
+          console.log(`[Firebase DB] ⚡ Batch-committed ${modifiedEntriesToSync.length} updated dictionary entries to Firestore attalibrary-1761f.`);
+        } catch (bErr) {
+          console.error('[Firebase DB] Failed to batch commit dictionary updates to Firestore:', bErr);
+        }
+      }
+    }
+
+    return { updatedCount: updatedList.length, entries: updatedList };
   }
 
   /**
@@ -2377,6 +2832,98 @@ class DatabaseService {
       this.persist();
     }
     return repairedCount;
+  }
+
+  /**
+   * Dedicated Brahui Pronunciation Column Migration (Requirement 2):
+   * Automatically migrates and parses all existing Brahui terms where Latin transliterations
+   * are written underneath or within the Perso-Arabic text, shifting them cleanly into the
+   * dedicated Pronunciation column (`entry.pronunciation`).
+   */
+  public migrateAndSeparatePronunciation(): number {
+    if (!this.data.dictionary || this.data.dictionary.length === 0) return 0;
+    let migratedCount = 0;
+
+    for (const entry of this.data.dictionary) {
+      let changed = false;
+      let term = (entry.term || '').trim();
+      let pron = (entry.pronunciation || entry.latinTerm || '').trim();
+      let eng = (entry.englishMeaning || entry.meaning || '').trim();
+      let urdu = (entry.urduMeaning || '').trim();
+
+      // 1. Check if term contains Latin characters (e.g. "اُرا (ura)" or "Tark = ترک" or "اُرا\nura")
+      const termHasArabic = /[\u0600-\u06FF]/.test(term);
+      const termHasLatin = /[a-zA-Z]/.test(term);
+
+      if (termHasArabic && termHasLatin) {
+        // Extract Perso-Arabic part
+        const arabicMatch = term.match(/[\u0600-\u06FF\s]+/g);
+        const latinMatch = term.match(/[a-zA-Z0-9āīūēōṭḍṛṣśñ\-_'/]+/g);
+
+        if (arabicMatch && arabicMatch.length > 0) {
+          term = arabicMatch.join(' ').replace(/\s+/g, ' ').trim();
+          changed = true;
+        }
+        if (latinMatch && latinMatch.length > 0 && !pron) {
+          pron = latinMatch.join(' ').replace(/\s+/g, ' ').trim();
+          changed = true;
+        }
+      }
+
+      // 2. If pronunciation contains Arabic characters (e.g. accidentally swapped with Urdu)
+      if (pron && /[\u0600-\u06FF]/.test(pron)) {
+        if (!urdu && pron !== term) {
+          urdu = pron;
+        }
+        pron = '';
+        changed = true;
+      }
+
+      // 3. If pronunciation is identical to English definition or Brahui term
+      if (pron && (pron.toLowerCase() === eng.toLowerCase() || pron === term)) {
+        pron = '';
+        changed = true;
+      }
+
+      // 4. Strip delimiters from fields
+      const stripDelim = (s: string) => s.replace(/^[=\t|:;\s()]+|[=\t|:;\s()]+$/g, '').trim();
+      term = stripDelim(term);
+      pron = stripDelim(pron);
+      eng = stripDelim(eng);
+      urdu = stripDelim(urdu);
+
+      // 5. Update entry if fields changed
+      if (entry.term !== term && term) {
+        entry.term = term;
+        changed = true;
+      }
+      if (entry.pronunciation !== (pron || undefined)) {
+        entry.pronunciation = pron || undefined;
+        changed = true;
+      }
+      if (entry.latinTerm !== (pron || undefined)) {
+        entry.latinTerm = pron || undefined;
+        changed = true;
+      }
+      if (entry.urduMeaning !== (urdu || undefined)) {
+        entry.urduMeaning = urdu || undefined;
+        changed = true;
+      }
+
+      if (changed) {
+        migratedCount++;
+        if (this.firestore) {
+          setDoc(doc(this.firestore, 'dictionary', entry.id), sanitizeForFirestore(entry)).catch(() => {});
+        }
+      }
+    }
+
+    if (migratedCount > 0) {
+      console.log(`[Dictionary DB] ⚡ Dedicated Pronunciation Migration: Parsed and shifted ${migratedCount} terms into the dedicated pronunciation column.`);
+      this.rebuildIndexes();
+      this.persist();
+    }
+    return migratedCount;
   }
 
   // --- Knowledge Documents ---

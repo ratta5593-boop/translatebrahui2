@@ -70,6 +70,7 @@
       "properties": {
         "id": { "type": "string" },
         "term": { "type": "string" },
+        "pronunciation": { "type": "string" },
         "latinTerm": { "type": "string" },
         "meaning": { "type": "string" },
         "englishMeaning": { "type": "string" },

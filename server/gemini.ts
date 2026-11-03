@@ -5,9 +5,9 @@ import { dynamicTranslateSentence, BRAHUI_LEXICON } from './dynamicTranslator.js
 
 // Available Flash models in order of priority (fastest & lowest latency first)
 const CANDIDATE_MODELS = [
-  'gemini-3.5-flash-lite',
-  'gemini-flash-latest',
   'gemini-3.8-flash',
+  'gemini-flash-latest',
+  'gemini-3.1-flash-lite',
 ];
 
 /**
@@ -171,17 +171,26 @@ async function callWithRetryAndFallback<T>(
         continue;
       }
 
+      const isTimeout =
+        err?.message?.includes('timed out') ||
+        err?.message?.includes('timeout') ||
+        err?.message?.includes('Timeout');
+
+      if (isTimeout) {
+        console.info(`[Gemini] Model ${modelName} reached timeout limit (${timeoutMs}ms), seamlessly using dynamic heuristic fallback.`);
+        return fallbackFn();
+      }
+
       const isTransient =
         err?.status === 503 ||
         err?.status === 429 ||
         err?.message?.includes('503') ||
         err?.message?.includes('429') ||
         err?.message?.includes('UNAVAILABLE') ||
-        err?.message?.includes('high demand') ||
-        err?.message?.includes('timed out');
+        err?.message?.includes('high demand');
 
       if (isTransient) {
-        console.warn(`[Gemini] Model ${modelName} transient issue or timeout (${err.status || err.message}), trying fallback candidate (${i + 1}/${CANDIDATE_MODELS.length})...`);
+        console.warn(`[Gemini] Model ${modelName} transient issue (${err.status || err.message}), trying fallback candidate (${i + 1}/${CANDIDATE_MODELS.length})...`);
         continue;
       }
 
@@ -1345,7 +1354,8 @@ Extract the underlying grammar rule or morphological pattern.`;
         },
         explanationText: inferredExplanation,
       };
-    }
+    },
+    3500 // Max 3.5s timeout: immediately falls back to rich linguistic pattern deduction without hanging
   );
 }
 
@@ -1456,7 +1466,7 @@ Output valid JSON array:
         return fallbackTerms;
       },
       () => fallbackTerms,
-      5000
+      2500 // Max 2.5s timeout: immediately falls back to BRAHUI_LEXICON heuristic extraction
     );
   } catch {
     return fallbackTerms;
