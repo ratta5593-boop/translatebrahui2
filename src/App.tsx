@@ -324,35 +324,12 @@ export default function App() {
         )}
       </main>
 
-      {/* Footer with Cultural and Linguistic Preservation Notice */}
-      <footer className="bg-white border-t border-slate-200/80 mt-auto py-5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-700">Brahui Translate</span>
-            <span>•</span>
-            <span className="font-nastaliq text-base sm:text-lg text-slate-800" dir="rtl">
-              دا آئیڈیا او ایپ عطاء الرحمٰن نا تخلیق کروک ئسے
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3 text-[11px] flex-wrap justify-center">
-            <span className="flex items-center gap-1 text-slate-600">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              Gemini 3.1 Flash-Lite Engine
-            </span>
-            <span>•</span>
-            <span>SOV Active Learning Induction</span>
-            <span>•</span>
-            {/* Discreet Admin Portal Link in footer for accessibility if URL hash isn't used */}
-            <button
-              type="button"
-              onClick={() => handleOpenAuthModal('admin')}
-              className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer underline"
-              title="Admin Portal Access"
-            >
-              Admin Access
-            </button>
-          </div>
+      {/* Clean Minimalist Footer */}
+      <footer className="bg-white border-t border-slate-200/80 mt-auto py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="font-nastaliq text-base sm:text-lg text-slate-700" dir="rtl">
+            دا آن لائن ایپ و آئیڈیا عطاء الرحمٰن عطاء نا تخلیق ءِ
+          </p>
         </div>
       </footer>
     </div>
